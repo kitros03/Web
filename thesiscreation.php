@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 
-    // Insert the new thesis
+    // Insert the new thesis and create a committee
     if ($pdfPath) {
         $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description, pdf_description) VALUES (?, ?, ?, ?)");
         $stmt->execute([$teacherID, $title, $description, $pdfPath]);
@@ -59,7 +59,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description) VALUES (?, ?, ?)");
         $stmt->execute([$teacherID, $title, $description]);
     }
-
+    $stmt = $pdo->prepare("INSERT INTO committee (thesisID, supervisor) VALUES (?, ?)");
+    $thesisID = $pdo->lastInsertId();
+    $stmt->execute([$thesisID, $teacherID]);
     echo json_encode(['success' => true, 'message' => 'Thesis created successfully.']);
     exit;
 }

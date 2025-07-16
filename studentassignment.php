@@ -87,6 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt2 = $pdo->prepare("UPDATE student SET thesisID = NULL WHERE thesisID = ?");
             if ($stmt1->execute([$thesisID]) && $stmt2->execute([$thesisID])) {
                 echo "Success";
+                //also need to remove members from committe
+                $stmt = $pdo->prepare("UPDATE committee SET member1 = NULL, member2 = NULL, m1_confirmation = NULL, m2_confirmation=NULL WHERE thesisID = ?");
+                $stmt->execute([$thesisID]);
             } else {
                 http_response_code(500);
                 echo "Failed to unassign thesis.";
