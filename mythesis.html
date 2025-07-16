@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>My Thesis</title>
+</head>
+<body>
+    <h2>Thesis Details</h2>
+    <div id="thesisInfo"></div>
+    <script>
+        /*fetch('api/student/mythesis.php')*/
+        fetch('./mythesis.php')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.thesis) {
+                let html = `<strong>Title:</strong> ${data.thesis.title}<br>
+                    <strong>Description:</strong> ${data.thesis.th_description}<br>
+                    <strong>Status:</strong> ${data.thesis.status}<br>
+                    <strong>Supervisor:</strong> ${data.thesis.supervisor_name}<br>
+                    <strong>Committee:</strong> ${data.thesis.committee_members || '(not set yet)'}<br>
+                    <strong>Assignment date:</strong> ${data.thesis.assignment_date || '(not set)'}<br>
+                    <strong>PDF:</strong> ${
+                        data.thesis.pdf_description
+                            ? `<a href="${data.thesis.pdf_description}" target="_blank">View PDF</a>`
+                            : '-'
+                    }`;
+                document.getElementById('thesisInfo').innerHTML = html;
+            } else {
+                document.getElementById('thesisInfo').textContent = 'No thesis found for you.';
+            }
+        });
+    </script>
+</body>
+</html>
