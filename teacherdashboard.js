@@ -1,6 +1,4 @@
-const container = document.getElementById('div');
-
-document.body.appendChild(container);
+const container = document.getElementById('dashboard-container');
 
 document.getElementById('thesiscreationBtn').onclick = () => {
   window.location.href = 'thesiscreation.php';

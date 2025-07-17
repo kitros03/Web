@@ -1,3 +1,7 @@
+document.getElementById('backBtn').onclick = () => {
+  window.location.href = 'teacherdashboard.php';
+};
+
 document.getElementById('invitationForm').addEventListener('submit', async function(e) {
   e.preventDefault();
 
@@ -21,3 +25,4 @@ document.getElementById('invitationForm').addEventListener('submit', async funct
     console.error("Error:", error);
   }
 });
+

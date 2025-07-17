@@ -106,75 +106,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Assign Thesis</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>Assign Thesis to Student</h2>
-  <form id="assignmentForm">
-    <label>Thesis:
-      <select name="thesis">
-        <option value="">-- Select Thesis --</option>
-        <?php foreach ($theses as $thesis): ?>
-          <option value="<?= $thesis['thesisID'] ?>">
-            <?= htmlspecialchars($thesis['title']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </label>
-
-    <label>Student:
-      <select name="student">
-        <option value="">-- Select Student --</option>
-        <?php foreach ($students as $s): ?>
-          <option value="<?= htmlspecialchars($s['username']) ?>">
-            <?= htmlspecialchars($s['username']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </label>
-
-    <button type="submit">Assign</button>
-  </form>
-  <div id="result"></div>
-
-  <h2>Assigned Theses</h2>
-  <?php if (count($assignedTheses) > 0): ?>
-    <table border="1">
-      <thead>
-        <tr>
-          <th>Thesis ID</th>
-          <th>Title</th>
-          <th>Description</th>
-          <th>Student</th>
-          <th>Finalized</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($assignedTheses as $thesis): ?>
-          <tr>
-            <td><?= htmlspecialchars($thesis['thesisID']) ?></td>
-            <td><?= htmlspecialchars($thesis['title']) ?></td>
-            <td><?= htmlspecialchars($thesis['th_description']) ?></td>
-            <td><?= htmlspecialchars($thesis['studentUsername']) ?></td>
-            <td><?= $thesis['finalized'] ? 'Yes' : 'No' ?></td>
-            <td>
-              <?php if (!$thesis['finalized']): ?>
-                <form method="post" class="remove-form" data-thesis-id="<?= $thesis['thesisID'] ?>">
-                  <input type="submit" value="Remove">
-                </form>
-              <?php else: ?>
-                Finalized
-              <?php endif; ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php else: ?>
-    <p>No theses assigned yet.</p>
-  <?php endif; ?>
-
-  <script src="studentassignment.js"></script>
+  <header>
+    <div class="logo-title-row">
+      <button class="back-btn" id="backBtn">
+        <img src="logo2.jpg" alt="Logo" class="logo" />
+      </button>
+      <h1 class="site-title">Thesis Assignment</h1>
+    </div>
+  </header>
+  <div class="dashboard-container">
+    <main class="dashboard-main">
+      <h2>Assign Thesis to Student</h2>
+        <form class="form-group" id="assignmentForm">
+          <select class="select" name="thesis">
+            <option value="">-- Select Thesis --</option>
+            <?php foreach ($theses as $thesis): ?>
+            <option value="<?= $thesis['thesisID'] ?>">
+              <?= htmlspecialchars($thesis['title']) ?>
+            </option>
+            <?php endforeach; ?>
+          </select>     
+          <select class="select" name="student">
+            <option value="">-- Select Student --</option>
+            <?php foreach ($students as $s): ?>
+            <option value="<?= htmlspecialchars($s['username']) ?>">
+              <?= htmlspecialchars($s['username']) ?>
+            </option>
+              <?php endforeach; ?>
+          </select>  
+          <button class="submit-btn" type="submit">Assign</button>
+        </form>
+        <div id="result"></div>
+        <h2>Assigned Theses</h2>
+        <?php if (count($assignedTheses) > 0): ?>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Thesis ID</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Student</th>
+                <th>Finalized</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($assignedTheses as $thesis): ?>
+                <tr>
+                  <td><?= htmlspecialchars($thesis['thesisID']) ?></td>
+                  <td><?= htmlspecialchars($thesis['title']) ?></td>
+                  <td><?= htmlspecialchars($thesis['th_description']) ?></td>
+                  <td><?= htmlspecialchars($thesis['studentUsername']) ?></td>
+                  <td><?= $thesis['finalized'] ? 'Yes' : 'No' ?></td>
+                  <td>
+                    <?php if (!$thesis['finalized']): ?>
+                      <form method="post" class="remove-form" data-thesis-id="<?= $thesis['thesisID'] ?>">
+                        <input class="submit-btn" type="submit" value="Remove">
+                      </form>
+                    <?php else: ?>
+                      Finalized
+                    <?php endif; ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        <?php else: ?>
+        <p>No theses assigned yet.</p>
+      <?php endif; ?>
+      <script src="studentassignment.js"></script>
+    </main>
+  </div>
+  <footer >
+    <div class="footer-content">
+      <p>&copy; 2025 Thesis Management System.</p>
+    </div>
+  </footer>
 </body>
 </html>

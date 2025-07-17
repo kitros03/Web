@@ -10,22 +10,36 @@ if (!isset($_SESSION['username'])) {
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Dashboard</title>
-        <link rel="stylesheet" href="css/teacherdashboard.css">
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <div id="div">
-            <h1>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
-            <p>This is your teacher dashboard.</p>
-            <ul>
-                <li><button id="thesiscreationBtn">View and Create Thesis</button></li>
-                <li><button id="studentassignmentBtn">Assign Thesis to a student</button></li>
-                <li><button id="committeeinvitationsBtn">View incoming committee invitations</button></li>
-                <li><button id="viewstatsBtn">View Statistics</button></li>
-                <li><button id="managethesesBtn">Manage your Theses</button></li>
-                <li><a href="logout.php">Logout</a></li>
-            </ul>
+        <header>
+            <div class="logo-title-row">
+                <img src="logo2.jpg" alt="Logo" class="logo" />
+                <h1 class="site-title">Teacher Dashboard</h1>
+            </div>
+        </header>
+        <div class="dashboard-container">
+            <aside class="sidebar">
+                <nav>
+                    <ul>
+                        <li><button class="sidebarButton" id="thesiscreationBtn">Thesis Creation</button></li>
+                        <li><button class="sidebarButton" id="studentassignmentBtn">Student Assignment</button></li>
+                        <li><button class="sidebarButton" id="committeeinvitationsBtn">Committee Invitations</button></li>
+                        <li><button class="sidebarButton" id="viewstatsBtn">View Stats</button></li>
+                        <li><button class="sidebarButton" id="managethesesBtn">Manage Theses</button></li>
+                    </ul>
+                </nav>
+            </aside>
+            <main class="dashboard-with-sidebar">
+                <section class="announcements">
+                    <h2>Announcements</h2>
+                    <p>Your announcements go here...</p>
+                </section>
+            </main>
         </div>
         <script src="teacherdashboard.js"></script>
+        <footer class="footer">
+            <p>&copy; 2025 Thesis Management System</p>
     </body>
 </html>

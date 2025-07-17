@@ -93,53 +93,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['response'], $_POST['i
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Committee Invitations</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .invitationForm {
-            display: inline;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<table>
-    <tr>
-        <th>Thesis Title</th>
-        <th>Sender Name</th>
-        <th>Invitation Date</th>
-        <th>Actions</th>
-    </tr>
-    <?php if (empty($invitations)): ?>
-        <tr><td colspan="4">No committee invitations found.</td></tr>
-    <?php else: ?>
-        <?php foreach ($invitations as $invitation): ?>
-            <tr>
-                <td><?= htmlspecialchars(getThesisTitle($pdo, $invitation['thesisID'])) ?></td>
-                <td><?= htmlspecialchars(getSenderName($pdo, $invitation['senderID'])) ?></td>
-                <td><?= htmlspecialchars($invitation['invitationDate']) ?></td>
-                <td>
-                    <form class="invitationForm" method="post">
-                        <input type="hidden" name="invitationID" value="<?= htmlspecialchars($invitation['invitationID']) ?>">
-                        <button type="submit" name="response" value="1">Accept</button>
-                        <button type="submit" name="response" value="0">Decline</button>
-                        <div class="result"></div> 
-                    </form>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</table>
-<script src="committeeinvitations.js"></script>
+    <header>
+        <div class="logo-title-row">
+            <button class="back-btn" id="backBtn">
+                <img src="logo2.jpg" alt="Logo" class="logo" />
+            </button>
+            <h1 class="site-title">Committee Invitations</h1>
+        </div>
+    </header>
+    <div class="dashboard-container">
+        <main class="dashboard-main">
+            <h2>Committee Invitations</h2>
+            <p>Here you can accept or decline committee invitations.</p>
+            <table class="table">
+                <tr>
+                    <th>Thesis Title</th>
+                    <th>Sender Name</th>
+                    <th>Invitation Date</th>
+                    <th>Actions</th>
+                </tr>
+                <?php if (empty($invitations)): ?>
+                    <tr><td colspan="4">No committee invitations found.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($invitations as $invitation): ?>
+                        <tr>
+                            <td><?= htmlspecialchars(getThesisTitle($pdo, $invitation['thesisID'])) ?></td>
+                            <td><?= htmlspecialchars(getSenderName($pdo, $invitation['senderID'])) ?></td>
+                            <td><?= htmlspecialchars($invitation['invitationDate']) ?></td>
+                            <td>
+                                <form class="invitationForm" method="post">
+                                    <input type="hidden" name="invitationID" value="<?= htmlspecialchars($invitation['invitationID']) ?>">
+                                    <button class="submit-btn" type="submit" name="response" value="1">Accept</button>
+                                    <button class="submit-btn" type="submit" name="response" value="0">Decline</button>
+                                    <div class="result"></div> 
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </table>
+            <script src="committeeinvitations.js"></script>
+        </main>
+    </div>
+    <footer class="footer">
+        <p>&copy; 2025 Thesis Management System</p>
 </body>
 </html>

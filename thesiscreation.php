@@ -83,39 +83,39 @@ if (!empty($_SESSION['username'])) {
     }
 }
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Create Thesis</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
-        th { background-color: #f2f2f2; }
-        #result p { font-weight: bold; }
-        #result .success { color: green; }
-        #result .error { color: red; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <form id="thesisForm" method="post" enctype="multipart/form-data">
-        <label for="title">Thesis Title:</label>
-        <input type="text" name="title" id="title" required><br><br>
-
-        <label for="description">Description:</label>
-        <input type="text" name="description" id="description" required><br><br>
-
-        <label for="pdf">PDF (optional):</label>
-        <input type="file" name="pdf" id="pdf" accept="application/pdf"><br><br>
-
-        <button type="submit">Create Thesis</button>
-    </form>
-
-    <div id="result"></div>
-
+    <header>
+        <div class="logo-title-row">
+            <button class="back-btn" id="backBtn">
+                <img src="logo2.jpg" alt="Logo" class="logo" />
+            </button>
+            <h1 class="site-title">Thesis Creation</h1>
+        </div>
+    </header>
+    <div class="dashboard-main">
+        <h2>Create a New Thesis</h2>
+        <p>Fill out the form below to create a new thesis.</p>
+        <form class="form-group" id="thesisForm" method="post" enctype="multipart/form-data">
+            <label for="title">Thesis Title:</label>
+            <input type="text" name="title" id="title" required><br><br>
+            <label for="description">Description:</label>
+            <input type="desc" name="description" id="description" required><br><br>
+            <label for="pdf">PDF (optional):</label>
+            <input class="file-input" type="file" name="pdf" id="pdf" accept="application/pdf"><br><br>
+            <button class="submit-btn" type="submit">Create Thesis</button>
+        </form>
+        <div id="result"></div>
     <h2>Previously Created Theses</h2>
     <?php if (!empty($theses)): ?>
-    <table>
+    <table class="table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -145,5 +145,8 @@ if (!empty($_SESSION['username'])) {
     <p>No theses found.</p>
     <?php endif; ?>
     <script src="thesiscreation.js"></script>
+    </div>
+    <footer class="footer">
+        <p>&copy; 2025 Thesis Management System</p>
 </body>
 </html>

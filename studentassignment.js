@@ -1,3 +1,7 @@
+document.getElementById('backBtn').onclick = () => {
+  window.location.href = 'teacherdashboard.php';
+};
+
 document.getElementById('assignmentForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const form = document.getElementById('assignmentForm');
