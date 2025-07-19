@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     header("Content-Type: application/json");
 
     $title = isset($_POST['title']) ? trim($_POST['title']) : '';
-    $description = isset($_POST['description']) ? trim($_POST['description']) : '';
+    $description = isset($_POST['desc']) ? trim($_POST['desc']) : '';
     $pdf = isset($_FILES['pdf']) ? $_FILES['pdf'] : null;
 
     if ($title === '' || $description === '') {
@@ -107,7 +107,7 @@ if (!empty($_SESSION['username'])) {
             <label for="title">Thesis Title:</label>
             <input type="text" name="title" id="title" required><br><br>
             <label for="description">Description:</label>
-            <input type="desc" name="description" id="description" required><br><br>
+            <textarea rows="8" cols="50" name="desc"></textarea><br><br>
             <label for="pdf">PDF (optional):</label>
             <input class="file-input" type="file" name="pdf" id="pdf" accept="application/pdf"><br><br>
             <button class="submit-btn" type="submit">Create Thesis</button>
