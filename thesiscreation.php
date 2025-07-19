@@ -2,7 +2,6 @@
 session_start();
 require_once "dbconnect.php"; // Ensure this contains $pdo
 
-// Handle form submission (AJAX or direct post)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     header("Content-Type: application/json");
 
@@ -64,11 +63,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->execute([$thesisID, $teacherID]);
     echo json_encode(['success' => true, 'message' => 'Thesis created successfully.']);
     exit;
-}
-// Only output HTML below for GET requests
-header("Content-Type: text/html; charset=UTF-8");
 
-// Fetch all theses for this teacher
+}
+
 $theses = [];
 if (!empty($_SESSION['username'])) {
     $stmt = $pdo->prepare("SELECT teacherID FROM teacher WHERE username = ?");
@@ -82,6 +79,8 @@ if (!empty($_SESSION['username'])) {
         $theses = $stmt2->fetchAll(PDO::FETCH_ASSOC);
     }
 }
+
+
 ?>
 
 
@@ -113,38 +112,44 @@ if (!empty($_SESSION['username'])) {
             <button class="submit-btn" type="submit">Create Thesis</button>
         </form>
         <div id="result"></div>
-    <h2>Previously Created Theses</h2>
-    <?php if (!empty($theses)): ?>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Description</th>
-                <th>PDF</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($theses as $thesis): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($thesis['thesisID']); ?></td>
-                <td><?php echo htmlspecialchars($thesis['title']); ?></td>
-                <td><?php echo htmlspecialchars($thesis['th_description']); ?></td>
-                <td>
-                    <?php if (!empty($thesis['pdf_description'])): ?>
-                        <a href="<?php echo htmlspecialchars($thesis['pdf_description']); ?>" target="_blank">View PDF</a>
-                    <?php else: ?>
-                        No PDF
-                    <?php endif; ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php else: ?>
-    <p>No theses found.</p>
-    <?php endif; ?>
-    <script src="thesiscreation.js"></script>
+        <h2>Previously Created Theses</h2>
+        <?php if (!empty($theses)): ?>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($theses as $thesis): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($thesis['thesisID']); ?></td>
+                    <td><?php echo htmlspecialchars($thesis['title']); ?></td>
+                    <td><?php echo htmlspecialchars($thesis['th_description']); ?></td>
+                    <td>
+                        <?php if (!empty($thesis['pdf_description'])): ?>
+                            <a href="<?php echo htmlspecialchars($thesis['pdf_description']); ?>" target="_blank">View PDF</a>
+                        <?php else: ?>
+                            No PDF
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <button class="edit-btn" id="edit-form" type="click" data-thesis-id="<?= $thesis['thesisID'] ?>">Edit</button>
+                    </td>
+                    <td>
+                        <button class="delete-btn" id="delete-form" type="button" data-thesis-id="<?= $thesis['thesisID'] ?>">Delete</button>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php else: ?>
+        <p>No theses found.</p>
+        <?php endif; ?>
+        <script src="thesiscreation.js"></script>
     </div>
     <footer class="footer">
         <p>&copy; 2025 Thesis Management System</p>

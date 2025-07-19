@@ -251,7 +251,9 @@ main {
     box-shadow: 0 4px 14px rgba(192,181,36,0.09);
 }
 
-.submit-btn {
+.submit-btn,
+.edit-btn,
+.delete-btn {
     background: #ffff;
     color: #222;
     padding: 0.8rem 1.2rem;
@@ -264,7 +266,12 @@ main {
 }
 
 .submit-btn:hover,
-.submit-btn:focus {
+.submit-btn:focus,
+.edit-btn:hover,
+.edit-btn:focus,
+.delete-btn:hover,
+.delete-btn:focus 
+ {
     background: #a6bffc;
     color: #222;
     box-shadow: 0 4px 14px rgba(192,181,36,0.09);
