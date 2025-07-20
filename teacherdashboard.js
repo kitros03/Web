@@ -16,3 +16,7 @@ document.getElementById('managethesesBtn').onclick = () => {
   window.location.href = 'managetheses.php';
 };
 
+document.getElementById('logoutBtn').onclick = () => {
+  window.location.href = 'logout.php';
+};
+

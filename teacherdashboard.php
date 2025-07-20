@@ -28,6 +28,7 @@ if (!isset($_SESSION['username'])) {
                         <li><button class="sidebarButton" id="committeeinvitationsBtn">Committee Invitations</button></li>
                         <li><button class="sidebarButton" id="viewstatsBtn">View Stats</button></li>
                         <li><button class="sidebarButton" id="managethesesBtn">Manage Theses</button></li>
+                        <li><button class="sidebarButton" id="logoutBtn">Logout</button></li>
                     </ul>
                 </nav>
             </aside>

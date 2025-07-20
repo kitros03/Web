@@ -2,7 +2,7 @@
 function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
-}
+};
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -24,3 +24,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         document.getElementById('loginError').textContent = result.message;
     }
 });
+
+document.getElementById('register-btn').onclick = () => {
+    window.location.href = 'register.html';
+};

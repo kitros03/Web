@@ -61,7 +61,7 @@ main {
     min-height: 50vh;
     display: flex;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: top;
     font-family: 'Open Sans', sans-serif;
 }
 
@@ -95,6 +95,7 @@ main {
     width: 100%;
     font-family: 'Open Sans', sans-serif;
     flex-direction: column;
+    justify-content: center;
 }
 
 .centered-body {
@@ -107,7 +108,8 @@ main {
 
 .dashboard-container {
     display: flex;
-    min-height: calc(100vh - 70px); 
+    
+    justify-content: center;
 }
 
 
@@ -153,32 +155,26 @@ main {
 
 .form-group {
     margin-bottom: 1.5rem;
+    text-align: center;
 }
+
 
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: bold;
+    min-width: 1px;
 }
 
 .form-group input[type="text"],
-.form-group textarea {
+.form-group input[type="password"],
+.form-group textarea{
+ 
     width: 50%;
     padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
-}
-
-.form-group textarea {
-    width: 50%;
-    height: 100px;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    text-align: left;
-    font-family: 'Open Sans', sans-serif;
 }
 
 .form-group input[type="file"] {
@@ -201,6 +197,7 @@ main {
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
 }
+
 
 .input[type="file"]::file-selector-button:hover,
 .input[type="file"]::file-selector-button:focus {
@@ -253,7 +250,7 @@ main {
 
 .submit-btn,
 .edit-btn,
-.delete-btn {
+.delete-btn{
     background: #ffff;
     color: #222;
     padding: 0.8rem 1.2rem;
@@ -270,7 +267,7 @@ main {
 .edit-btn:hover,
 .edit-btn:focus,
 .delete-btn:hover,
-.delete-btn:focus 
+.delete-btn:focus
  {
     background: #a6bffc;
     color: #222;

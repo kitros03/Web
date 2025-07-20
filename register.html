@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo-title-row">
+            <img src="logo2.jpg" alt="Logo" class="logo" />
+            <h1 class="title-login">Login - Diploma Support System</h1>
+        </div>
+    </header>
+    <main class="dashboard-container">
+        <div class="centered-body">
+            <h2> Register As new User </h2>
+            <a> Please enter your details below </a>
+            <form class="form-group" id="registerForm">
+                <input type="text" id="fname" placeholder="First Name" required>
+                <input type="text" id="lname" placeholder="Last Name" required>
+                <input type="text" id="id" placeholder="Academic ID" required> 
+                <input type="text" id="username" placeholder="Username" required>     
+                <input type="password" id="password" placeholder="Password" required>
+                <input type="password" id="r-pass" placeholder="Repeat Password" required>
+                <div></div>
+                <select class="select" id="role" required>
+                    <option value="">--Select Role--</option> 
+                    <option value="teacher">Teacher</option>
+                    <option value="student">Student</option>
+                    <option value="secretary">Secretary</option>
+                </select>
+                <div> </div>
+                <button class="submit-btn" type="submit">Register</button>
+            </form>
+            <button class="submit-btn" id="backBtn" type="backBtn"> Back</button>
+            <div id="result"></div>
+        </div>  
+        <script src="register.js"></script>
+    </main>
+    <footer>
+        <p>&copy; 2025 Thesis Management System.</p>
+</body>
+    
+</html>
