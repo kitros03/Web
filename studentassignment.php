@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $stmt = $pdo->prepare("UPDATE thesis SET assigned = TRUE WHERE thesisID = ?");
+        $stmt = $pdo->prepare("UPDATE thesis SET assigned = TRUE, th_status='RUNNING' WHERE thesisID = ?");
         $stmt1 = $pdo->prepare("UPDATE student SET thesisID = ? WHERE username = ?");
         if ($stmt->execute([$thesisID]) && $stmt1->execute([$thesisID, $studentUsername])) {
             echo json_encode(['success' => true, 'message' => 'Thesis assigned successfully.']);
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($result && !$result['finalized']) {
-            $stmt1 = $pdo->prepare("UPDATE thesis SET assigned = 0 WHERE thesisID = ?");
+            $stmt1 = $pdo->prepare("UPDATE thesis SET assigned = 0, th_status='TBG' WHERE thesisID = ?");
             $stmt2 = $pdo->prepare("UPDATE student SET thesisID = NULL WHERE thesisID = ?");
             if ($stmt1->execute([$thesisID]) && $stmt2->execute([$thesisID])) {
                 echo "Success";

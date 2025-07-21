@@ -13,7 +13,7 @@ document.getElementById('viewstatsBtn').onclick = () => {
   window.location.href = 'viewstats.php';
 };
 document.getElementById('managethesesBtn').onclick = () => {
-  window.location.href = 'managetheses.php';
+  window.location.href = 'viewtheses.php';
 };
 
 document.getElementById('logoutBtn').onclick = () => {
