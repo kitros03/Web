@@ -20,6 +20,7 @@ document.getElementById('thesisForm').addEventListener('submit', async function(
     const data = await response.json();
 
     resultDiv.innerHTML = `<p style="color: ${data.success ? 'green' : 'red'}">${data.message}</p>`;
+    setTimeout(() => window.location.reload(), 1000);
   } catch (error) {
     resultDiv.innerHTML = `<p style="color: red">Error: Could not submit the form.</p>`;
     console.error("Error:", error);

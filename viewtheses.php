@@ -56,9 +56,7 @@ session_start();
                             <td><?=htmlspecialchars($thesis['th_status'])?></td>
                             <td>
                                 <form class="selectThesis" method="get">
-                                    <input type="hidden" name="thesisID" value="<?=htmlspecialchars($thesis['thesisID'])?>">
-                                    <button class="submit-btn" type="submit">Select</button>
-                                    <div class="result"></div>
+                                    <button class="submit-btn" type="button" data-thesis-id="<?= htmlspecialchars($thesis['thesisID']) ?>">Select</button>
                                 </form>
                             </td>
                         </tr>

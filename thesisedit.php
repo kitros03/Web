@@ -6,6 +6,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
     echo json_encode(['success' => false, 'message' => 'Thesis ID is required.']);
     exit;
 }
+
 $thesisID = $_GET['id'];
 
 $stmt = $pdo->prepare("SELECT * FROM thesis WHERE thesisID = ?");

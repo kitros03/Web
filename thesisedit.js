@@ -1,3 +1,7 @@
+document.getElementById('backBtn').onclick = () => {
+  window.location.href = 'teacherdashboard.php';
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     function goBack() { window.location.href = 'thesiscreation.php'; }
     const backBtn2 = document.getElementById('backBtn2'); // the added back button
