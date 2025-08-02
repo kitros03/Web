@@ -2,33 +2,35 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <title>My Thesis</title>
+    <title>Η διπλωματική μου</title>
 </head>
 <body>
-    <h2>Thesis Details</h2>
-    <div id="thesisInfo"></div>
+    <h1>Η διπλωματική μου εργασία</h1>
+    <div id="thesisDetails">Φόρτωση...</div>
     <script>
-        /*fetch('api/student/mythesis.php')*/
-        fetch('./mythesis.php')
-        .then(res => res.json())
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('get_mythesis.php', {
+            method: 'GET',
+            credentials: 'same-origin'
+        })
+        .then(resp => resp.json())
         .then(data => {
             if (data.success && data.thesis) {
-                let html = `<strong>Title:</strong> ${data.thesis.title}<br>
-                    <strong>Description:</strong> ${data.thesis.th_description}<br>
-                    <strong>Status:</strong> ${data.thesis.status}<br>
-                    <strong>Supervisor:</strong> ${data.thesis.supervisor_name}<br>
-                    <strong>Committee:</strong> ${data.thesis.committee_members || '(not set yet)'}<br>
-                    <strong>Assignment date:</strong> ${data.thesis.assignment_date || '(not set)'}<br>
-                    <strong>PDF:</strong> ${
-                        data.thesis.pdf_description
-                            ? `<a href="${data.thesis.pdf_description}" target="_blank">View PDF</a>`
-                            : '-'
-                    }`;
-                document.getElementById('thesisInfo').innerHTML = html;
+                const th = data.thesis;
+                document.getElementById('thesisDetails').innerHTML = `
+                    <strong>Θέμα:</strong> ${th.title}<br>
+                    <strong>Περιγραφή:</strong> ${th.th_description}<br>
+                    <strong>Συνημμένο PDF:</strong> ${th.pdf_description ? `<a href="${th.pdf_description}" target="_blank">Λήψη PDF</a>` : '—'}<br>
+                    <strong>Κατάσταση:</strong> ${th.th_status || '—'}<br>
+                    <strong>Επιβλέπων:</strong> ${th.supervisor_name}<br>
+                    <strong>Μέλη τριμελούς:</strong> ${th.committee_members || '—'}<br>
+                    <strong>Ημέρες από ανάθεση:</strong> ${th.days_since_assignment !== null ? th.days_since_assignment + ' ημέρες' : '—'}
+                `;
             } else {
-                document.getElementById('thesisInfo').textContent = 'No thesis found for you.';
+                document.getElementById('thesisDetails').textContent = data.message || 'Δεν βρέθηκε διπλωματική.';
             }
         });
+    });
     </script>
 </body>
 </html>
