@@ -17,7 +17,9 @@ th_description varchar(500),
 pdf_description longblob,
 assigned boolean default 0,
 finalized boolean default 0, 
-th_status enum ('TBG', 'RUNNING', 'DONE', 'CANCELLED'),
+th_status enum ('TBG', 'RUNNING', 'DONE', 'CANCELLED') not null,
+thesisGrade int(10),
+FinishDate date,
 foreign key (supervisor)
 references teacher (teacherID) on delete cascade
 );
