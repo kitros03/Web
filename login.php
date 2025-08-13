@@ -9,18 +9,12 @@ $username = trim($data['username']);
 $password = trim($data['password']);
 $role = $data['role'];
 
-
-if ($role === 'teacher') {
-    $stmt = $pdo->prepare("SELECT username, pass FROM teacher WHERE username = ?");
-} elseif ($role === 'student') {
-    $stmt = $pdo->prepare("SELECT username, pass FROM student WHERE username = ?");
-} elseif ($role === 'secretary') {
-    $stmt = $pdo->prepare("SELECT username, pass FROM secretary WHERE username = ?");
-} else {
-    echo json_encode(['success' => false, 'message' => 'Invalid role specified.', $role]);
+if(empty($role)){
+    echo json_encode(['success' => false, 'message' => 'Role is required.']);
     exit;
 }
 
+$stmt = $pdo->prepare("SELECT username, pass FROM users WHERE username = ?");
 
 
 $stmt->execute([$username]);

@@ -2,22 +2,22 @@
 session_start();
 require 'dbconnect.php';
 
-$teacherID = null;
+$id = null;
 $theses = [];
 $students = [];
 $assignedTheses = [];
 
 if (isset($_SESSION['username'])) {
-    $stmt = $pdo->prepare("SELECT teacherID FROM teacher WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
     $stmt->execute([$_SESSION['username']]);
     $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($teacher && isset($teacher['teacherID'])) {
-        $teacherID = $teacher['teacherID'];
+    if ($teacher && isset($teacher['id'])) {
+        $id = $teacher['id'];
 
         // Get unassigned theses for dropdown
         $stmt2 = $pdo->prepare("SELECT * FROM thesis WHERE supervisor = ? AND assigned = 0 ORDER BY thesisID DESC");
-        $stmt2->execute([$teacherID]);
+        $stmt2->execute([$id]);
         $theses = $stmt2->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -33,7 +33,7 @@ if (isset($_SESSION['username'])) {
         WHERE t.supervisor = ? AND t.assigned = 1
         ORDER BY t.thesisID DESC
     ");
-    $stmt->execute([$teacherID]);
+    $stmt->execute([$id]);
     $assignedTheses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 

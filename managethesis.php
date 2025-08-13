@@ -27,31 +27,31 @@ session_start();
     $stmt->execute([$thesisID]);
     $committee = $stmt->fetch(PDO::FETCH_ASSOC);
     if(isset($committee['member1']) && isset($committee['member2'])){
-        $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE teacherID = ? OR teacherID = ?");
+        $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ? OR id = ?");
         $stmt->execute([$committee['member1'], $committee['member2']]);
         $memberNames = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     else if(isset($committee['member1'])){
-        $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE teacherID = ?");
+        $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
         $stmt->execute([$committee['member1']]);
         $memberNames = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     else if(isset($committee['member2'])){
-        $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE teacherID = ?");
+        $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
         $stmt->execute([$committee['member2']]);
         $memberNames = $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE teacherID = ?");
+    $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
     $stmt->execute([$committee['supervisor']]);
     $supervisorName = $stmt->fetch(PDO::FETCH_ASSOC);
-    //get teacherID to identify role in thesis
-    $stmt = $pdo->prepare("SELECT teacherID FROM teacher WHERE username = ?");
+    //get id to identify role in thesis
+    $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
     $stmt->execute([$_SESSION['username']]);
-    $teacherID = $stmt->fetch(PDO::FETCH_ASSOC);
-    if($teacherID['teacherID']===$committee['supervisor']){
+    $id = $stmt->fetch(PDO::FETCH_ASSOC);
+    if($id['id']===$committee['supervisor']){
         $role="supervisor";
     }
-    else if($teacherID['teacherID']===$committee['member1'] || $teacherID['teacherID']===$committee['member2']){
+    else if($id['id']===$committee['member1'] || $id['id']===$committee['member2']){
         $role="member";
     }
 ?>

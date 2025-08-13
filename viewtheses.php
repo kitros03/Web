@@ -7,13 +7,13 @@ session_start();
     }
 
     header('Content-Type: text/html; charset=utf-8');
-    $stmt = $pdo->prepare("SELECT teacherID FROM teacher WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
     $stmt->execute([$_SESSION['username']]);
     $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
 
     //need to find all theses for current teacher that are either finished, running, or cancelled
     $stmt = $pdo->prepare("SELECT t.* FROM thesis t LEFT JOIN committee c ON t.thesisID=c.thesisID WHERE (t.supervisor=? OR c.member1=? OR c.member2=?) AND t.th_status!='TBG'");
-    $stmt->execute([$teacher['teacherID'], $teacher['teacherID'], $teacher['teacherID']]);
+    $stmt->execute([$teacher['id'], $teacher['id'], $teacher['id']]);
     $theses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -48,7 +48,7 @@ session_start();
                         <tr>
                             <td><?= htmlspecialchars($thesis['thesisID'])?></td>
                             <td><?=htmlspecialchars($thesis['title'])?></td>
-                            <?php if($teacher['teacherID']===$thesis['supervisor']):?>
+                            <?php if($teacher['id']===$thesis['supervisor']):?>
                                 <td>Supervisor</td>
                             <?php else: ?>
                                 <td>Committee</td>

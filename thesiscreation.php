@@ -20,14 +20,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // Retrieve the teacher's ID
-    $stmt = $pdo->prepare("SELECT teacherID FROM teacher WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
     $stmt->execute([$_SESSION['username']]);
     $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$teacher || !isset($teacher['teacherID'])) {
+    if (!$teacher || !isset($teacher['id'])) {
         echo json_encode(['success' => false, 'message' => 'Supervisor not found.']);
         exit;
     }
-    $teacherID = $teacher['teacherID'];
+    $id = $teacher['id'];
 
     // Handle optional PDF upload
     $pdfPath = null;
@@ -53,14 +53,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Insert the new thesis and create a committee
     if ($pdfPath) {
         $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description, pdf_description, th_status) VALUES (?, ?, ?, ?, 'TBG')");
-        $stmt->execute([$teacherID, $title, $description, $pdfPath]);
+        $stmt->execute([$id, $title, $description, $pdfPath]);
     } else {
         $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description, th_status) VALUES (?, ?, ?, 'TBG')");
-        $stmt->execute([$teacherID, $title, $description]);
+        $stmt->execute([$id, $title, $description]);
     }
     $stmt = $pdo->prepare("INSERT INTO committee (thesisID, supervisor) VALUES (?, ?)");
     $thesisID = $pdo->lastInsertId();
-    $stmt->execute([$thesisID, $teacherID]);
+    $stmt->execute([$thesisID, $id]);
     echo json_encode(['success' => true, 'message' => 'Thesis created successfully.']);
     exit;
 
@@ -68,14 +68,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 $theses = [];
 if (!empty($_SESSION['username'])) {
-    $stmt = $pdo->prepare("SELECT teacherID FROM teacher WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
     $stmt->execute([$_SESSION['username']]);
     $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($teacher && isset($teacher['teacherID'])) {
-        $teacherID = $teacher['teacherID'];
+    if ($teacher && isset($teacher['id'])) {
+        $id = $teacher['id'];
         $stmt2 = $pdo->prepare("SELECT * FROM thesis WHERE supervisor = ? ORDER BY thesisID DESC");
-        $stmt2->execute([$teacherID]);
+        $stmt2->execute([$id]);
         $theses = $stmt2->fetchAll(PDO::FETCH_ASSOC);
     }
 }

@@ -18,20 +18,15 @@ session_start();
 
     $hashedPassword = password_hash(trim($password), PASSWORD_DEFAULT);
 
-    $stmt = $pdo->prepare("SELECT username FROM teacher WHERE username=?
-    UNION
-    SELECT username FROM student WHERE username=?
-    UNION
-    SELECT username FROM secretary WHERE username=?
-    ");
-    $stmt->execute([$username, $username, $username]);
+    $stmt = $pdo->prepare("SELECT username FROM users WHERE username=?");
+    $stmt->execute([$username]);
    
     if($user = $stmt->fetch(PDO::FETCH_ASSOC)){
         echo json_encode(['success' => false, 'message' => 'Username already exists.']);
         exit;
     }
 
-    $stmt = $pdo->prepare("SELECT teacherID FROM teacher WHERE teacherID=?
+    $stmt = $pdo->prepare("SELECT id FROM teacher WHERE id=?
     UNION
     SELECT studentID FROM student WHERE studentID=?
     UNION
@@ -47,16 +42,17 @@ session_start();
 
 
     if($role==='teacher'){
-        $stmt = $pdo->prepare('INSERT INTO teacher (teacherID, t_fname, t_lname, username, pass) VALUES (?, ?, ?, ?, ?)');
+        $stmt = $pdo->prepare('INSERT INTO teacher (id, t_fname, t_lname, username) VALUES (?, ?, ?, ?)');
     }
     else if($role==='student'){
-        $stmt = $pdo->prepare('INSERT INTO student (studentID, s_fname, s_lname, username, pass) VALUES (?, ?, ?, ?, ?)');
+        $stmt = $pdo->prepare('INSERT INTO student (studentID, s_fname, s_lname, username) VALUES (?, ?, ?, ?)');
     }
     else {
-        $stmt = $pdo->prepare('INSERT INTO secretary (secretaryID, secr_fname, secr_lname, username, pass) VALUES (?, ?, ?, ?, ?)');
+        $stmt = $pdo->prepare('INSERT INTO secretary (secretaryID, secr_fname, secr_lname, username) VALUES (?, ?, ?, ?)');
     }
+    $stmt1 = $pdo->prepare('INSERT INTO users (username, pass, type) VALUES (?, ?, ?)');
 
-    if($stmt->execute([$id, $fname, $lname, $username, $hashedPassword])){
+    if(($stmt1->execute([$username, $hashedPassword, $role])) && ($stmt->execute([$id, $fname, $lname, $username]))){
         echo json_encode(['success' => true, 'message' => 'User registered successfully!']);
         exit;
     }
