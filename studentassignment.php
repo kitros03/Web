@@ -65,9 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $stmt = $pdo->prepare("UPDATE thesis SET assigned = TRUE, th_status='RUNNING' WHERE thesisID = ?");
+        $stmt = $pdo->prepare("UPDATE thesis SET assigned = TRUE, th_status='ASSIGNED' WHERE thesisID = ?");
         $stmt1 = $pdo->prepare("UPDATE student SET thesisID = ? WHERE username = ?");
-        if ($stmt->execute([$thesisID]) && $stmt1->execute([$thesisID, $studentUsername])) {
+        $stmt2 = $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate) VALUES (?, NOW())");
+        if ($stmt->execute([$thesisID]) && $stmt1->execute([$thesisID, $studentUsername]) && $stmt2->execute([$thesisID])) {
             echo json_encode(['success' => true, 'message' => 'Thesis assigned successfully.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to assign thesis.']);
@@ -83,9 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($result && !$result['finalized']) {
-            $stmt1 = $pdo->prepare("UPDATE thesis SET assigned = 0, th_status='TBG' WHERE thesisID = ?");
+            $stmt1 = $pdo->prepare("UPDATE thesis SET assigned = 0, th_status='NOT_ASSIGNED' WHERE thesisID = ?");
             $stmt2 = $pdo->prepare("UPDATE student SET thesisID = NULL WHERE thesisID = ?");
-            if ($stmt1->execute([$thesisID]) && $stmt2->execute([$thesisID])) {
+            $stmt3 = $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate) VALUES (?, NOW())");
+            if ($stmt1->execute([$thesisID]) && $stmt2->execute([$thesisID]) && $stmt3->execute([$thesisID])) {
                 echo "Success";
                 //also need to remove members from committe
                 $stmt = $pdo->prepare("UPDATE committee SET member1 = NULL, member2 = NULL, m1_confirmation = NULL, m2_confirmation=NULL WHERE thesisID = ?");

@@ -32,7 +32,7 @@ th_description varchar(500),
 pdf_description longblob,
 assigned boolean default 0,
 finalized boolean default 0, 
-th_status enum ('TBG', 'RUNNING', 'DONE', 'CANCELLED'),
+th_status enum ('NOT_ASSIGNED','ASSIGNED','ACTIVE','EXAM','DONE','CANCELLED'),
 foreign key (supervisor)
 references teacher (id) on delete cascade
 );
@@ -111,6 +111,15 @@ announcementDesc varchar(500)
  references student (studentID),
  foreign key (receiverID)
  references teacher (id)
+ );
+
+ create table if not exists thesisStatusChanges
+ (
+ id int primary key auto_increment,
+ thesisID int(10) not null,
+ changeDate date,
+ foreign key (thesisID)
+ references thesis (thesisID)
  );
 
 

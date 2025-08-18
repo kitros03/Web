@@ -288,6 +288,69 @@ main {
     outline: none;
 }
 
+/* Popup button */
+.popup-btn {
+  background: #a6bffc;
+  color: #222;
+  border: none;
+  border-radius: 6px;
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(30,40,60,0.08);
+  font-family: 'Open Sans', sans-serif;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.popup-btn:hover,
+.popup-btn:focus {
+  background: #7191d2;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(192,181,36,0.09);
+}
+
+/* Popup window (overlay) */
+.popup-window {
+  display: none;            /* JS will set to flex when opened */
+  position: fixed;
+  z-index: 1000;
+  inset: 0;                 /* shorthand for top/right/bottom/left:0 */
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.32);
+  justify-content: center;  /* works when display:flex */
+  align-items: center;      /* works when display:flex */
+}
+
+/* Popup content box */
+.popup-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  position: relative;
+  min-width: 300px;
+  min-height: 150px;
+}
+
+/* Close button */
+.close-popup-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #7191d2;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.2s;
+}
+.close-popup-btn:hover,
+.close-popup-btn:focus {
+  color: #222;
+}
+
 
 footer {
   background: #7191d2;

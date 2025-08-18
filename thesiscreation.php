@@ -52,10 +52,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Insert the new thesis and create a committee
     if ($pdfPath) {
-        $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description, pdf_description, th_status) VALUES (?, ?, ?, ?, 'TBG')");
+        $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description, pdf_description, th_status) VALUES (?, ?, ?, ?, 'NOT_ASSIGNED')");
         $stmt->execute([$id, $title, $description, $pdfPath]);
     } else {
-        $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description, th_status) VALUES (?, ?, ?, 'TBG')");
+        $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description, th_status) VALUES (?, ?, ?, 'NOT_ASSIGNED')");
         $stmt->execute([$id, $title, $description]);
     }
     $stmt = $pdo->prepare("INSERT INTO committee (thesisID, supervisor) VALUES (?, ?)");
