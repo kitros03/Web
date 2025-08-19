@@ -1,42 +1,53 @@
-document.getElementById('backBtn').onclick = () => {
-  window.location.href = 'teacherdashboard.php';
-};
-
-document.querySelectorAll('.submit-btn').forEach(btn => {
+document.addEventListener('DOMContentLoaded', function () {
+  const backBtn = document.getElementById('backBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'teacherdashboard.php';
+    });
+  }
 
   const popupBtn = document.getElementById('popupBtn');
   const popupWindow = document.getElementById('popupWindow');
   const closePopupBtn = document.getElementById('closePopupBtn');
 
   if (popupBtn && popupWindow && closePopupBtn) {
-    popupBtn.onclick = function() {
-
+    popupBtn.addEventListener('click', () => {
       popupWindow.style.display = 'flex';
-    };
-
-    closePopupBtn.onclick = function() {
+    });
+    closePopupBtn.addEventListener('click', () => {
       popupWindow.style.display = 'none';
-    };
-
-    popupWindow.addEventListener('click', function(e) {
+    });
+    popupWindow.addEventListener('click', (e) => {
       if (e.target === popupWindow) {
         popupWindow.style.display = 'none';
       }
     });
-  };
+  }
 
-  btn.addEventListener('click', function() {
-    const thesisID = this.dataset.thesisId;
-    if(th_status === 'ASSIGNED'){
-      window.location.href = `assignedthesis.php?thesisID=${thesisID}`;
+
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.open-btn');
+    if (!btn) return;
+
+    const thesisID = btn.dataset.thesisId;    
+    const thStatus = btn.dataset.thStatus;   
+
+    if (!thesisID || !thStatus) {
+      console.error('Missing data-thesis-id or data-th-status on the clicked button.');
+      return;
     }
-    else if(th_status === 'ACTIVE'){
-      window.location.href = `activethesis.php?thesisID=${thesisID}`;
+
+    let targetUrl;
+    if (thStatus === 'ASSIGNED') {
+      targetUrl = `assignedthesis.php?thesisID=${encodeURIComponent(thesisID)}`;
+    } else if (thStatus === 'ACTIVE') {
+      targetUrl = `activethesis.php?thesisID=${encodeURIComponent(thesisID)}`;
+    } else if (thStatus === 'EXAM') {
+      targetUrl = `examthesis.php?thesisID=${encodeURIComponent(thesisID)}`;
+    } else {
+      targetUrl = `viewthesis.php?thesisID=${encodeURIComponent(thesisID)}`;
     }
-    else if(th_status === 'EXAM'){
-      window.location.href = `examthesis.php?thesisID=${thesisID}`;
-    }
+
+    window.location.href = targetUrl;
   });
 });
-
-

@@ -1,6 +1,6 @@
 <?php
 session_start();
-header('Content_Type: application/json')
+header('Content_Type: application/json');
 require_once '../dbconnect.php';
 
 if(!isset($_SESSION['username']) || $_SESSION['role']!== 'student'){

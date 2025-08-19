@@ -1,13 +1,13 @@
 <?php
 session_start();
-require_once 'dbconnect.php'; // adjust if you include PDO elsewhere
+require_once 'dbconnect.php'; 
 
-// Get current teacher id (same as your existing code)
+// Get current teacher id 
 $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Fetch theses same as before (keep your existing filter and order)
+// Fetch theses same as before 
 $stmt = $pdo->prepare("
     SELECT t.* 
     FROM thesis t 
@@ -119,7 +119,13 @@ function getTeacherName(PDO $pdo, $id) {
             </td>
             <td>
                 <?php if ($thesis['th_status'] === 'ASSIGNED' || $thesis['th_status'] === 'ACTIVE' || $thesis['th_status'] === 'EXAM' ): ?>
-                    <button class="submit-btn" data-thesis-id="<?= htmlspecialchars($thesis['thesisID']) ?>">Open</button> 
+                    <button
+                        class="submit-btn open-btn"
+                        data-thesis-id="<?= htmlspecialchars($thesis['thesisID']) ?>"
+                        data-th-status="<?= htmlspecialchars($thesis['th_status']) ?>"
+                    >
+                    Open
+                    </button>
                 <?php else: ?>
                     <span>N/A</span>
                 <?php endif; ?>
@@ -132,6 +138,6 @@ function getTeacherName(PDO $pdo, $id) {
 </main>
 <footer class="footer">
     <p>© 2025 Thesis Management System</p>
-    <script src="managethesis.js"></script>
+    <script src="viewtheses.js"></script>
 </body>
 </html>

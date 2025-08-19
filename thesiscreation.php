@@ -139,9 +139,6 @@ if (!empty($_SESSION['username'])) {
                     <td>
                         <button class="edit-btn" id="edit-form" type="click" data-thesis-id="<?= $thesis['thesisID'] ?>">Edit</button>
                     </td>
-                    <td>
-                        <button class="delete-btn" id="delete-form" type="button" data-thesis-id="<?= $thesis['thesisID'] ?>">Delete</button>
-                    </td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
