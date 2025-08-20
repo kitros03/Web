@@ -1,11 +1,15 @@
 <?php
 session_start();
 require_once 'dbconnect.php'; 
-
+if (!isset($_SESSION['username'])) {
+    header('Location: index.html');
+    exit;
+}
 // Get current teacher id 
 $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
+
 
 // Fetch theses same as before 
 $stmt = $pdo->prepare("
@@ -33,7 +37,6 @@ function getTeacherName(PDO $pdo, $id) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Theses</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>

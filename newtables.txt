@@ -122,4 +122,14 @@ announcementDesc varchar(500)
  references thesis (thesisID)
  );
 
-
+create table if not exists teacherNotes
+(
+id int primary key auto_increment,
+thesisID int(10) not null,
+teacherID int(10) not null,
+description varchar(300),
+foreign key (thesisID)
+references thesis (thesisID),
+foreign key (teacherID)
+references teacher (id)
+);
