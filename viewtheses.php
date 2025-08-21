@@ -109,7 +109,7 @@ function getTeacherName(PDO $pdo, $id) {
                         <ul class="changes-list">
                             <?php foreach ($changes as $change): ?>
                                 <li>
-                                    <strong><?= htmlspecialchars($change['changeDate']) ?></strong>
+                                    <strong><?= htmlspecialchars($change['changeDate'] . ' ' . $change['changeTo']) ?></strong>
                                 </li>
                             <?php endforeach; ?>
                         </ul>

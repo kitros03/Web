@@ -118,6 +118,7 @@ announcementDesc varchar(500)
  id int primary key auto_increment,
  thesisID int(10) not null,
  changeDate date,
+ changeTo enum('NOT_ASSIGNED','ASSIGNED','ACTIVE','EXAM','DONE','CANCELLED'),
  foreign key (thesisID)
  references thesis (thesisID)
  );
@@ -132,4 +133,15 @@ foreign key (thesisID)
 references thesis (thesisID),
 foreign key (teacherID)
 references teacher (id)
+);
+
+create table if not exists cancelledThesis
+(
+id int primary key auto_increment,
+thesisID int(10) not null,
+gaNumber int not null,
+gaDate date not null,
+reason varchar(100) default ('από Διδάσκοντα'),
+foreign key (thesisID)
+references thesis (thesisID)
 );
