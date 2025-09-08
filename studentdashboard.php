@@ -1,4 +1,10 @@
-
+<?php
+session_start();
+if (!isset($_SESSION['username'])) {
+    header('Location: index.html');
+    exit;
+}
+?>
 
 <!DOCTYPE html>
 <html lang="el">
@@ -40,7 +46,7 @@
         </section>
       </main>
     </div>
-
+<script src="studentdashboard.js"></script>
     
 
     <footer class="footer">
