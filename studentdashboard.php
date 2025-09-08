@@ -1,11 +1,11 @@
 <?php
+declare(strict_types=1);
 session_start();
 if (!isset($_SESSION['username'])) {
-    header('Location: index.html');
-    exit;
+  header('Location: index.html');
+  exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="el">
   <head>
@@ -25,7 +25,6 @@ if (!isset($_SESSION['username'])) {
       <aside class="sidebar">
         <nav>
           <ul>
-            <!-- Κρατάμε id με ίδιο naming pattern όπως στο teacher -->
             <li><button class="sidebarButton" id="thesisviewBtn">Προβολή Θέματος</button></li>
             <li><button class="sidebarButton" id="studentprofileBtn">Επεξεργασία Προφίλ</button></li>
             <li><button class="sidebarButton" id="managethesesBtn">Διαχείριση Διπλωματικής Εργασίας</button></li>
@@ -34,21 +33,16 @@ if (!isset($_SESSION['username'])) {
         </nav>
       </aside>
 
-      <!-- Χρησιμοποιούμε ίδια κλάση wrapper για να μην αλλάξουμε CSS -->
       <main class="dashboard-with-sidebar">
-        <!-- Κρατάμε την ίδια section "announcements" για συμβατότητα με το CSS σου -->
         <section class="announcements">
           <h2>Πίνακας Φοιτητή</h2>
           <p>Εδώ θα εμφανίζονται οι επιλογές και τα περιεχόμενα του φοιτητή.</p>
-
-
-
+          <!-- Χωρίς include — το περιεχόμενο θα φορτωθεί δυναμικά -->
         </section>
       </main>
     </div>
-<script src="studentdashboard.js"></script>
-    
 
+    <script src="studentdashboard.js"></script>
     <footer class="footer">
       <p>&copy; 2025 Thesis Management System</p>
     </footer>
