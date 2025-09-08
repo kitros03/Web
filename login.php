@@ -29,6 +29,7 @@ else if (!password_verify($password, $user['pass'])) {
     exit;
 } else {
     $_SESSION['username'] = $user['username'];
+    $_SESSION['role'] = $role;
     if ($role === 'teacher') {
         echo json_encode(['success' => true, 'dashboard' => 'teacherdashboard.php']);
     } elseif ($role === 'student') {
