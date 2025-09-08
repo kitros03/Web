@@ -9,7 +9,7 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['rol
 <html lang="el">
 <head>
   <meta charset="UTF-8" />
-  <title>Secretary · Εισαγωγή Δεδομένων (JSON)</title>
+  <title>Secretary · Προβολή ΔΕ</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -34,27 +34,24 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['rol
 
     <main class="dashboard-with-sidebar">
       <section class="announcements">
-        <h2>Εισαγωγή δεδομένων από JSON</h2>
-        <p>Επιλέξτε αρχείο JSON με στοιχεία φοιτητών και διδασκόντων για εισαγωγή στη βάση.</p>
+        <h2>Προβολή Διπλωματικών (Ενεργές & Υπό Εξέταση)</h2>
+        <p>Επιλέξτε μία ΔΕ από τη λίστα για να δείτε λεπτομέρειες.</p>
       </section>
 
       <section>
         <div class="form-group">
-          <label for="jsonFile">Αρχείο JSON</label>
-          <input id="jsonFile" type="file" accept=".json" />
+          <input type="text" id="searchBox" placeholder="Αναζήτηση τίτλου ή ονόματος φοιτητή/επιβλέποντα..." />
         </div>
 
-        <div class="form-group">
-          <button id="uploadBtn" class="submit-btn">Ανέβασμα & Εισαγωγή</button>
-        </div>
+        <div id="thesesList"></div>
 
-        <div id="result" class="centered-body" style="display:none;"></div>
+        <div id="thesisDetails" style="margin-top: 20px;"></div>
       </section>
     </main>
   </div>
 
   <script src="secretarydashboard.js"></script>
-  <script src="secretary_import.js"></script>
+  <script src="secretary_view_theses.js"></script>
   <footer class="footer">
     <p>&copy; 2025 Thesis Management System</p>
   </footer>
