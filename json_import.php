@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json");
 include "db_connect.php"; 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $json = file_get_contents("php://input");
     $data = json_decode($json, true);
@@ -13,65 +14,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $defaultPassword = password_hash("1", PASSWORD_DEFAULT);
 
     if (isset($data['students'])) {
-        $stmt = $conn->prepare("INSERT INTO student 
-            (studentID, s_fname, s_lname, address, email, cellphone, homephone, currentects, currentNPclasses, username, pass)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-                s_fname=VALUES(s_fname),
-                s_lname=VALUES(s_lname),
-                address=VALUES(address),
-                email=VALUES(email),
-                cellphone=VALUES(cellphone),
-                homephone=VALUES(homephone),
-                username=VALUES(username),
-                pass=VALUES(pass)");
-
         foreach ($data['students'] as $s) {
             $studentID = intval($s['student_number']);
             $fname = $s['name'];
             $lname = $s['surname'];
-            $address = $s['street'] . " " . $s['number'] . ", " . $s['city'] . ", " . $s['postcode'];
-            $email = $s['student_number'] . "@upatras.gr";
-            $cellphone = $s['mobile_telephone'];
+            $street = $s['street'];
+            $street_number = $s['number'];
+            $city = $s['city'];
+            $postcode = intval($s['postcode']);
+            $father_name = $s['father_name'];
             $homephone = $s['landline_telephone'];
-            $ects = 0;
-            $npclasses = 0;
-            $username = strtolower($lname); 
-            $pass = $defaultPassword;
+            $cellphone = $s['mobile_telephone'];
+            $email = $studentID . "@upatras.gr";
+            $username = strtolower($lname);
 
-            $stmt->bind_param("issssssiiis", 
-                $studentID, $fname, $lname, $address, $email, 
-                $cellphone, $homephone, $ects, $npclasses, 
-                $username, $pass
+            $stmtUser = $conn->prepare("INSERT INTO users (username, pass, type)
+                                        VALUES (?, ?, 'student')
+                                        ON DUPLICATE KEY UPDATE pass=VALUES(pass), type='student'");
+            $stmtUser->bind_param("ss", $username, $defaultPassword);
+            $stmtUser->execute();
+
+            $stmtStud = $conn->prepare("INSERT INTO student 
+                (s_fname, s_lname, studentID, street, street_number, city, postcode, father_name, homephone, cellphone, email, username)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    s_fname=VALUES(s_fname),
+                    s_lname=VALUES(s_lname),
+                    street=VALUES(street),
+                    street_number=VALUES(street_number),
+                    city=VALUES(city),
+                    postcode=VALUES(postcode),
+                    father_name=VALUES(father_name),
+                    homephone=VALUES(homephone),
+                    cellphone=VALUES(cellphone),
+                    email=VALUES(email),
+                    username=VALUES(username)");
+
+            $stmtStud->bind_param("ssisssisssss",
+                $fname, $lname, $studentID, $street, $street_number, $city, $postcode,
+                $father_name, $homephone, $cellphone, $email, $username
             );
-            $stmt->execute();
+            $stmtStud->execute();
         }
     }
 
     if (isset($data['professors'])) {
-        $stmt = $conn->prepare("INSERT INTO teacher 
-            (teacherID, t_fname, t_lname, email, username, pass)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-                t_fname=VALUES(t_fname),
-                t_lname=VALUES(t_lname),
-                email=VALUES(email),
-                username=VALUES(username),
-                pass=VALUES(pass)");
-
         foreach ($data['professors'] as $t) {
-            $teacherID = intval($t['id']);
+            $id = intval($t['id']);
             $fname = $t['name'];
             $lname = $t['surname'];
-            $email = $t['id'] . "@upatras.gr"; 
+            $email = $id . "@upatras.gr";
+            $topic = $t['topic'];
+            $homephone = $t['landline'];
+            $cellphone = $t['mobile'];
+            $department = $t['department'];
+            $university = $t['university'];
             $username = strtolower($lname);
-            $pass = $defaultPassword;
 
-            $stmt->bind_param("isssss", 
-                $teacherID, $fname, $lname, $email, 
-                $username, $pass
+            $stmtUser = $conn->prepare("INSERT INTO users (username, pass, type)
+                                        VALUES (?, ?, 'teacher')
+                                        ON DUPLICATE KEY UPDATE pass=VALUES(pass), type='teacher'");
+            $stmtUser->bind_param("ss", $username, $defaultPassword);
+            $stmtUser->execute();
+
+            $stmtTeach = $conn->prepare("INSERT INTO teacher 
+                (id, t_fname, t_lname, email, topic, homephone, cellphone, department, university, username)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    t_fname=VALUES(t_fname),
+                    t_lname=VALUES(t_lname),
+                    email=VALUES(email),
+                    topic=VALUES(topic),
+                    homephone=VALUES(homephone),
+                    cellphone=VALUES(cellphone),
+                    department=VALUES(department),
+                    university=VALUES(university),
+                    username=VALUES(username)");
+
+            $stmtTeach->bind_param("issssissss",
+                $id, $fname, $lname, $email, $topic,
+                $homephone, $cellphone, $department, $university, $username
             );
-            $stmt->execute();
+            $stmtTeach->execute();
         }
     }
 
