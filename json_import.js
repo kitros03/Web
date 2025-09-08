@@ -19,14 +19,18 @@ document.getElementById("studentassignmentBtn").addEventListener("click", () => 
                 })
                 .then(res => res.json())
                 .then(response => {
-                    alert(response.message);
+                    if (response.success) {
+                        alert("✅ " + response.message);
+                    } else {
+                        alert("❌ Σφάλμα: " + response.message);
+                    }
                 })
                 .catch(err => {
                     console.error("Σφάλμα AJAX:", err);
-                    alert("Αποτυχία αποστολής στο server");
+                    alert("❌ Αποτυχία αποστολής στο server");
                 });
             } catch (err) {
-                alert("Το αρχείο δεν είναι έγκυρο JSON");
+                alert("❌ Το αρχείο δεν είναι έγκυρο JSON");
                 console.error("JSON Error:", err);
             }
         };
