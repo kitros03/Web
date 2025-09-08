@@ -3,8 +3,8 @@ const container = document.getElementById('dashboard-container');
 document.getElementById('viewstatsBtn').onclick = () => {
   window.location.href = 'viewstatsBtn.php';
 };
-document.getElementById('studentassignmentBtn').onclick = () => {
-  window.location.href = 'studentassignmentBtn.php';
+document.getElementById('secretaryInsertDataBtn').onclick = () => {
+  window.location.href = 'secretaryInsertDataBtn.php';
 };
 document.getElementById('managethesesBtn').onclick = () => {
   window.location.href = 'managethesesBtn.php';

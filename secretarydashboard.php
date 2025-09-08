@@ -23,7 +23,7 @@ if (!isset($_SESSION['username'])) {
             <nav>
                 <ul>
                     <li><button class="sidebarButton" id="viewstatsBtn">Προβολή ΔΕ</button></li>
-                    <li><button class="sidebarButton" id="studentassignmentBtn">Εισαγωγή Δεδομένων</button></li>
+                    <li><button class="sidebarButton" id="secretaryInsertDataBtn">Εισαγωγή Δεδομένων</button></li>
                     <li><button class="sidebarButton" id="managethesesBtn">Διαχείριση Διπλωματικής Εργασίας</button></li>
                     <li><button class="sidebarButton" id="logoutBtn">Logout</button></li>
                 </ul>
