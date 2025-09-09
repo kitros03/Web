@@ -40,15 +40,15 @@ if (!empty($th['member2_name']))    $committee[] = $th['member2_name'];
 // Auto-promotion + καθάρισμα pending
 $currStatus = $th['th_status'] ?? 'NOT_ASSIGNED';
 if ($currStatus === 'ASSIGNED' && count($committee) >= 3) {
-  $pdo->prepare("UPDATE thesis SET th_status='EXAM' WHERE thesisID=?")->execute([(int)$th['thesisID']]);
-  $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, CURDATE(), 'EXAM')")
+  $pdo->prepare("UPDATE thesis SET th_status='ACTIVE' WHERE thesisID=?")->execute([(int)$th['thesisID']]);
+  $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, CURDATE(), 'ACTIVE')")
       ->execute([(int)$th['thesisID']]);
   $pdo->prepare("
     DELETE ci FROM committeeInvitations ci
     JOIN student s ON s.studentID = ci.senderID
     WHERE s.thesisID=? AND ci.response IS NULL
   ")->execute([(int)$th['thesisID']]);
-  $currStatus = 'EXAM';
+  $currStatus = 'ACTIVE';
 }
 
 // Ημέρες από ανάθεση

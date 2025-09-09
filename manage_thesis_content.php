@@ -31,9 +31,9 @@ $st2->execute([$thesisID]);
 $thStatus = (string)$st2->fetchColumn();
 
 // ========= View όταν είναι Υπό Εξέταση (EXAM) =========
-if ($thStatus === 'EXAM') {
-  echo '<h3>Διαχείριση Διπλωματικής — Υπό Εξέταση</h3>';
-  echo '<p>Η πτυχιακή είναι σε κατάσταση <strong>Υπό Εξέταση</strong>. Οι προσκλήσεις έχουν ολοκληρωθεί.</p>';
+if ($thStatus === 'ACTIVE') {
+  echo '<h3>Διαχείριση Διπλωματικής — Ενεργή </h3>';
+  echo '<p>Η πτυχιακή είναι σε κατάσταση <strong>Ενεργή</strong>. Οι προσκλήσεις έχουν ολοκληρωθεί. Ανέμενε από καθηγητή να αλλάξει την κατάσταση</p>';
   // Κενό panel, ίδιο layout
   echo '<div class="announcements" style="min-height:220px;"></div>';
   exit;

@@ -62,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($c['member2']))   $total++;
 
     if ($curr === 'ASSIGNED' && $total >= 3) {
-      $pdo->prepare("UPDATE thesis SET th_status='EXAM' WHERE thesisID=?")->execute([$thesisID]);
-      $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, CURDATE(), 'EXAM')")
+      $pdo->prepare("UPDATE thesis SET th_status='ACTIVE' WHERE thesisID=?")->execute([$thesisID]);
+      $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, CURDATE(), 'ACTIVE')")
           ->execute([$thesisID]);
       // Διαγραφή ΟΛΩΝ των pending invitations
       $pdo->prepare("
@@ -86,7 +86,7 @@ $stmt = $pdo->prepare("
  FROM committeeInvitations ci
  JOIN student st ON st.studentID = ci.senderID
  LEFT JOIN thesis th ON th.thesisID = st.thesisID
- WHERE ci.receiverID = ?
+ WHERE ci.receiverID = ? AND ci.response IS NULL
  ORDER BY ci.invitationDate DESC, ci.invitationID DESC
 ");
 $stmt->execute([$teacherID]);
