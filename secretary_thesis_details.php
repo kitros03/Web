@@ -3,12 +3,12 @@ declare(strict_types=1);
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['username']) || ($_SESSION['type'] ?? '') !== 'secretary') {
+if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') {
   http_response_code(403);
   echo json_encode(['error' => 'Forbidden']); exit;
 }
 
-require_once __DIR__ . '/dbconnect.php'; // PDO: $pdo
+require_once __DIR__ . '/dbconnect.php'; // $pdo
 
 $thesisID = isset($_GET['thesisID']) ? (int)$_GET['thesisID'] : 0;
 if ($thesisID <= 0) { http_response_code(400); echo json_encode(['error'=>'Invalid thesisID']); exit; }

@@ -3,12 +3,12 @@ declare(strict_types=1);
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['username']) || ($_SESSION['type'] ?? '') !== 'secretary') {
+if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') {
   http_response_code(403);
   echo json_encode(['error' => 'Forbidden']); exit;
 }
 
-require_once __DIR__ . '/dbconnect.php'; // PDO: $pdo
+require_once __DIR__ . '/dbconnect.php'; // έρχεται το $pdo
 
 $sql = "
 SELECT
@@ -31,13 +31,15 @@ SELECT
 FROM thesis t
 LEFT JOIN teacher te ON te.id = t.supervisor
 LEFT JOIN student s  ON s.thesisID = t.thesisID
-WHERE t.th_status IN ('ACTIVE', 'EXAM')
+WHERE t.th_status IN ('ACTIVE','EXAM')
 ORDER BY t.thesisID DESC
 ";
+
 $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 $out = [];
 $today = new DateTimeImmutable('today');
+
 foreach ($rows as $r) {
   $assigned = $r['assigned_date_assigned'] ?: $r['assigned_date_active'];
   $days = null;
@@ -54,4 +56,5 @@ foreach ($rows as $r) {
     'days_since_assignment' => $days
   ];
 }
+
 echo json_encode($out);
