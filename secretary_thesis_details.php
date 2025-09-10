@@ -3,22 +3,16 @@ declare(strict_types=1);
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'secretary') {
-    http_response_code(403);
-    echo json_encode(['error' => 'Forbidden']);
-    exit;
+if (!isset($_SESSION['username']) || ($_SESSION['type'] ?? '') !== 'secretary') {
+  http_response_code(403);
+  echo json_encode(['error' => 'Forbidden']); exit;
 }
 
 require_once __DIR__ . '/dbconnect.php'; // PDO: $pdo
 
 $thesisID = isset($_GET['thesisID']) ? (int)$_GET['thesisID'] : 0;
-if ($thesisID <= 0) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid thesisID']);
-    exit;
-}
+if ($thesisID <= 0) { http_response_code(400); echo json_encode(['error'=>'Invalid thesisID']); exit; }
 
-// Βασικά στοιχεία + supervisor + student + ημερομηνία επίσημης ανάθεσης
 $sql = "
 SELECT
   t.thesisID,
@@ -46,19 +40,10 @@ LIMIT 1
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$thesisID]);
 $th = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$th) { http_response_code(404); echo json_encode(['error'=>'Not found']); exit; }
 
-if (!$th) {
-    http_response_code(404);
-    echo json_encode(['error' => 'Not found']);
-    exit;
-}
-
-// Τριμελής (committee)
 $sqlC = "
 SELECT
-  c.supervisor,
-  c.member1,
-  c.member2,
   CONCAT(t1.t_fname, ' ', t1.t_lname) AS supervisor_name,
   CONCAT(t2.t_fname, ' ', t2.t_lname) AS member1_name,
   CONCAT(t3.t_fname, ' ', t3.t_lname) AS member2_name
@@ -73,19 +58,18 @@ $stmtC->execute([$thesisID]);
 $comm = $stmtC->fetch(PDO::FETCH_ASSOC);
 $committee = [];
 if ($comm) {
-    if (!empty($comm['supervisor_name'])) $committee[] = 'Επιβλέπων: ' . $comm['supervisor_name'];
-    if (!empty($comm['member1_name']))   $committee[] = 'Μέλος: ' . $comm['member1_name'];
-    if (!empty($comm['member2_name']))   $committee[] = 'Μέλος: ' . $comm['member2_name'];
+  if (!empty($comm['supervisor_name'])) $committee[] = 'Επιβλέπων: ' . $comm['supervisor_name'];
+  if (!empty($comm['member1_name']))   $committee[] = 'Μέλος: ' . $comm['member1_name'];
+  if (!empty($comm['member2_name']))   $committee[] = 'Μέλος: ' . $comm['member2_name'];
 }
 
 $assigned = $th['assigned_date_assigned'] ?: $th['assigned_date_active'];
 $days = null;
 if ($assigned) {
-    try {
-        $today = new DateTimeImmutable('today');
-        $ad = new DateTimeImmutable($assigned);
-        $days = (int)$today->diff($ad)->format('%a');
-    } catch (Throwable $e) { $days = null; }
+  try {
+    $today = new DateTimeImmutable('today');
+    $days = (int)$today->diff(new DateTimeImmutable($assigned))->format('%a');
+  } catch (Throwable $e) {}
 }
 
 echo json_encode([

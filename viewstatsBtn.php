@@ -1,8 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'secretary') {
-    header('Location: index.html');
-    exit;
+if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') {
+  header('Location: index.html'); exit;
 }
 ?>
 <!DOCTYPE html>
@@ -40,12 +39,11 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['rol
 
       <section>
         <div class="form-group">
-          <input type="text" id="searchBox" placeholder="Αναζήτηση τίτλου ή ονόματος φοιτητή/επιβλέποντα..." />
+          <input type="text" id="searchBox" placeholder="Αναζήτηση τίτλου, επιβλέποντα ή φοιτητή..." />
         </div>
 
         <div id="thesesList"></div>
-
-        <div id="thesisDetails" style="margin-top: 20px;"></div>
+        <div id="thesisDetails" style="margin-top:20px;"></div>
       </section>
     </main>
   </div>
