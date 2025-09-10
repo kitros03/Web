@@ -34,7 +34,8 @@ assigned boolean default 0,
 finalized boolean default 0, 
 th_status enum ('NOT_ASSIGNED','ASSIGNED','ACTIVE','EXAM','DONE','CANCELLED'),
 foreign key (supervisor)
-references teacher (id) on delete cascade
+references teacher (id) on delete cascade,
+gs_numb int(10)
 );
 
 create table if not exists student
