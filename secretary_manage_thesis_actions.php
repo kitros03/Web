@@ -18,7 +18,7 @@ try {
   $thesisID = (int)($data['thesisID'] ?? 0);
   if ($thesisID <= 0) throw new Exception('Άκυρο thesisID.');
 
-  // φέρε τρέχουσα κατάσταση
+  // τρέχουσα κατάσταση
   $st = $pdo->prepare("SELECT th_status FROM thesis WHERE thesisID=? LIMIT 1");
   $st->execute([$thesisID]);
   $row = $st->fetch(PDO::FETCH_ASSOC);
@@ -26,10 +26,11 @@ try {
   if ($row['th_status'] !== 'ACTIVE') throw new Exception('Η ενέργεια επιτρέπεται μόνο για Ενεργές διπλωματικές.');
 
   if ($action === 'startExam') {
+    // ➜ ΤΩΡΑ: ΜΟΝΟ καταχώριση GS Number, ΔΕΝ αλλάζουμε status
     $gs = trim((string)($data['gs_numb'] ?? ''));
     if ($gs === '') throw new Exception('Συμπλήρωσε GS Number.');
 
-    // ελέγχουμε ότι υπάρχει η στήλη gs_numb
+    // υπάρχει η στήλη gs_numb;
     $q = $pdo->prepare("
       SELECT COUNT(*) FROM information_schema.columns
       WHERE table_schema = DATABASE() AND table_name = 'thesis' AND column_name = 'gs_numb'
@@ -40,15 +41,10 @@ try {
       throw new Exception("Δεν υπάρχει στήλη 'gs_numb' στον πίνακα thesis. Τρέξε: ALTER TABLE thesis ADD COLUMN gs_numb VARCHAR(50) NULL;");
     }
 
-    $pdo->beginTransaction();
-    $u = $pdo->prepare("UPDATE thesis SET gs_numb=?, th_status='EXAM' WHERE thesisID=?");
+    $u = $pdo->prepare("UPDATE thesis SET gs_numb=? WHERE thesisID=?");
     $u->execute([$gs, $thesisID]);
 
-    $i = $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, CURDATE(), 'EXAM')");
-    $i->execute([$thesisID]);
-
-    $pdo->commit();
-    echo json_encode(['success'=>true,'message'=>'Η διπλωματική μπήκε σε εξέταση.']);
+    echo json_encode(['success'=>true, 'message'=>'Καταχωρήθηκε το GS Number. Η κατάσταση παραμένει ACTIVE.']);
     exit;
   }
 
