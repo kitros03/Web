@@ -1,54 +1,61 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const backBtn = document.getElementById('backBtn');
-    if (backBtn) {
-        backBtn.addEventListener('click', () => {
-        window.location.href = 'teacherdashboard.php';
-        });
-    }
 
-    const notesBtn = document.getElementById('addNotesBtn');
-    const popupWindow1 = document.getElementById('popupWindow1');
-    const closePopupBtn1 = document.getElementById('closePopupBtn1');
+  // BACK BUTTON
+  const backBtn = document.getElementById('backBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'teacherdashboard.php';
+    });
+  }
 
-    const viewBtn = document.getElementById('viewNotesBtn');
-    const popupWindow2 = document.getElementById('popupWindow2');
-    const closePopupBtn2 = document.getElementById('closePopupBtn2');
+  // POPUP WINDOWS (Add Notes)
+  const notesBtn = document.getElementById('addNotesBtn');
+  const popupWindow1 = document.getElementById('popupWindow1');
+  const closePopupBtn1 = document.getElementById('closePopupBtn1');
 
+  if (notesBtn && popupWindow1 && closePopupBtn1) {
+    notesBtn.addEventListener('click', () => {
+      popupWindow1.style.display = 'flex';
+    });
 
-    if (notesBtn && popupWindow1 && closePopupBtn1) {
-        popupBtn.addEventListener('click', () => {
-        popupWindow.style.display = 'flex';
-        });
-        closePopupBtn.addEventListener('click', () => {
-        popupWindow.style.display = 'none';
-        });
-        popupWindow.addEventListener('click', (e) => {
-        if (e.target === popupWindow) {
-            popupWindow.style.display = 'none';
-        }
-        });
-    }
+    closePopupBtn1.addEventListener('click', () => {
+      popupWindow1.style.display = 'none';
+    });
 
-    if (viewBtn && popupWindow2 && closePopupBtn2) {
-        popupBtn.addEventListener('click', () => {
-        popupWindow.style.display = 'flex';
-        });
-        closePopupBtn.addEventListener('click', () => {
-        popupWindow.style.display = 'none';
-        });
-        popupWindow.addEventListener('click', (e) => {
-        if (e.target === popupWindow) {
-            popupWindow.style.display = 'none';
-        }
-        });
-    }
+    popupWindow1.addEventListener('click', (e) => {
+      if (e.target === popupWindow1) {
+        popupWindow1.style.display = 'none';
+      }
+    });
+  }
 
-  //need to handle the form submission for unassigning thesis
-    const form = document.getElementById('unassignForm');
+  // POPUP WINDOWS (View Notes)
+  const viewBtn = document.getElementById('viewNotesBtn');
+  const popupWindow2 = document.getElementById('popupWindow2');
+  const closePopupBtn2 = document.getElementById('closePopupBtn2');
+
+  if (viewBtn && popupWindow2 && closePopupBtn2) {
+    viewBtn.addEventListener('click', () => {
+      popupWindow2.style.display = 'flex';
+    });
+
+    closePopupBtn2.addEventListener('click', () => {
+      popupWindow2.style.display = 'none';
+    });
+
+    popupWindow2.addEventListener('click', (e) => {
+      if (e.target === popupWindow2) {
+        popupWindow2.style.display = 'none';
+      }
+    });
+  }
+
+  // UNASSIGN FORM
+  const form = document.getElementById('unassignForm');
+  if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      const thesisID = form.getAttribute('data-thesis-id') || form.querySelector('[name="thesisID"]')?.value;
+      const thesisID = form.querySelector('[name="thesisID"]')?.value || form.getAttribute('data-thesis-id');
       if (!thesisID) {
         alert('Missing thesisID for this form.');
         return;
@@ -64,25 +71,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const response = await fetch('activethesis.php', {
           method: 'POST',
           credentials: 'same-origin',
-          body: formData
+          body: formData,
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const result = await response.text();
 
-        alert('Assignment removed successfully.');
-        window.location.href = `viewtheses.php`;
+        const result = await response.text();
+        alert(result); // Show backend message
+
+        if (result.includes('success')) {
+          window.location.href = `viewtheses.php`;
+        }
       } catch (error) {
         alert('Error: Could not remove assignment.');
         console.error('Removal error:', error);
       }
     });
+  }
 
-    // also need to handle the form for starting exam
-    const startExamForm = document.getElementById('startExamForm');
+  // START EXAM FORM
+  const startExamForm = document.getElementById('startExamForm');
+  if (startExamForm) {
     startExamForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      const thesisID = startExamForm.getAttribute('data-thesis-id') || startExamForm.querySelector('[name="thesisID"]')?.value;
+      const thesisID = startExamForm.querySelector('[name="thesisID"]')?.value || startExamForm.getAttribute('data-thesis-id');
       if (!thesisID) {
         alert('Missing thesisID for this form.');
         return;
@@ -91,23 +101,27 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!confirm('Are you sure you want to start the exam?')) return;
 
       const formData = new FormData(startExamForm);
-      formData.set('startExam', '1');
+      formData.set('start_examination', '1'); // match PHP POST key
       formData.set('thesisID', thesisID);
 
       try {
         const response = await fetch('activethesis.php', {
           method: 'POST',
           credentials: 'same-origin',
-          body: formData
+          body: formData,
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const result = await response.text();
 
-        alert('Exam started successfully.');
-        window.location.href = `examthesis.php?thesisID=${encodeURIComponent(thesisID)}`;
+        const result = await response.text();
+        alert(result); // Always show the backend message
+
+        if (result.includes('success')) {
+          alert('Exam started successfully. Redirecting to exam page.');
+          window.location.href = `examthesis.php?thesisID=${encodeURIComponent(thesisID)}`;
+        }
       } catch (error) {
         alert('Error: Could not start exam.');
         console.error('Start exam error:', error);
       }
     });
+  }
 });

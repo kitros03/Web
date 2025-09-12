@@ -3,6 +3,11 @@ session_start();
 require_once "dbconnect.php";
 header("Content-Type: application/json");
 
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
+    header('Location: index.html');
+    exit;
+}
+
 if (!isset($_POST['id']) || empty($_POST['id'])) {
     echo json_encode(['success' => false, 'message' => 'No thesis ID specified.']);
     exit;

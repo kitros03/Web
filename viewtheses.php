@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'dbconnect.php'; 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: index.html');
     exit;
 }

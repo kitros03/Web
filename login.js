@@ -21,7 +21,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     if (result.success) {
         window.location.href = result.dashboard;
     } else {
-        document.getElementById('loginError').textContent = result.message;
+       resultDiv.innerHTML = `<p style="color: red">${result.message}</p>`;
+        
     }
 });
 

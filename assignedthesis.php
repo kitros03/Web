@@ -1,7 +1,10 @@
 <?php 
 session_start();
 require_once 'dbconnect.php';
-
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
+    header('Location: index.html');
+    exit;
+}
 // Get current teacher id
 $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
