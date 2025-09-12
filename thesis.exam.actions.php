@@ -5,16 +5,20 @@ header('Content-Type: application/json; charset=utf-8');
 
 function fail($msg, $code=400){ http_response_code($code); echo json_encode(['success'=>false,'message'=>$msg]); exit; }
 
+// 1) Αυθεντικοποίηση
 if (empty($_SESSION['username'])) fail('Unauthorized', 401);
 
-$role = $_SESSION['role'] ?? '';
+$role     = $_SESSION['role'] ?? '';
 $username = $_SESSION['username'];
 
+// Γραμματεία δεν έχει πρόσβαση στις ενέργειες
 if ($role === 'secretary') fail('Μη εξουσιοδοτημένη πρόσβαση (Γραμματεία)', 403);
 
+// 2) thesisID από το POST
 $reqThesisID = (int)($_POST['thesisID'] ?? 0);
 if ($reqThesisID <= 0) fail('Λείπει thesisID');
 
+// 3) Πληροφορίες πτυχιακής + χρήστη
 $q = $pdo->prepare("
   SELECT t.thesisID, t.th_status, t.supervisor,
          s.studentID, s.username AS student_username
@@ -26,9 +30,10 @@ $q->execute([$reqThesisID]);
 $T = $q->fetch(PDO::FETCH_ASSOC);
 if (!$T) fail('Δεν βρέθηκε η πτυχιακή');
 
+// Πρέπει να είναι σε EXAM
 if (($T['th_status'] ?? '') !== 'EXAM') fail('Η πτυχιακή δεν είναι σε κατάσταση Υπό Εξέταση');
 
-// Έλεγχος πρόσβασης: φοιτητής ή επιβλέπων ή αποδεκτό μέλος επιτροπής
+// 4) Έλεγχος πρόσβασης: φοιτητής της πτυχιακής ή επιβλέπων ή αποδεκτό μέλος επιτροπής
 $canAccess = false;
 
 // α) Φοιτητής
@@ -57,7 +62,7 @@ if (!$canAccess && $role === 'teacher') {
 }
 if (!$canAccess) fail('Δεν έχεις δικαίωμα πρόσβασης σε αυτή την πτυχιακή', 403);
 
-// Βεβαιώσου ότι υπάρχει εγγραφή thesis_exam_meta
+// 5) Εξασφάλισε ότι υπάρχει γραμμή στο thesis_exam_meta (transaction)
 $pdo->beginTransaction();
 try {
   $chk = $pdo->prepare("SELECT thesisID FROM thesis_exam_meta WHERE thesisID=?");
@@ -75,11 +80,20 @@ try {
 $action = $_POST['action'] ?? '';
 
 try {
+  // 6) Αποθήκευση Draft + Links
   if ($action === 'save_draft') {
+    // Idempotent διασφάλιση ύπαρξης γραμμής (σε περίπτωση που παρακαμφθεί το παραπάνω)
+    $pdo->prepare("
+      INSERT IGNORE INTO thesis_exam_meta (thesisID, created_at, updated_at)
+      VALUES (?, NOW(), NOW())
+    ")->execute([$reqThesisID]);
+
+    // Links -> JSON string (δουλεύει και αν η στήλη είναι TEXT)
     $linksRaw  = (string)($_POST['external_links'] ?? '');
     $linksArr  = array_filter(array_map('trim', preg_split('/\R+/', $linksRaw)));
     $linksJson = json_encode(array_values($linksArr), JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 
+    // Προαιρετικό upload
     $draftPath = null;
     if (!empty($_FILES['draft_file']) && $_FILES['draft_file']['error'] === UPLOAD_ERR_OK && (int)$_FILES['draft_file']['size'] > 0) {
       $uploadDir = __DIR__.'/uploads/exam_drafts/';
@@ -91,9 +105,8 @@ try {
       $name = uniqid('draft_', true).'_'.$safe;
       $full = $uploadDir.$name;
 
-      if (!@move_uploaded_file($_FILES['draft_file']['tmp_name'], $full)) {
-        fail('Αποτυχία μεταφοράς αρχείου', 500);
-      }
+      if (!@move_uploaded_file($_FILES['draft_file']['tmp_name'], $full)) fail('Αποτυχία μεταφοράς αρχείου', 500);
+
       $draftPath = 'uploads/exam_drafts/'.$name;
     }
 
@@ -108,6 +121,7 @@ try {
     echo json_encode(['success'=>true,'message'=>'Αποθηκεύτηκαν τα στοιχεία draft','reload'=> (bool)$draftPath]); exit;
   }
 
+  // 7) Αποθήκευση Δήλωσης Εξέτασης
   if ($action === 'save_schedule') {
     $dt   = trim((string)($_POST['exam_datetime'] ?? ''));
     $room = trim((string)($_POST['exam_room'] ?? ''));
@@ -128,14 +142,12 @@ try {
     echo json_encode(['success'=>true,'message'=>'Αποθηκεύτηκε η δήλωση εξέτασης']); exit;
   }
 
+  // 8) Αποθήκευση “Μετά τη βαθμολόγηση” (κλειδωμένο έως grading=1)
   if ($action === 'save_after') {
-    // Ξεκλείδωμα όταν thesis.grading = 1 (Εναλλακτική: COUNT(*) από grades)
     $qg = $pdo->prepare("SELECT grading FROM thesis WHERE thesisID=?");
     $qg->execute([$reqThesisID]);
     $gradingFlag = (int)$qg->fetchColumn();
-    if ($gradingFlag !== 1) {
-      fail('Το βήμα αυτό ενεργοποιείται αφού ο επιβλέπων οριστικοποιήσει τη βαθμολόγηση', 403);
-    }
+    if ($gradingFlag !== 1) fail('Το βήμα αυτό ενεργοποιείται αφού ο επιβλέπων οριστικοποιήσει τη βαθμολόγηση', 403);
 
     $report = trim((string)($_POST['report_url'] ?? ''));
     $repo   = trim((string)($_POST['repository_url'] ?? ''));
@@ -151,7 +163,9 @@ try {
   }
 
   fail('Άγνωστη ενέργεια', 400);
+
 } catch (Throwable $e) {
   http_response_code(500);
+  // Αν θέλεις προσωρινά για debug: echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
   echo json_encode(['success'=>false,'message'=>'Σφάλμα διακομιστή']);
 }
