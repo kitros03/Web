@@ -1,6 +1,10 @@
 <?php
 session_start();
 require_once "dbconnect.php"; // Ensure this contains $pdo
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
+    header('Location: index.html');
+    exit;
+}
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     header("Content-Type: application/json");

@@ -2,12 +2,16 @@
 session_start();
 require 'dbconnect.php';
 
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
+    header('Location: index.html');
+    exit;
+}
+
 $id = null;
 $theses = [];
 $students = [];
 $assignedTheses = [];
 
-if (isset($_SESSION['username'])) {
     $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
     $stmt->execute([$_SESSION['username']]);
     $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -35,7 +39,6 @@ if (isset($_SESSION['username'])) {
     ");
     $stmt->execute([$id]);
     $assignedTheses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
 
 // Handle form submissions (assignment and removal)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

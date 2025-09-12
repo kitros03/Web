@@ -1,7 +1,7 @@
 <?php 
 session_start();
 require_once 'dbconnect.php';
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: index.html');
     exit;
 }
@@ -11,8 +11,8 @@ $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
 
-//get thesis id from url
-$thesisID = isset($_GET['thesisID']) ? $_GET['thesisID'] : null;
+// get thesis ID from GET or POST (POST for AJAX form submissions)
+$thesisID = $_GET['thesisID'] ?? $_POST['thesisID'] ?? null;
 if (!$thesisID) {
     http_response_code(400);
     echo "Thesis ID is required";
@@ -41,9 +41,9 @@ $stmt->execute([$committeeID['member2']]);
 $member2 = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // get all notes for this teacher and thesis
-$stmt = $pdo->prepare("SELECT * FROM notes WHERE thesisID = ? AND teacherID = ?");
+$stmt = $pdo->prepare("SELECT * FROM teachernotes WHERE thesisID = ? AND teacherID = ?");
 $stmt->execute([$thesisID, $teacher['id']]);
-$notes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$teachernotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // need to get the date of the active thesis status, thesis is currenty active so last changeTo should be 'ACTIVE'
 $stmt = $pdo->prepare("SELECT changeDate FROM thesisStatusChanges WHERE thesisID = ? ORDER BY changeDate DESC LIMIT 1");
@@ -51,7 +51,7 @@ $stmt->execute([$thesisID]);
 $changeDate = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // now i need to add 2 years to the changeDate and compare it with the current date
-$activeDate = new DateTime($changeDate[0]['changeDate']);
+$activeDate = new DateTime($changeDate['changeDate']);
 $activeDate->modify('+2 years');
 $currentDate = new DateTime();
 
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $stmt = $pdo->prepare("INSERT INTO notes (thesisID, teacherID, description) VALUES (?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO teachernotes (thesisID, teacherID, description) VALUES (?, ?, ?)");
         if ($stmt->execute([$thesisID, $teacher['id'], $description])) {
             echo json_encode(['success' => true, 'message' => 'Note added successfully.']);
             exit;
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </header>
 <main class="dashboard-main">
     <h2>My Notes</h2>
-    <button class="add-note-btn" id="addNotesBtn">Add Note</button>
+    <button class="submit-btn" id="addNotesBtn">Add Note</button>
     <div id="popupWindow1" class="popup-window" style="display:none;">
         <div class="popup-content">
             <h3>Add Note</h3>
@@ -118,14 +118,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
             <button id="closePopupBtn1" class="close-popup-btn" aria-label="Close">&times;</button>
         </div>
-    </div>    
-    <button class="view-notes-btn" id="viewNotesBtn">View Notes</button>
+    </div>   
+    <button class="submit-btn" id="viewNotesBtn">View Notes</button>
     <div id="popupWindow2" class="popup-window" style="display:none;">
         <div class="popup-content">
-            <?php if (isset($notes)): ?>
+            <?php if (isset($teachernotes)): ?>
                 <h3>Notes</h3>
                 <ul class="notes-list">
-                <?php foreach ($notes as $note): ?>
+                <?php foreach ($teachernotes as $note): ?>
                     <li>
                         <strong><?= htmlspecialchars($note['description']) ?></strong>
                     </li>
@@ -149,15 +149,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p> The thesis has been active for less than 2 years, you cannot unassign it yet.</p>
         <?php endif; ?>
         <h2> Start examination</h2>
-        <form id="startExamForm" method="post">
-            <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
-            <button type="submit" class="start-examination-btn">Start Examination</button>
-        </form>
+        <?php if($thesis['gs_numb']): ?>
+            <form id="startExamForm" method="post" data-thesis-id="<?= htmlspecialchars($thesisID) ?>">
+                <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
+                <button type="submit" class="submit-btn">Start Examination</button>
+            </form>
+        <?php else: ?>
+            <p> You cannot start the examination until the secretary has provided the number of the GS.</p>
+        <?php endif; ?>
     <?php else: ?>
         <p>You are not authorized for further actions.</p>
     <?php endif; ?>
     <script src="activethesis.js"></script>
-    <footer>
+    </main> 
+<footer>
         <p class="footer">© 2025 Thesis Management System</p>
-    </footer>
-</main>
+</footer>
+</body>
+</html>

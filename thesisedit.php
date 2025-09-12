@@ -2,6 +2,11 @@
 session_start();
 require_once "dbconnect.php";
 
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
+    header('Location: index.html');
+    exit;
+}
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     echo json_encode(['success' => false, 'message' => 'Thesis ID is required.']);
     exit;

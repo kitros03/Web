@@ -30,6 +30,14 @@ else if (!password_verify($password, $user['pass'])) {
 } else {
     $_SESSION['username'] = $user['username'];
     $_SESSION['role'] = $role;
+    // need to check role and respective table to see if user exists in that table
+    $stmt = $pdo->prepare("SELECT * FROM $role WHERE username = ?");
+    $stmt->execute([$username]);
+    $roleUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$roleUser) {
+        echo json_encode(['success' => false, 'message' => 'User role mismatch.']);
+        exit;
+    }
     if ($role === 'teacher') {
         echo json_encode(['success' => true, 'dashboard' => 'teacherdashboard.php']);
     } elseif ($role === 'student') {

@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'dbconnect.php'; 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: index.html');
     exit;
 }
@@ -31,6 +31,13 @@ function getTeacherName(PDO $pdo, $id) {
     if (!$row) return null;
     return trim(($row['t_fname'] ?? '') . ' ' . ($row['t_lname'] ?? ''));
 }
+
+//get the committees
+$stmt = $pdo->prepare("SELECT * FROM committee");
+$stmt->execute();
+$committees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$memberNames = [];
 
 ?>
 <!DOCTYPE html>
@@ -93,17 +100,28 @@ function getTeacherName(PDO $pdo, $id) {
             <td><?= htmlspecialchars($role) ?></td>
             <td><?= htmlspecialchars($thesis['th_status']) ?></td>
             <td><?= htmlspecialchars($supervisorName ?? '') ?></td>
-            <?php if(isset($memberNames)): foreach($memberNames as $member):?>
-                <td><?= htmlspecialchars($member['t_fname']) ?> <?= htmlspecialchars($member['t_lname'])?></td>
-            <?php endforeach; else: ?>
+            <?php foreach($committees as $committee):if($committee['thesisID'] === $thesis['thesisID']):
+                $member1 = getTeacherName($pdo, $committee['member1']);
+                $member2 = getTeacherName($pdo, $committee['member2']);
+                endif; endforeach;?>
+            <?php if($member1 && $member2):?>
+                <td><?= htmlspecialchars($member1)?></td>
+                <td><?= htmlspecialchars($member2)?></td>
+            <?php elseif($member1 && !$member2):?>
+                <td><?= htmlspecialchars($member1)?></td>
+                <td>There is no second member in committee.</td>
+            <?php elseif(!$member1 && $member2):?>
+                <td>There is no first member in committee.</td>
+                <td><?= htmlspecialchars($member2)?></td>
+            <?php  else: ?>
                 <td>There are no members in committee.</td>
-                <td></td>
+                <td>-</td>
             <?php endif; ?>
             <td><?= htmlspecialchars($grade) ?></td>
             <td>
-                <button id="popupBtn" class="popup-btn">View Changes</button>
-                <div id="popupWindow" class="popup-window" style="display:none;">
-                    <div class="popup-content">
+                <button class="popupBtn">View Changes</button>
+                <div class="popupWindow popup-window" style="display:none;">
+                  <div class="popup-content">
                     <?php if (isset($changes)): ?>
                         <h3>Changes Timeline</h3>
                         <ul class="changes-list">
@@ -116,7 +134,7 @@ function getTeacherName(PDO $pdo, $id) {
                     <?php else: ?>
                         <p>No changes recorded for this thesis.</p>
                     <?php endif; ?>
-                    <button id="closePopupBtn" class="close-popup-btn" aria-label="Close">&times;</button>
+                    <button id="closePopupBtn" class="closePopupBtn close-popup-btn" aria-label="Close">&times;</button>
                     </div>
                 </div>
             </td>
