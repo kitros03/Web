@@ -289,7 +289,7 @@ main {
 }
 
 /* Popup button */
-.popup-btn {
+.popup-btn, .popupBtn {
   background: #a6bffc;
   color: #222;
   border: none;
@@ -302,14 +302,17 @@ main {
   transition: background 0.18s, color 0.18s, box-shadow 0.18s;
 }
 .popup-btn:hover,
-.popup-btn:focus {
+.popup-btn:focus,
+.popupBtn:hover,
+.popupBtn:focus {
   background: #7191d2;
   color: #fff;
   box-shadow: 0 4px 14px rgba(192,181,36,0.09);
 }
 
 /* Popup window (overlay) */
-.popup-window {
+.popup-window,
+.popupWindow {
   display: none;            /* JS will set to flex when opened */
   position: fixed;
   z-index: 1000;
@@ -333,7 +336,8 @@ main {
 }
 
 /* Close button */
-.close-popup-btn {
+.close-popup-btn,
+.closePopupBtn {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -347,7 +351,9 @@ main {
   transition: color 0.2s;
 }
 .close-popup-btn:hover,
-.close-popup-btn:focus {
+.close-popup-btn:focus,
+.closePopupBtn:hover,
+.closePopupBtn:focus {
   color: #222;
 }
 

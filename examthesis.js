@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const gradebtn = document.getElementById('gradebtn');
   const popup3 = document.getElementById('popup3');
-  const closePopupBtn3 = document.getElementById('closePopupBtn2');
+  const closePopupBtn3 = document.getElementById('closePopupBtn3');
 
   if (gradebtn && popup3 && closePopupBtn3) {
     gradebtn.addEventListener('click', () => {
