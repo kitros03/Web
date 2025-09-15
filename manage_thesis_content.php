@@ -28,13 +28,6 @@ $thStatus     = (string)$me['th_status'];
 
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
-/*
-  STATUS MAP
-  - ASSIGNED  -> Dashboard Προσκλήσεων
-  - ACTIVE    -> Dashboard Ενεργή
-  - EXAM      -> Dashboard Υπό Εξέταση (3 bullets)
-*/
-
 if ($thStatus === 'ASSIGNED') {
   echo '<h3>Διαχείριση Διπλωματικής — Υπό Ανάθεση</h3>';
   echo '<p>Αποστολή προσκλήσεων προς μέλη τριμελούς. Μετά από 2 αποδοχές (μαζί με τον επιβλέποντα =&gt; 3 συνολικά), η κατάσταση θα γίνει <strong>Ενεργή</strong>.</p>';
@@ -92,7 +85,6 @@ if ($thStatus === 'ASSIGNED') {
       </table>
     <?php endif; ?>
   </div>
-
   <?php
   exit;
 }
@@ -111,7 +103,10 @@ if ($thStatus === 'EXAM') {
   $m->execute([$thesisID]);
   $meta = $m->fetch(PDO::FETCH_ASSOC) ?: [];
 
-  // Ξεκλείδωμα 3ου βήματος όταν thesis.grading = 1 (εναλλακτικά, COUNT(*) από grades)
+  // Έλεγχος αν υπάρχει αρχείο (τώρα είναι file path, όχι BLOB)
+  $hasFile = !empty($meta['draft_file']) && file_exists(__DIR__ . '/' . $meta['draft_file']);
+
+  // Ξεκλείδωμα 3ου βήματος όταν thesis.grading = 1
   $gt = $pdo->prepare("SELECT grading FROM thesis WHERE thesisID=?");
   $gt->execute([$thesisID]);
   $gradingFlag = (int)$gt->fetchColumn();
@@ -144,8 +139,17 @@ https://youtube.com/..."><?php
           echo h(isset($meta['external_links']) ? implode("\n", json_decode($meta['external_links'], true) ?: []) : '');
         ?></textarea>
         <button class="submit-btn mt-12" type="submit">Αποθήκευση</button>
-        <?php if (!empty($meta['draft_file'])): ?>
-          <p class="small mt-8">Τρέχον αρχείο: <a class="mono" target="_blank" href="<?php echo h($meta['draft_file']); ?>">Άνοιγμα</a></p>
+        <?php if ($hasFile): ?>
+          <p class="small mt-8">Αρχείο: <a class="mono" target="_blank" href="<?php echo h($meta['draft_file']); ?>"><?php 
+            echo h(basename($meta['draft_file'])); 
+          ?></a> 
+          <?php 
+          $filePath = __DIR__ . '/' . $meta['draft_file'];
+          if (file_exists($filePath)) {
+            echo '(' . round(filesize($filePath) / 1024, 1) . ' KB)';
+          }
+          ?>
+          </p>
         <?php endif; ?>
       </form>
     </section>
@@ -156,7 +160,12 @@ https://youtube.com/..."><?php
         <input type="hidden" name="action" value="save_schedule">
         <input type="hidden" name="thesisID" value="<?php echo $thesisID; ?>">
         <label>Ημερομηνία & Ώρα:</label>
-        <input class="w-100" type="datetime-local" name="exam_datetime" value="<?php echo h($meta['exam_datetime'] ?? ''); ?>">
+        <input class="w-100" type="datetime-local" name="exam_datetime" value="<?php 
+          $dt = $meta['exam_datetime'] ?? '';
+          if ($dt && $dt !== '0000-00-00 00:00:00') {
+            echo h(date('Y-m-d\TH:i', strtotime($dt)));
+          }
+        ?>">
         <label class="mt-8">Αίθουσα (προαιρετικό):</label>
         <input class="w-100" type="text" name="exam_room" value="<?php echo h($meta['exam_room'] ?? ''); ?>">
         <label class="mt-8">Σύνδεσμος σύσκεψης (προαιρετικό):</label>
@@ -189,32 +198,6 @@ https://youtube.com/..."><?php
       </ul>
     </section>
   </div>
-
-  <script>
-  async function postForm(url, form) {
-    const r = await fetch(url, { method:'POST', body: form, credentials:'same-origin' });
-    return r.json();
-  }
-  document.getElementById('examDraftForm')?.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const res = await postForm('thesis_exam_actions.php', fd);
-    alert(res.message || (res.success ? 'Αποθηκεύτηκε' : 'Σφάλμα'));
-    if (res.success && res.reload) location.reload();
-  });
-  document.getElementById('examScheduleForm')?.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const res = await postForm('thesis_exam_actions.php', fd);
-    alert(res.message || (res.success ? 'Αποθηκεύτηκε' : 'Σφάλμα'));
-  });
-  document.getElementById('examAfterForm')?.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const res = await postForm('thesis_exam_actions.php', fd);
-    alert(res.message || (res.success ? 'Αποθηκεύτηκε' : 'Σφάλμα'));
-  });
-  </script>
   <?php
   exit;
 }
@@ -223,3 +206,4 @@ https://youtube.com/..."><?php
 echo '<h3>Διαχείριση Διπλωματικής — Ενεργή</h3>';
 echo '<p>Δεν απαιτούνται ενέργειες αυτή τη στιγμή.</p>';
 echo '<div class="announcements" style="min-height:220px;"></div>';
+?>
