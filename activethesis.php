@@ -84,6 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         echo json_encode(['success' => true, 'message' => 'Examination started successfully.']);
+        $stmt = $pdo->prepare("INSERT INTO thesis_exam_meta (thesisID) VALUES (?)");
+        $stmt->execute([$thesisID]);
         exit;
     }
 }
