@@ -98,6 +98,15 @@ main {
     justify-content: center;
 }
 
+.dashboard-centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80%;
+    background: #d1d1d1;
+    font-family: 'Open Sans', sans-serif;
+}
+
 .centered-body {
     background: #d1d1d1;
     padding: 2rem 3rem;
