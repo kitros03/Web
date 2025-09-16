@@ -7,11 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    document.getElementById('textbtn').addEventListener('click', function() {
-        let thesisID = "<?= htmlspecialchars($thesisID) ?>";
-    window.open('showDraft.php?thesisID=' + encodeURIComponent(thesisID), '_blank');
-    });
-
     // POPUPS
     const togglePopup = (btnId, popupId, closeBtnId) => {
         const btn = document.getElementById(btnId);
@@ -81,4 +76,3 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-

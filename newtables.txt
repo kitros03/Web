@@ -92,15 +92,6 @@ references teacher (id)
 );
 
 
-create table if not exists announcements
-(
-announcementID int(10) primary key auto_increment,
-announcementTitle varchar(50),
-announcementDate date,
-announcementDesc varchar(500)
-);
-
-
  create table if not exists committeeInvitations
  (
  invitationID int primary key auto_increment,
@@ -176,5 +167,6 @@ CREATE TABLE IF NOT EXISTS thesis_exam_meta (
   repository_url VARCHAR(255) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_tem_thesis FOREIGN KEY (thesisID) REFERENCES thesis(thesisID) ON DELETE CASCADE
+  CONSTRAINT fk_tem_thesis FOREIGN KEY (thesisID) REFERENCES thesis(thesisID) ON DELETE CASCADE,
+  announce boolean default 0
 );

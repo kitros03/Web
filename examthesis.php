@@ -107,14 +107,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 </header>
 <main class="dashboard-centered">
     <div class="centered-body">
-        <button class="submit-btn" id="textbtn">Προβολή Κειμένου</button>
-    </div>
+        <a href="<?php echo htmlspecialchars($thesis_meta['draft_file']); ?>"  class="submit-btn">Προβολή Προχείρου</a></div>
     <div class="centered-body">
         <button class="submit-btn" id="presentationbtn">Παρουσίαση</button>
         <div id="popup2" class="popup-window">
             <div class="popup-content">
                 <button id="closePopupBtn2" class="close-popup-btn" aria-label="Close">&times;</button>
-                <!-- Εδώ η παρουσίαση -->
+                <?php if ($thesis_meta['announce']): ?>
+                    <h3>Ανακοίνωση Παρουσίασης</h3>    
+                    <p><strong>Ημερομηνία & Ώρα:</strong> <?= htmlspecialchars(date('d/m/Y H:i', strtotime($thesis_meta['exam_datetime']))) ?></p>
+                    <?php if ($thesis_meta['exam_meeting_url']): ?>
+                        <p><strong>Σύνδεσμος Συνάντησης:</strong> <a href="<?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?>" target="_blank"><?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?></a></p>
+                    <?php elseif ($thesis_meta['exam_room']): ?>
+                        <p><strong>Αίθουσα:</strong> <?= htmlspecialchars($thesis_meta['exam_room']) ?></p>
+                <?php endif; ?> 
+                <?php endif; ?>
+                <?php if ($thesis_meta['exam_datetime'] && ($thesis_meta['exam_meeting_url'] || $thesis_meta['exam_room'])): ?>
+                    <button id="announceBtn" class="submit-btn">Ανακοίνωση Παρουσίασης</button>
+                <?php else: ?>
+                    <h3>Δεν έχουν οριστεί ακόμα λεπτομέρειες παρουσίασης.</h3>
+                <?php endif; ?>      
             </div>
         </div>
     </div>
