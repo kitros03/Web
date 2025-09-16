@@ -158,6 +158,7 @@ time_grade int(10),
 rest_quality_grade int(10),
 presentation_grade int(10),
 calc_grade int(10),
+grade int(10),
 foreign key (thesisID)
 references thesis (thesisID),
 foreign key (teacherID)
