@@ -153,12 +153,12 @@ create table if not exists grades
 id int primary key auto_increment,
 thesisID int(10) not null,
 teacherID int(10) not null,
-quality_grade int(10),
-time_grade int(10),
-rest_quality_grade int(10),
-presentation_grade int(10),
-calc_grade int(10),
-grade int(10),
+quality_grade float,
+time_grade float,
+rest_quality_grade float,
+presentation_grade float,
+calc_grade float,
+grade float,
 foreign key (thesisID)
 references thesis (thesisID),
 foreign key (teacherID)

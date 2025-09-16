@@ -74,6 +74,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    //if all 3 teachers grades are in, calculate final grade and update thesis
+    if (count($grades) === 3 && $thesis['grade'] === null) {
+        $finalGrade = round(array_sum(array_column($grades, 'calc_grade')) / 3, 2);
+        $stmt = $pdo->prepare("UPDATE thesis SET final_grade = ? WHERE thesisID = ?");
+        $stmt->execute([$finalGrade, $thesisID]);
+        $thesis['final_grade'] = $finalGrade; // update local variable
+    }
+
+
     //fetch thesis meta
     $stmt = $pdo->prepare("SELECT * FROM thesis_exam_meta WHERE thesisID = ?");
     $stmt->execute([$thesisID]);
