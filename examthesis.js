@@ -75,4 +75,30 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // ΥΠΟΒΟΛΗ ΠΑΡΟΥΣΙΑΣΗΣ
+    const presentationForm = document.getElementById('presentationForm');
+    if (presentationForm) {
+        presentationForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(presentationForm);
+            formData.append('action', 'submitPresentation');
+            try {
+                const response = await fetch('examthesis.php', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message);
+                    window.location.reload();
+                } else {
+                    alert('Σφάλμα υποβολής παρουσίασης.');
+                }
+            } catch (error) {
+                alert("Σφάλμα.");
+                console.error(error);
+            }
+        });
+    }
 });

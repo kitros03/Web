@@ -88,6 +88,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $stmt->execute([$thesisID]);
     $thesis_meta = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    //handle announcement submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['announceExam']) && $_POST['thesisID'] == $thesisID) {
+        $stmt = $pdo->prepare("UPDATE thesis_exam_meta SET announce = 1 WHERE thesisID = ?");
+        $stmt->execute([$thesisID]);
+        $thesis_meta['announce'] = 1; // update local variable
+        echo json_encode(['success' => true, 'message' => 'Η ανακοίνωση στάλθηκε!']);  
+        exit;
+    }
+
 ?>
 <!DOCTYPE html>
 <html lang="el">
