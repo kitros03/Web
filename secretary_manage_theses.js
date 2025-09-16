@@ -65,18 +65,18 @@
           <div class="form-group" style="margin-bottom:12px;">
             <h4>Καταχώριση GS Number</h4>
             <label>GS Number</label>
-            <input type="text" class="gs-input" placeholder="π.χ. 12345" value="${it.gs_numb ?? ''}">
+            <input type="text" class="gs-input" placeholder value="${it.gs_numb ?? ''}">
             <button class="submit-btn do-start" data-id="${it.thesisID}">Καταχώριση GS</button>
           </div>
           <hr>
           <div class="form-group">
             <h4>Ακύρωση Διπλωματικής</h4>
             <label>GA Number</label>
-            <input type="text" class="ga-input" placeholder="π.χ. 2025-42">
+            <input type="text" class="ga-input" placeholder>
             <label>GA Date</label>
             <input type="date" class="ga-date">
             <label>Αιτιολογία</label>
-            <input type="text" class="ga-reason" placeholder="π.χ. από Διδάσκοντα">
+            <input type="text" class="ga-reason" placeholder>
             <button class="submit-btn danger do-cancel" data-id="${it.thesisID}">Καταχώριση Ακύρωσης</button>
           </div>
         </td>
