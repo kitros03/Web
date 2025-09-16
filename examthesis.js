@@ -77,12 +77,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ΥΠΟΒΟΛΗ ΠΑΡΟΥΣΙΑΣΗΣ
-    const presentationForm = document.getElementById('presentationForm');
-    if (presentationForm) {
-        presentationForm.addEventListener('submit', async function(e) {
+    const announceForm = document.getElementById('announceForm');
+    if (announceForm) {
+        announceForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const formData = new FormData(presentationForm);
-            formData.append('action', 'submitPresentation');
+            const formData = new FormData(announceForm);
+            formData.append('action', 'announceExam');
             try {
                 const response = await fetch('examthesis.php', {
                     method: 'POST',

@@ -132,7 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 <?php endif; ?> 
                 <?php endif; ?>
                 <?php if ($thesis_meta['exam_datetime'] && ($thesis_meta['exam_meeting_url'] || $thesis_meta['exam_room'])): ?>
-                    <button id="announceBtn" class="submit-btn">Ανακοίνωση Παρουσίασης</button>
+                    <form id="announceForm" method="POST">
+                        <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
+                        <button id="announceBtn" class="submit-btn">Ανακοίνωση Παρουσίασης</button>
+                    </form>
                 <?php else: ?>
                     <h3>Δεν έχουν οριστεί ακόμα λεπτομέρειες παρουσίασης.</h3>
                 <?php endif; ?>      
