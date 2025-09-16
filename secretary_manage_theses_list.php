@@ -10,23 +10,13 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
 require_once __DIR__ . '/dbconnect.php'; // $pdo
 
 try {
-  // Ελέγχουμε αν υπάρχει η στήλη gs_numb στον thesis
-  $q = $pdo->prepare("
-    SELECT COUNT(*) FROM information_schema.columns
-    WHERE table_schema = DATABASE() AND table_name = 'thesis' AND column_name = 'gs_numb'
-  ");
-  $q->execute();
-  $hasGs = (bool)$q->fetchColumn();
-
-  $selectGs = $hasGs ? "t.gs_numb AS gs_numb," : "NULL AS gs_numb,";
-
   $sql = "
     SELECT
       t.thesisID,
       t.title,
       t.th_description,
       t.th_status,
-      $selectGs
+      t.gs_numb,
       CONCAT(te.t_fname, ' ', te.t_lname) AS supervisor_name,
       CONCAT(s.s_fname, ' ', s.s_lname)   AS student_name,
       (
@@ -43,11 +33,10 @@ try {
     WHERE t.th_status = 'ACTIVE'
     ORDER BY t.thesisID DESC
   ";
-
   $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-  $out = [];
   $today = new DateTimeImmutable('today');
+  $out = [];
   foreach ($rows as $r) {
     $assigned = $r['assigned_date_assigned'] ?: $r['assigned_date_active'];
     $days = null;
@@ -65,7 +54,6 @@ try {
       'days_since_assignment' => $days
     ];
   }
-
   echo json_encode($out);
 } catch (Throwable $e) {
   http_response_code(500);
