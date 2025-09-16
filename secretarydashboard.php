@@ -44,24 +44,37 @@ if ($announcement_result) {
         </aside>
         <main class="dashboard-with-sidebar">
             <section class="announcements">
-                <?php if (!empty($announcements)): ?>
-        <h2>Ανακοινώσεις</h2>
-        <ul class="announcement-list">
-          <?php foreach ($announcements as $announcement): ?>
-            <<h3>Ανακοίνωση Παρουσίασης</h3>    
-                    <p><strong>Ημερομηνία & Ώρα:</strong> <?= htmlspecialchars(date('d/m/Y H:i', strtotime($thesis_meta['exam_datetime']))) ?></p>
-                    <?php if ($thesis_meta['exam_meeting_url']): ?>
-                        <p><strong>Σύνδεσμος Συνάντησης:</strong> <a href="<?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?>" target="_blank"><?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?></a></p>
-                    <?php elseif ($thesis_meta['exam_room']): ?>
-                        <p><strong>Αίθουσα:</strong> <?= htmlspecialchars($thesis_meta['exam_room']) ?></p>
-                <?php endif; ?> 
-            </li>
-          <?php endforeach; ?>
-        </ul>
-      <?php else: ?>
-        <p>Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή.</p>
-      <?php endif; ?>
-            </section>
+                    <?php if (!empty($announcements)): ?>
+                        <h2>Ανακοινώσεις</h2>
+                        <ul class="announcement-list">
+                            <?php foreach ($announcements as $announcement):
+                                $stmt = $pdo->prepare("SELECT thesisID, exam_datetime, exam_meeting_url, exam_room FROM thesis_exam_meta WHERE thesisID = ?");
+                                $stmt->execute([$announcement['thesisID']]);
+                                $thesis_meta = $stmt->fetch(PDO::FETCH_ASSOC);
+                                $stmt = $pdo->prepare("SELECT s_fname, s_lname FROM student WHERE thesisID = ?");
+                                $stmt->execute([$thesis_meta['thesisID']]);
+                                $student = $stmt->fetch(PDO::FETCH_ASSOC);
+                                $stmt = $pdo->prepare("SELECT title FROM thesis WHERE thesisID = ?");
+                                $stmt->execute([$thesis_meta['thesisID']]);
+                                $thesis = $stmt->fetch(PDO::FETCH_ASSOC);
+                            ?>
+                                <li class="announcement-item">
+                                    <h3>Ανακοίνωση Παρουσίασης</h3>   
+                                    <p><strong>Φοιτητής:</strong> <?= htmlspecialchars($student['s_fname'] . ' ' . $student['s_lname']) ?></p>
+                                    <p><strong>Θέμα:</strong> <?= htmlspecialchars($thesis['title']) ?></p>
+                                    <p><strong>Ημερομηνία & Ώρα:</strong> <?= htmlspecialchars(date('d/m/Y H:i', strtotime($thesis_meta['exam_datetime']))) ?></p>
+                                    <?php if ($thesis_meta['exam_meeting_url']): ?>
+                                        <p><strong>Σύνδεσμος Συνάντησης:</strong> <a href="<?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?>" target="_blank"><?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?></a></p>
+                                    <?php elseif ($thesis_meta['exam_room']): ?>
+                                        <p><strong>Αίθουσα:</strong> <?= htmlspecialchars($thesis_meta['exam_room']) ?></p>
+                                    <?php endif; ?> 
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p>Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή.</p>
+                    <?php endif; ?>
+                </section>
         </main>
     </div>
     <script src="secretarydashboard.js"></script>
