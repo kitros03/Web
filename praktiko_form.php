@@ -44,21 +44,15 @@ try {
   $row = $st->fetch(PDO::FETCH_ASSOC);
   if (!$row) { echo 'Δεν βρέθηκαν στοιχεία για την πτυχιακή.'; exit; }
 
-  // Υπολογισμός τελικού βαθμού: Μ.Ο. όλων των (calc_grade/3) για τη συγκεκριμένη thesis
-  // Αντί για calc_grade/3 μπορείς να αλλάξεις σε (quality_grade + time_grade + presentation_grade)/3
-  $finalGrade = null;
-  $qg = $pdo->prepare("
-    SELECT AVG(calc_grade/3) AS g
-    FROM grades
-    WHERE thesisID = ?
-      AND calc_grade IS NOT NULL
-  ");
+  // Βαθμός (AVG(grade) – προσαρμόζεται αν χρειάζεται)
+  $avgGrade = null;
+  $qg = $pdo->prepare("SELECT AVG(grade) AS avg_grade FROM grades WHERE thesisID = ?");
   $qg->execute([$thesisID]);
-  $gRow = $qg->fetch(PDO::FETCH_ASSOC);
-  if ($gRow && $gRow['g'] !== null) {
-    $finalGrade = round((float)$gRow['g'], 1); // προσαρμόζεις τα δεκαδικά αν θέλεις
+  $g = $qg->fetch(PDO::FETCH_ASSOC);
+  if ($g && $g['avg_grade'] !== null) {
+    $avgGrade = round((float)$g['avg_grade'], 1);
   }
-  $finalGradeText = $finalGrade !== null ? h($finalGrade) : '………………';
+  $finalGradeText = $avgGrade !== null ? h($avgGrade) : '………………';
 
   // Συνάρτηση εύρεσης διδάσκοντα
   $teacherById = function($id) use ($pdo){
@@ -70,14 +64,15 @@ try {
     return [
       'fname' => $x['t_fname'] ?? '',
       'lname' => $x['t_lname'] ?? '',
-      'full'  => fullName($x['t_fname'] ?? '', $x['t_lname'] ?? '')
+      'full'  => (($x['t_fname'] ?? '') . ' ' . ($x['t_lname'] ?? ''))
     ];
   };
 
+  // Φοιτητής/Τίτλος
   $studentFull = fullName($row['s_fname'] ?? null, $row['s_lname'] ?? null);
   $title       = dotted($row['title'] ?? '');
 
-  // Εξεταστική πληροφορία
+  // Ημερομηνία/Ώρα/Αίθουσα
   $room    = dotted($row['exam_room'] ?? '');
   $dayDate = '……………………………';
   $dateStr = '……………………………';
@@ -99,24 +94,21 @@ try {
 
   // 1η λίστα: φυσική σειρά
   $membersOriginal = [];
-  if ($sup) $membersOriginal[] = ['role'=>'Επιβλέπων','fname'=>$sup['fname'],'lname'=>$sup['lname'],'full'=>$sup['full']];
-  if ($m1)  $membersOriginal[] = ['role'=>'Μέλος','fname'=>$m1['fname'],'lname'=>$m1['lname'],'full'=>$m1['full']];
-  if ($m2)  $membersOriginal[] = ['role'=>'Μέλος','fname'=>$m2['fname'],'lname'=>$m2['lname'],'full'=>$m2['full']];
+  if ($sup) $membersOriginal[] = ['role'=>'Επιβλέπων','fname'=>$sup['fname'] ?? '','lname'=>$sup['lname'] ?? '','full'=>$sup['full'] ?? ''];
+  if ($m1)  $membersOriginal[] = ['role'=>'Μέλος','fname'=>$m1['fname'] ?? '','lname'=>$m1['lname'] ?? '','full'=>$m1['full'] ?? ''];
+  if ($m2)  $membersOriginal[] = ['role'=>'Μέλος','fname'=>$m2['fname'] ?? '','lname'=>$m2['lname'] ?? '','full'=>$m2['full'] ?? ''];
 
-  // 2η λίστα: αλφαβητικά μόνο κατά όνομα
+  // 2η λίστα: αλφαβητικά κατά όνομα
   $membersAlpha = $membersOriginal;
   usort($membersAlpha, function($a,$b){
     return strcasecmp($a['fname'], $b['fname']);
   });
 
   $supervisorFull = $sup['full'] ?? '………………………………';
-  $gsText = (isset($row['gs_numb']) && $row['gs_numb'] !== null && $row['gs_numb'] !== '')
-            ? h($row['gs_numb'])
-            : '…………………';
+  $gsText = (isset($row['gs_numb']) && $row['gs_numb'] !== null && $row['gs_numb'] !== '') ? h($row['gs_numb']) : '…………………';
 
 } catch (Throwable $e) {
-  http_response_code(500);
-  echo 'Σφάλμα φόρτωσης δεδομένων.';
+  echo 'Σφάλμα φόρτωσης δεδομένων';
   exit;
 }
 ?>
@@ -129,15 +121,20 @@ try {
 </head>
 <body>
   <div class="header">
-    <div class="university-name">ΠΡΑΚΤΙΚΟ ΣΥΝΕΔΡΙΑΣΗΣ</div>
-    <div class="department-name">ΤΗΣ ΤΡΙΜΕΛΟΥΣ ΕΠΙΤΡΟΠΗΣ</div>
+    <div class="university-name">ΠΡΟΓΡΑΜΜΑ ΣΠΟΥΔΩΝ</div>
+    <div class="department-name">«ΤΜΗΜΑΤΟΣ ΜΗΧΑΝΙΚΩΝ, ΗΛΕΚΤΡΟΝΙΚΩΝ ΥΠΟΛΟΓΙΣΤΩΝ ΚΑΙ ΠΛΗΡΟΦΟΡΙΚΗΣ»</div>
+
+    <div class="document-title">ΠΡΑΚΤΙΚΟ ΣΥΝΕΔΡΙΑΣΗΣ</div>
+    <div class="document-subtitle">ΤΗΣ ΤΡΙΜΕΛΟΥΣ ΕΠΙΤΡΟΠΗΣ</div>
     <div class="document-subtitle2">ΓΙΑ ΤΗΝ ΠΑΡΟΥΣΙΑΣΗ ΚΑΙ ΚΡΙΣΗ ΤΗΣ ΔΙΠΛΩΜΑΤΙΚΗΣ ΕΡΓΑΣΙΑΣ</div>
-    <div class="italic" style="margin-top:10px;">του/της φοιτητή/φοιτήτρια</div>
+
+    <!-- ΟΝΟΜΑ ακριβώς κάτω από τον τίτλο, με ίδια τοπολογία -->
+    <div class="title-name">Κ. <?php echo h($studentFull); ?></div>
+
+    <div class="italic">του/της φοιτητή/φοιτήτρια</div>
   </div>
 
   <div class="content">
-    <p>Κ. <?php echo h($studentFull); ?></p>
-
     <p>
       Η συνεδρίαση πραγματοποιήθηκε στην αίθουσα <?php echo h($room); ?>
       στις <?php echo h($dateStr); ?> ημέρα <?php echo h($dayDate); ?> και ώρα <?php echo h($timeStr); ?>
@@ -166,8 +163,7 @@ try {
     </p>
 
     <p style="margin-left:20px;">
-      «<?php echo h($title); ?><br>
-      ………………………………………………………………………………………………………………………………»
+      «<?php echo h($title); ?>»
     </p>
 
     <p>
@@ -233,7 +229,7 @@ try {
 
     <p>
       Μετά την έγκριση και την απονομή του βαθμού <?php echo $finalGradeText; ?>, η Τριμελής Επιτροπή, προτείνει να προχωρήσει
-      στην διαδικασία για να ανακηρυχθεί τον κ. <?php echo h($studentFull); ?>, σε διπλωματούχο του Προγράμματος
+      στην διαδικασία για να ανακηρύξει τον κ. <?php echo h($studentFull); ?>, σε διπλωματούχο του Προγράμματος
       Σπουδών του «ΤΜΗΜΑΤΟΣ ΜΗΧΑΝΙΚΩΝ, ΗΛΕΚΤΡΟΝΙΚΩΝ ΥΠΟΛΟΓΙΣΤΩΝ ΚΑΙ ΠΛΗΡΟΦΟΡΙΚΗΣ ΠΑΝΕΠΙΣΤΗΜΙΟΥ ΠΑΤΡΩΝ»
       και να του απονέμει το Δίπλωμα Μηχανικού Η/Υ το οποίο αναγνωρίζεται ως Ενιαίος Τίτλος Σπουδών Μεταπτυχιακού Επιπέδου.
     </p>
