@@ -1,0 +1,82 @@
+/* praktiko_exam.css */
+body {
+  font-family: "Times New Roman", serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  max-width: 800px;
+  margin: 0 auto;
+  color: #000;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.university-name {
+  font-weight: bold;
+  font-size: 11pt;
+}
+
+.department-name {
+  font-weight: bold;
+  font-size: 10pt;
+  font-style: italic;
+  margin-bottom: 15px;
+}
+
+.document-title {
+  font-weight: bold;
+  font-size: 13pt;
+  margin: 10px 0;
+  text-decoration: underline;
+}
+
+.document-subtitle,
+.document-subtitle2 {
+  font-weight: bold;
+  font-size: 11pt;
+}
+
+.italic { font-style: italic; }
+
+.content p {
+  margin: 12px 0;
+  text-align: justify;
+}
+
+ol { margin: 10px 0 10px 20px; }
+ol li { margin-bottom: 5px; text-align: justify; }
+
+/* Πίνακας υπογραφών */
+.signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  border: 2px solid #000;           /* εξωτερικό περίγραμμα */
+}
+
+/* Κεφαλίδα πίνακα – ίδιο χρώμα με τη φωτογραφία 1 */
+.signature-table thead th {
+  background: #dfe6f1;              /* απαλό μπλε-γκρι */
+  border: 1px solid #000;
+  padding: 8px 6px;
+  text-align: center;
+  font-weight: bold;
+  font-style: italic;                /* πλάγια όπως στην εικόνα */
+  letter-spacing: 0.5px;
+}
+
+/* Γραμμές/κελιά σώματος πίνακα */
+.signature-table tbody td {
+  border: 1px solid #000;           /* εσωτερικές γραμμές */
+  padding: 18px 10px;               /* χώρος για υπογραφές */
+  text-align: center;
+}
+
+.date-section { display: none; }
+
+/* Εκτύπωση */
+@media print {
+  body { font-size: 11pt; }
+}
