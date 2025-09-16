@@ -22,10 +22,16 @@ if (!$thesisID) {
     exit;
 }
 
+
 // Βρες στοιχεία εργασίας
 $stmt = $pdo->prepare("SELECT * FROM thesis WHERE thesisID = ?");
 $stmt->execute([$thesisID]);
 $thesis = $stmt->fetch(PDO::FETCH_ASSOC);
+//στοιχεια φοιτητη
+$stmt = $pdo->prepare("SELECT s_fname, s_lname FROM student WHERE thesisID = ?");
+$stmt->execute([$thesisID]);
+$student = $stmt->fetch(PDO::FETCH_ASSOC);
+
 
 // Βρες επιτροπή
 $stmt = $pdo->prepare("SELECT supervisor, member1, member2 FROM committee WHERE thesisID = ?");
@@ -89,13 +95,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $thesis_meta = $stmt->fetch(PDO::FETCH_ASSOC);
 
     //handle announcement submission
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['announceExam']) && $_POST['thesisID'] == $thesisID) {
-        $stmt = $pdo->prepare("UPDATE thesis_exam_meta SET announce = 1 WHERE thesisID = ?");
-        $stmt->execute([$thesisID]);
-        $thesis_meta['announce'] = 1; // update local variable
-        echo json_encode(['success' => true, 'message' => 'Η ανακοίνωση στάλθηκε!']);  
-        exit;
-    }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'announceExam' && isset($_POST['thesisID'])) {
+    // ενημέρωση ανακοίνωσης στο DB
+    $stmt = $pdo->prepare("UPDATE thesis_exam_meta SET announce = 1 WHERE thesisID = ?");
+    $stmt->execute([$_POST['thesisID']]);
+    $thesis_meta['announce'] = 1; // ενημέρωση τοπικής μεταβλητής
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'message' => 'Η ανακοίνωση στάλθηκε!']);
+    exit;
+}
 
 ?>
 <!DOCTYPE html>
@@ -123,17 +131,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="popup-content">
                 <button id="closePopupBtn2" class="close-popup-btn" aria-label="Close">&times;</button>
                 <?php if ($thesis_meta['announce']): ?>
-                    <h3>Ανακοίνωση Παρουσίασης</h3>    
+                    <h3>Ανακοίνωση Παρουσίασης</h3>   
+                    <p><strong>Φοιτητής:</strong> <?= htmlspecialchars($student['s_fname'] . ' ' . $student['s_lname']) ?></p>
+                    <p><strong>Θέμα:</strong> <?= htmlspecialchars($thesis['title']) ?></p>
                     <p><strong>Ημερομηνία & Ώρα:</strong> <?= htmlspecialchars(date('d/m/Y H:i', strtotime($thesis_meta['exam_datetime']))) ?></p>
                     <?php if ($thesis_meta['exam_meeting_url']): ?>
                         <p><strong>Σύνδεσμος Συνάντησης:</strong> <a href="<?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?>" target="_blank"><?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?></a></p>
                     <?php elseif ($thesis_meta['exam_room']): ?>
                         <p><strong>Αίθουσα:</strong> <?= htmlspecialchars($thesis_meta['exam_room']) ?></p>
                 <?php endif; ?> 
-                <?php endif; ?>
-                <?php if ($thesis_meta['exam_datetime'] && ($thesis_meta['exam_meeting_url'] || $thesis_meta['exam_room'])): ?>
+                <?php elseif ($thesis_meta['exam_datetime'] && ($thesis_meta['exam_meeting_url'] || $thesis_meta['exam_room'])): ?>
                     <form id="announceForm" method="POST">
                         <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
+                        <input type="hidden" name="announceExam" value="1">
                         <button id="announceBtn" class="submit-btn">Ανακοίνωση Παρουσίασης</button>
                     </form>
                 <?php else: ?>
