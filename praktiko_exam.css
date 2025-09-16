@@ -1,4 +1,4 @@
-/* praktiko_exam.css */
+/* Βασικά */
 body {
   font-family: "Times New Roman", serif;
   font-size: 12pt;
@@ -8,43 +8,34 @@ body {
   color: #000;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 20px;
-}
+.header { text-align: center; margin-bottom: 20px; }
 
-.university-name {
-  font-weight: bold;
-  font-size: 11pt;
-}
-
-.department-name {
-  font-weight: bold;
-  font-size: 10pt;
-  font-style: italic;
-  margin-bottom: 15px;
-}
+.university-name { font-weight: bold; font-size: 11pt; }
+.department-name { font-weight: bold; font-size: 10pt; font-style: italic; margin-bottom: 15px; }
 
 .document-title {
   font-weight: bold;
   font-size: 13pt;
-  margin: 10px 0;
+  margin: 10px 0 6px 0;
   text-decoration: underline;
 }
+.document-subtitle, .document-subtitle2 { font-weight: bold; font-size: 11pt; }
 
-.document-subtitle,
-.document-subtitle2 {
-  font-weight: bold;
-  font-size: 11pt;
+/* Γραμμή “του/της φοιτητή/φοιτήτρια” */
+.italic { font-style: italic; margin-top: 6px; }
+
+/* ΟΝΟΜΑ ακριβώς κάτω από τον τίτλο, με ίδια τοπολογία */
+.title-name {
+  /* κληρονομεί από document-title: στοίχιση κέντρο μέσω .header */
+  display: block;
+  font-weight: bold;         /* ίδιο βάρος όπως ο τίτλος */
+  font-size: 13pt;           /* ίδιο μέγεθος όπως ο τίτλος */
+  margin: 6px 0 16px 0;      /* κοντά στον τίτλο, πριν το υπόλοιπο κείμενο */
+  text-decoration: none;     /* χωρίς υπογράμμιση (αλλαγή αν το θες) */
 }
 
-.italic { font-style: italic; }
-
-.content p {
-  margin: 12px 0;
-  text-align: justify;
-}
-
+/* Περιεχόμενο */
+.content p { margin: 12px 0; text-align: justify; }
 ol { margin: 10px 0 10px 20px; }
 ol li { margin-bottom: 5px; text-align: justify; }
 
@@ -53,28 +44,22 @@ ol li { margin-bottom: 5px; text-align: justify; }
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
-  border: 2px solid #000;           /* εξωτερικό περίγραμμα */
+  border: 2px solid #000;
 }
-
-/* Κεφαλίδα πίνακα – ίδιο χρώμα με τη φωτογραφία 1 */
 .signature-table thead th {
-  background: #dfe6f1;              /* απαλό μπλε-γκρι */
+  background: #dfe6f1;
   border: 1px solid #000;
   padding: 8px 6px;
   text-align: center;
   font-weight: bold;
-  font-style: italic;                /* πλάγια όπως στην εικόνα */
+  font-style: italic;
   letter-spacing: 0.5px;
 }
-
-/* Γραμμές/κελιά σώματος πίνακα */
 .signature-table tbody td {
-  border: 1px solid #000;           /* εσωτερικές γραμμές */
-  padding: 18px 10px;               /* χώρος για υπογραφές */
+  border: 1px solid #000;
+  padding: 18px 10px;
   text-align: center;
 }
-
-.date-section { display: none; }
 
 /* Εκτύπωση */
 @media print {
