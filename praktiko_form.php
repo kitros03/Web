@@ -44,6 +44,22 @@ try {
   $row = $st->fetch(PDO::FETCH_ASSOC);
   if (!$row) { echo 'Δεν βρέθηκαν στοιχεία για την πτυχιακή.'; exit; }
 
+  // Υπολογισμός τελικού βαθμού: Μ.Ο. όλων των (calc_grade/3) για τη συγκεκριμένη thesis
+  // Αντί για calc_grade/3 μπορείς να αλλάξεις σε (quality_grade + time_grade + presentation_grade)/3
+  $finalGrade = null;
+  $qg = $pdo->prepare("
+    SELECT AVG(calc_grade/3) AS g
+    FROM grades
+    WHERE thesisID = ?
+      AND calc_grade IS NOT NULL
+  ");
+  $qg->execute([$thesisID]);
+  $gRow = $qg->fetch(PDO::FETCH_ASSOC);
+  if ($gRow && $gRow['g'] !== null) {
+    $finalGrade = round((float)$gRow['g'], 1); // προσαρμόζεις τα δεκαδικά αν θέλεις
+  }
+  $finalGradeText = $finalGrade !== null ? h($finalGrade) : '………………';
+
   // Συνάρτηση εύρεσης διδάσκοντα
   $teacherById = function($id) use ($pdo){
     if (!$id) return null;
@@ -76,26 +92,24 @@ try {
     } catch (Throwable $e) {}
   }
 
-  // Μέλη επιτροπής
+  // Επιτροπή
   $sup = $teacherById((int)$row['supervisor']);
   $m1  = $teacherById((int)$row['member1']);
   $m2  = $teacherById((int)$row['member2']);
 
-  // 1) ΠΡΩΤΗ λίστα: φυσική σειρά (επιβλέπων, μέλος1, μέλος2)
+  // 1η λίστα: φυσική σειρά
   $membersOriginal = [];
   if ($sup) $membersOriginal[] = ['role'=>'Επιβλέπων','fname'=>$sup['fname'],'lname'=>$sup['lname'],'full'=>$sup['full']];
   if ($m1)  $membersOriginal[] = ['role'=>'Μέλος','fname'=>$m1['fname'],'lname'=>$m1['lname'],'full'=>$m1['full']];
   if ($m2)  $membersOriginal[] = ['role'=>'Μέλος','fname'=>$m2['fname'],'lname'=>$m2['lname'],'full'=>$m2['full']];
 
-  // 2) ΔΕΥΤΕΡΗ λίστα: Αλφαβητικά ΜΟΝΟ κατά όνομα (t_fname)
+  // 2η λίστα: αλφαβητικά μόνο κατά όνομα
   $membersAlpha = $membersOriginal;
   usort($membersAlpha, function($a,$b){
-    return strcasecmp($a['fname'], $b['fname']); // ταξινόμηση μόνο στο όνομα
+    return strcasecmp($a['fname'], $b['fname']);
   });
 
   $supervisorFull = $sup['full'] ?? '………………………………';
-
-  // gs_numb για τη φράση “με αριθμό …”
   $gsText = (isset($row['gs_numb']) && $row['gs_numb'] !== null && $row['gs_numb'] !== '')
             ? h($row['gs_numb'])
             : '…………………';
@@ -115,13 +129,9 @@ try {
 </head>
 <body>
   <div class="header">
-    <div class="university-name">ΠΡΟΓΡΑΜΜΑ ΣΠΟΥΔΩΝ</div>
-    <div class="department-name">«ΤΜΗΜΑΤΟΣ ΜΗΧΑΝΙΚΩΝ, ΗΛΕΚΤΡΟΝΙΚΩΝ ΥΠΟΛΟΓΙΣΤΩΝ ΚΑΙ ΠΛΗΡΟΦΟΡΙΚΗΣ»</div>
-
-    <div class="document-title">ΠΡΑΚΤΙΚΟ ΣΥΝΕΔΡΙΑΣΗΣ</div>
-    <div class="document-subtitle">ΤΗΣ ΤΡΙΜΕΛΟΥΣ ΕΠΙΤΡΟΠΗΣ</div>
+    <div class="university-name">ΠΡΑΚΤΙΚΟ ΣΥΝΕΔΡΙΑΣΗΣ</div>
+    <div class="department-name">ΤΗΣ ΤΡΙΜΕΛΟΥΣ ΕΠΙΤΡΟΠΗΣ</div>
     <div class="document-subtitle2">ΓΙΑ ΤΗΝ ΠΑΡΟΥΣΙΑΣΗ ΚΑΙ ΚΡΙΣΗ ΤΗΣ ΔΙΠΛΩΜΑΤΙΚΗΣ ΕΡΓΑΣΙΑΣ</div>
-
     <div class="italic" style="margin-top:10px;">του/της φοιτητή/φοιτήτρια</div>
   </div>
 
@@ -135,7 +145,7 @@ try {
 
     <p>Στην συνεδρίαση είναι παρόντα τα μέλη της Τριμελούς Επιτροπής κ.κ.:</p>
 
-    <!-- 1) Φυσική σειρά: Επιβλέπων, μέλος1, μέλος2 -->
+    <!-- 1) Φυσική σειρά -->
     <ol>
       <?php foreach ($membersOriginal as $m): ?>
         <li><?php echo h($m['full']); ?>,</li>
@@ -176,7 +186,7 @@ try {
 
     <p>Τα μέλη της Τριμελούς Επιτροπής, ψηφίζουν κατ’ αλφαβητική σειρά:</p>
 
-    <!-- 2) Αλφαβητική σειρά μόνο κατά Όνομα -->
+    <!-- 2) Αλφαβητική σειρά κατά όνομα -->
     <ol>
       <?php foreach ($membersAlpha as $m): ?>
         <li><?php echo h($m['full']); ?>,</li>
@@ -197,7 +207,7 @@ try {
     <p>
       Μετά της έγκριση, ο εισηγητής κ. <?php echo h($supervisorFull); ?>,
       προτείνει στα μέλη της Τριμελούς Επιτροπής, να απονεμηθεί στο/στη φοιτητή/τρια
-      κ. <?php echo h($studentFull); ?> ο βαθμός ………………
+      κ. <?php echo h($studentFull); ?> ο βαθμός <?php echo $finalGradeText; ?>
     </p>
 
     <p>Τα μέλη της Τριμελούς Επιτροπής, απομένουν την παραπάνω βαθμολογία:</p>
@@ -222,7 +232,7 @@ try {
     </table>
 
     <p>
-      Μετά την έγκριση και την απονομή του βαθμού ……………, η Τριμελής Επιτροπή, προτείνει να προχωρήσει
+      Μετά την έγκριση και την απονομή του βαθμού <?php echo $finalGradeText; ?>, η Τριμελής Επιτροπή, προτείνει να προχωρήσει
       στην διαδικασία για να ανακηρυχθεί τον κ. <?php echo h($studentFull); ?>, σε διπλωματούχο του Προγράμματος
       Σπουδών του «ΤΜΗΜΑΤΟΣ ΜΗΧΑΝΙΚΩΝ, ΗΛΕΚΤΡΟΝΙΚΩΝ ΥΠΟΛΟΓΙΣΤΩΝ ΚΑΙ ΠΛΗΡΟΦΟΡΙΚΗΣ ΠΑΝΕΠΙΣΤΗΜΙΟΥ ΠΑΤΡΩΝ»
       και να του απονέμει το Δίπλωμα Μηχανικού Η/Υ το οποίο αναγνωρίζεται ως Ενιαίος Τίτλος Σπουδών Μεταπτυχιακού Επιπέδου.
