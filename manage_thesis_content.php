@@ -122,6 +122,9 @@ if ($thStatus === 'EXAM') {
     .mt-8{margin-top:8px;} .mt-12{margin-top:12px;} .mt-16{margin-top:16px;}
     .small{font-size:13px;} .mono{font-family:ui-monospace,Menlo,monospace;}
     .disabled-block { opacity:.6; pointer-events:none; }
+    .preview-btn { background:#4CAF50; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; }
+    .preview-btn:hover { background:#45a049; }
+    .preview-btn:disabled { background:#cccccc; cursor:not-allowed; }
   </style>
 
   <div class="grid-2 mt-16">
@@ -182,10 +185,15 @@ https://youtube.com/..."><?php
       <form id="examAfterForm">
         <input type="hidden" name="action" value="save_after">
         <input type="hidden" name="thesisID" value="<?php echo $thesisID; ?>">
-        <label>Σύνδεσμος πρακτικού (HTML/PDF):</label>
-        <input class="w-100" type="url" name="report_url" value="<?php echo h($meta['report_url'] ?? ''); ?>" <?php echo $after_enabled ? '' : 'disabled'; ?>>
-        <label class="mt-8">Σύνδεσμος αποθετηρίου (Νημερτής):</label>
+        
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label style="margin: 0;">Πρακτικό εξέτασης:</label>
+          <button type="button" class="preview-btn" id="reportPreviewBtn" <?php echo $after_enabled ? '' : 'disabled'; ?> onclick="window.open('praktiko_form.php?thesisID=<?php echo $thesisID; ?>', '_blank', 'width=800,height=900,scrollbars=yes')">Προβολή</button>
+        </div>
+        
+        <label class="mt-16">Σύνδεσμος αποθετηρίου (Νημερτής):</label>
         <input class="w-100" type="url" name="repository_url" value="<?php echo h($meta['repository_url'] ?? ''); ?>" <?php echo $after_enabled ? '' : 'disabled'; ?>>
+        
         <button class="submit-btn mt-12" type="submit" <?php echo $after_enabled ? '' : 'disabled'; ?>>Αποθήκευση</button>
       </form>
     </section>
