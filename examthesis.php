@@ -75,11 +75,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     //if all 3 teachers grades are in, calculate final grade and update thesis
-    if (count($grades) === 3 && $thesis['grade'] === null) {
+    if (count($grades) === 3 && $grades['grade'] === null) {
         $finalGrade = round(array_sum(array_column($grades, 'calc_grade')) / 3, 2);
-        $stmt = $pdo->prepare("UPDATE thesis SET final_grade = ? WHERE thesisID = ?");
+        $stmt = $pdo->prepare("UPDATE grades SET grade = ? WHERE thesisID = ?");
         $stmt->execute([$finalGrade, $thesisID]);
-        $thesis['final_grade'] = $finalGrade; // update local variable
+        $thesis['grade'] = $finalGrade; // update local variable
     }
 
 
@@ -87,6 +87,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $stmt = $pdo->prepare("SELECT * FROM thesis_exam_meta WHERE thesisID = ?");
     $stmt->execute([$thesisID]);
     $thesis_meta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    //fetch draft text if exists
+    $stmt = $pdo->prepare("SELECT draft FROM thesis_exam_meta WHERE thesisID = ?");
+    $stmt->execute([$thesisID]);
+    $draft = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="el">
@@ -110,7 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         <div id="popup1" class="popup-window">
             <div class="popup-content">
                 <h3>Πρόχειρο Κείμενο Εργασίας</h3>
-                <?= htmlspecialchars($thesis_meta['draft_text'] ?? 'Δεν έχει προστεθεί πρόχειρο κείμενο.') ?>
+
+                <?= htmlspecialchars($draft['draft']) ?? 'Δεν έχει προστεθεί πρόχειρο κείμενο.') ?>
                 <button id="closePopupBtn1" class="close-popup-btn" aria-label="Close">&times;</button>
             </div>
         </div>
@@ -179,6 +185,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     <td><?= htmlspecialchars($grade['calc_grade']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
+                            <?php if ($grades['grade'] !== null): ?>
+                                <tr>
+                                    <td colspan="5"><strong>Τελικός Βαθμός</strong></td>
+                                    <td><strong><?= htmlspecialchars($grades['grade']) ?></strong></td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 <?php endif; ?>
