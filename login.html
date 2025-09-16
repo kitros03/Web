@@ -19,8 +19,15 @@
                 <form class="form-group" id="loginForm">
                     <input type="text" id="username" placeholder="Username">
                     <input type="password" id="password" placeholder="Password">
+                    <label for="menu">Choose an option:</label>
+                    <select id="menu" name="menu" class="select" required>
+                        <option>Please select</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="secretary">Secretary</option>
+                        <option value="student">Student</option>
+                    </select>
                     <div>
-                        <button class="submit-btn" type="submit">Login</button> <!-- without div the button isnt under password textbox -->
+                        <button class="submit-btn" type="submit">Login</button> 
                     </div>
                 </form>
                 <a>Don't have an account? <button class="submit-btn" type="register" id="register-btn">Register</button></a>  

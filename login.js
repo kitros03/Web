@@ -8,7 +8,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     e.preventDefault();
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
-    const role = getQueryParam('role'); // Get the role from the URL
+    const role = document.getElementById('menu').value;
 
     const response = await fetch('login.php', {
         method: 'POST',

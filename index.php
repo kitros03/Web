@@ -1,15 +1,8 @@
-<?php
+<?php 
 session_start();
-if (!isset($_SESSION['username'])) {
-    header('Location: index.html');
-    exit;
-}
 header("Content-Type: text/html; charset=utf-8");
 require_once("dbconnect.php");
-if ($_SESSION['role'] !== 'secretary') {
-    header('Location: index.html');
-    exit;
-}
+
 //gather announcemets if there are any
 $announcements = [];
 $announcement_query = "SELECT * FROM thesis_exam_meta where announce=1 ORDER BY updated_at DESC ";
@@ -17,34 +10,30 @@ $announcement_result = $pdo->query($announcement_query);
 if ($announcement_result) {
     $announcements = $announcement_result->fetchAll(PDO::FETCH_ASSOC);
 }
+
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Diploma Support System</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header>
-        <div class="logo-title-row">
-            <img src="logo2.jpg" alt="Logo" class="logo" />
-            <h1 class="site-title">Secretary Dashboard</h1>
-        </div>
-    </header>
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <nav>
-                <ul>
-                    <li><button class="sidebarButton" id="viewstatsBtn">Προβολή ΔΕ</button></li>
-                    <li><button class="sidebarButton" id="secretaryInsertDataBtn">Εισαγωγή Δεδομένων</button></li>
-                    <li><button class="sidebarButton" id="managethesesBtn">Διαχείριση Διπλωματικής Εργασίας</button></li>
-                    <li><button class="sidebarButton" id="logoutBtn">Logout</button></li>
-                </ul>
-            </nav>
-        </aside>
-        <main class="dashboard-with-sidebar">
-            <section class="announcements">
-                <?php if (!empty($announcements)): ?>
+  <header>
+    <div class="logo-title-row">
+      <img src="logo2.jpg" alt="Logo" class="logo" />
+      <h1 class="site-title">Thesis Support System</h1>   
+      <button class="login-btn" onclick="location.href='login.html'">Login</button>
+    </div>
+         
+
+  </header>
+  <main class="dashboard-centered">
+    <div class="centered-body">
+      <?php if (!empty($announcements)): ?>
         <h2>Ανακοινώσεις</h2>
         <ul class="announcement-list">
           <?php foreach ($announcements as $announcement): ?>
@@ -61,12 +50,10 @@ if ($announcement_result) {
       <?php else: ?>
         <p>Δεν υπάρχουν ανακοινώσεις αυτή τη στιγμή.</p>
       <?php endif; ?>
-            </section>
-        </main>
+    <script src="startscreen.js"></script>
     </div>
-    <script src="secretarydashboard.js"></script>
-    <footer class="footer">
-        <p>&copy; 2025 Thesis Management System</p>
-    </footer>
+  </main>
+  <footer>
+    <p>&copy; 2025 Thesis Management System.</p>
 </body>
 </html>
