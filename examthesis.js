@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    document.getElementById('textbtn').addEventListener('click', function() {
+        let thesisID = "<?= htmlspecialchars($thesisID) ?>";
+    window.open('showDraft.php?thesisID=' + encodeURIComponent(thesisID), '_blank');
+    });
+
     // POPUPS
     const togglePopup = (btnId, popupId, closeBtnId) => {
         const btn = document.getElementById(btnId);
@@ -20,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     };
-    togglePopup('textbtn','popup1','closePopupBtn1');
+   
     togglePopup('presentationbtn','popup2','closePopupBtn2');
     togglePopup('gradebtn','popup3','closePopupBtn3');
 
@@ -76,3 +81,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+

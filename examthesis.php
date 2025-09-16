@@ -88,10 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $stmt->execute([$thesisID]);
     $thesis_meta = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    //fetch draft text if exists
-    $stmt = $pdo->prepare("SELECT draft FROM thesis_exam_meta WHERE thesisID = ?");
-    $stmt->execute([$thesisID]);
-    $draft = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="el">
@@ -112,14 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <main class="dashboard-centered">
     <div class="centered-body">
         <button class="submit-btn" id="textbtn">Προβολή Κειμένου</button>
-        <div id="popup1" class="popup-window">
-            <div class="popup-content">
-                <h3>Πρόχειρο Κείμενο Εργασίας</h3>
-
-                <?= htmlspecialchars($draft['draft']) ?? 'Δεν έχει προστεθεί πρόχειρο κείμενο.') ?>
-                <button id="closePopupBtn1" class="close-popup-btn" aria-label="Close">&times;</button>
-            </div>
-        </div>
     </div>
     <div class="centered-body">
         <button class="submit-btn" id="presentationbtn">Παρουσίαση</button>
