@@ -10,15 +10,14 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
 require_once __DIR__ . '/dbconnect.php'; // $pdo
 
 try {
-  $raw = file_get_contents('php://input');
-  $data = json_decode($raw, true);
+  $data = json_decode(file_get_contents('php://input'), true);
   if (!is_array($data)) throw new Exception('Μη έγκυρο αίτημα.');
 
   $action   = trim((string)($data['action'] ?? ''));
   $thesisID = (int)($data['thesisID'] ?? 0);
   if ($thesisID <= 0) throw new Exception('Άκυρο thesisID.');
 
-  // τρέχουσα κατάσταση
+  // φέρε τρέχουσα κατάσταση
   $st = $pdo->prepare("SELECT th_status FROM thesis WHERE thesisID=? LIMIT 1");
   $st->execute([$thesisID]);
   $row = $st->fetch(PDO::FETCH_ASSOC);
@@ -26,25 +25,15 @@ try {
   if ($row['th_status'] !== 'ACTIVE') throw new Exception('Η ενέργεια επιτρέπεται μόνο για Ενεργές διπλωματικές.');
 
   if ($action === 'startExam') {
-    // ➜ ΤΩΡΑ: ΜΟΝΟ καταχώριση GS Number, ΔΕΝ αλλάζουμε status
+    // ΜΟΝΟ GS — ΔΕΝ αλλάζουμε status
     $gs = trim((string)($data['gs_numb'] ?? ''));
     if ($gs === '') throw new Exception('Συμπλήρωσε GS Number.');
-
-    // υπάρχει η στήλη gs_numb;
-    $q = $pdo->prepare("
-      SELECT COUNT(*) FROM information_schema.columns
-      WHERE table_schema = DATABASE() AND table_name = 'thesis' AND column_name = 'gs_numb'
-    ");
-    $q->execute();
-    $hasGs = (bool)$q->fetchColumn();
-    if (!$hasGs) {
-      throw new Exception("Δεν υπάρχει στήλη 'gs_numb' στον πίνακα thesis. Τρέξε: ALTER TABLE thesis ADD COLUMN gs_numb VARCHAR(50) NULL;");
-    }
+    if (!ctype_digit($gs)) throw new Exception('Το GS πρέπει να είναι ακέραιος αριθμός.');
 
     $u = $pdo->prepare("UPDATE thesis SET gs_numb=? WHERE thesisID=?");
-    $u->execute([$gs, $thesisID]);
+    $u->execute([(int)$gs, $thesisID]);
 
-    echo json_encode(['success'=>true, 'message'=>'Καταχωρήθηκε το GS Number. Η κατάσταση παραμένει ACTIVE.']);
+    echo json_encode(['success'=>true,'message'=>'Καταχωρήθηκε το GS Number. Η κατάσταση παραμένει ACTIVE.']);
     exit;
   }
 
@@ -53,7 +42,7 @@ try {
     $gaDate   = trim((string)($data['gaDate'] ?? ''));
     $reason   = trim((string)($data['reason'] ?? '')) ?: 'από Διδάσκοντα';
     if ($gaNumber === '' || $gaDate === '') throw new Exception('Συμπλήρωσε GA Number και GA Date.');
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $gaDate)) throw new Exception('Μη έγκυρη ημερομηνία.');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $gaDate)) throw new Exception('Μη έγκυρη ημερομηνία (YYYY-MM-DD).');
 
     $pdo->beginTransaction();
     $u = $pdo->prepare("UPDATE thesis SET th_status='CANCELLED' WHERE thesisID=?");

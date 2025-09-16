@@ -34,21 +34,20 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
   <main class="dashboard-with-sidebar">
     <section class="announcements">
       <h2>Διαχείριση Διπλωματικών (μόνο Ενεργές)</h2>
-      <p>Επιλέξτε μια ΔΕ για να ξεκινήσετε εξέταση ή να την ακυρώσετε.</p>
+      <p>Επιλέξτε μια ΔΕ για καταχώριση GS ή ακύρωση.</p>
     </section>
 
     <section>
       <div class="form-group">
         <input type="text" id="searchBox" placeholder="Αναζήτηση τίτλου / επιβλέποντα / φοιτητή...">
       </div>
-
       <div id="manageList"></div>
     </section>
   </main>
 </div>
 
 <script src="secretarydashboard.js"></script>
-<script src="secretary_manage_theses.js"></script>
+<script src="secretary_manage_theses.js?v=4"></script>
 <footer class="footer">
   <p>&copy; 2025 Thesis Management System</p>
 </footer>

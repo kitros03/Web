@@ -1,4 +1,4 @@
-// secretary_manage_theses.js  (βελτιωμένο error handling)
+// secretary_manage_theses.js
 (function () {
   const listDiv = document.getElementById('manageList');
   const searchBox = document.getElementById('searchBox');
@@ -6,11 +6,11 @@
 
   const statusGR = s => ({
     'NOT_ASSIGNED': 'Μη Ανατεθειμένη',
-    'ASSIGNED': 'Ανατεθειμένη',
-    'ACTIVE': 'Ενεργή',
-    'EXAM': 'Υπό Εξέταση',
-    'DONE': 'Ολοκληρωμένη',
-    'CANCELLED': 'Ακυρωμένη'
+    'ASSIGNED':     'Ανατεθειμένη',
+    'ACTIVE':       'Ενεργή',
+    'EXAM':         'Υπό Εξέταση',
+    'DONE':         'Ολοκληρωμένη',
+    'CANCELLED':    'Ακυρωμένη'
   }[s] || s);
 
   function daysLabel(days) {
@@ -39,10 +39,12 @@
       listDiv.innerHTML = '<p>Δεν βρέθηκαν ενεργές διπλωματικές.</p>';
       return;
     }
+
     const rows = [];
     rows.push('<table class="table"><thead><tr>');
     rows.push('<th>Κωδ.</th><th>Τίτλος</th><th>Κατάσταση</th><th>Επιβλέπων</th><th>Φοιτητής</th><th>Από ανάθεση</th><th>GS</th><th>Ενέργειες</th>');
     rows.push('</tr></thead><tbody>');
+
     items.forEach(it => {
       rows.push('<tr>');
       rows.push(`<td>${it.thesisID}</td>`);
@@ -52,33 +54,33 @@
       rows.push(`<td>${it.student_name ?? '—'}</td>`);
       rows.push(`<td>${daysLabel(it.days_since_assignment)}</td>`);
       rows.push(`<td>${it.gs_numb ?? '—'}</td>`);
-      rows.push(`<td>
-        <button class="sidebarButton act-start" data-id="${it.thesisID}">Έναρξη Εξέτασης</button>
-        <button class="sidebarButton act-cancel" data-id="${it.thesisID}">Ακύρωση</button>
-      </td>`);
+      rows.push(`<td><button class="sidebarButton act-toggle" data-id="${it.thesisID}">Ενέργειες</button></td>`);
       rows.push('</tr>');
+
+      // φόρμες (κρυφές – φαίνονται με το "Ενέργειες")
       rows.push(`<tr class="row-forms" data-for="${it.thesisID}" style="display:none;">
         <td colspan="8">
           <div class="form-group" style="margin-bottom:12px;">
-            <h4>Έναρξη Εξέτασης</h4>
+            <h4>Καταχώριση GS Number</h4>
             <label>GS Number</label>
-            <input type="text" class="gs-input" placeholder="π.χ. 12345" value="${it.gs_numb ?? ''}">
-            <button class="submit-btn do-start" data-id="${it.thesisID}">Καταχώριση & Μετάβαση σε Εξέταση</button>
+            <input type="text" class="gs-input" value="${it.gs_numb ?? ''}">
+            <button class="submit-btn do-start" data-id="${it.thesisID}">Καταχώριση GS</button>
           </div>
           <hr>
           <div class="form-group">
             <h4>Ακύρωση Διπλωματικής</h4>
             <label>GA Number</label>
-            <input type="text" class="ga-input" placeholder="π.χ. 2025-42">
+            <input type="text" class="ga-input">
             <label>GA Date</label>
             <input type="date" class="ga-date">
             <label>Αιτιολογία</label>
-            <input type="text" class="ga-reason" placeholder="π.χ. από Διδάσκοντα">
+            <input type="text" class="ga-reason">
             <button class="submit-btn danger do-cancel" data-id="${it.thesisID}">Καταχώριση Ακύρωσης</button>
           </div>
         </td>
       </tr>`);
     });
+
     rows.push('</tbody></table>');
     listDiv.innerHTML = rows.join('');
   }
@@ -104,18 +106,19 @@
   searchBox?.addEventListener('input', render);
 
   document.addEventListener('click', async (e) => {
-    const startBtn = e.target.closest('button.act-start[data-id]');
-    const cancelBtn = e.target.closest('button.act-cancel[data-id]');
+    const toggleBtn = e.target.closest('button.act-toggle[data-id]');
     const doStart   = e.target.closest('button.do-start[data-id]');
     const doCancel  = e.target.closest('button.do-cancel[data-id]');
 
-    if (startBtn || cancelBtn) {
-      const id = (startBtn || cancelBtn).dataset.id;
+    // άνοιγμα/κλείσιμο φόρμας
+    if (toggleBtn) {
+      const id = toggleBtn.dataset.id;
       const row = document.querySelector(`tr.row-forms[data-for="${id}"]`);
       if (row) row.style.display = (row.style.display === 'none' ? 'table-row' : 'none');
       return;
     }
 
+    // καταχώριση GS (ΔΕΝ αλλάζει status)
     if (doStart) {
       const id = doStart.dataset.id;
       const row = document.querySelector(`tr.row-forms[data-for="${id}"]`);
@@ -130,12 +133,13 @@
         });
         const out = await res.json();
         if (!out.success) throw new Error(out.message || 'Αποτυχία');
-        alert('Η διπλωματική μπήκε σε εξέταση.');
+        alert('Καταχωρήθηκε το GS Number.');
         await loadList();
       } catch (err) { alert('Σφάλμα: ' + err.message); }
       return;
     }
 
+    // ακύρωση
     if (doCancel) {
       const id = doCancel.dataset.id;
       const row = document.querySelector(`tr.row-forms[data-for="${id}"]`);
