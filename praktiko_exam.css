@@ -13,25 +13,20 @@ body {
 .university-name { font-weight: bold; font-size: 11pt; }
 .department-name { font-weight: bold; font-size: 10pt; font-style: italic; margin-bottom: 15px; }
 
-.document-title {
-  font-weight: bold;
-  font-size: 13pt;
-  margin: 10px 0 6px 0;
-  text-decoration: underline;
-}
+.document-title { font-weight: bold; font-size: 13pt; margin: 10px 0; text-decoration: underline; }
 .document-subtitle, .document-subtitle2 { font-weight: bold; font-size: 11pt; }
 
 /* Γραμμή “του/της φοιτητή/φοιτήτρια” */
 .italic { font-style: italic; margin-top: 6px; }
 
-/* ΟΝΟΜΑ ακριβώς κάτω από τον τίτλο, με ίδια τοπολογία */
-.title-name {
-  /* κληρονομεί από document-title: στοίχιση κέντρο μέσω .header */
+/* ΟΝΟΜΑ κάτω από τη γραμμή “του/της …”, χωρίς bold */
+.student-name {
   display: block;
-  font-weight: bold;         /* ίδιο βάρος όπως ο τίτλος */
-  font-size: 13pt;           /* ίδιο μέγεθος όπως ο τίτλος */
-  margin: 6px 0 16px 0;      /* κοντά στον τίτλο, πριν το υπόλοιπο κείμενο */
-  text-decoration: none;     /* χωρίς υπογράμμιση (αλλαγή αν το θες) */
+  width: 100%;
+  text-align: center;
+  margin: 6px 0 16px 0;
+  font-weight: normal;      /* χωρίς bold */
+  font-size: 12pt;          /* ελαφρώς μικρότερο από τον τίτλο */
 }
 
 /* Περιεχόμενο */

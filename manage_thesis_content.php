@@ -107,10 +107,21 @@ if ($thStatus === 'EXAM') {
   $hasFile = !empty($meta['draft_file']) && file_exists(__DIR__ . '/' . $meta['draft_file']);
 
   // Ξεκλείδωμα 3ου βήματος όταν thesis.grading = 1
-  $gt = $pdo->prepare("SELECT grading FROM thesis WHERE thesisID=?");
-  $gt->execute([$thesisID]);
-  $gradingFlag = (int)$gt->fetchColumn();
-  $after_enabled = ($gradingFlag === 1);
+// Ξεκλείδωμα 3ου βήματος όταν ΥΠΑΡΧΟΥΝ 3 εγγραφές grades για τη thesis
+// και όλες έχουν μη-NULL calc_grade
+$gq = $pdo->prepare("
+  SELECT 
+    SUM(CASE WHEN calc_grade IS NOT NULL THEN 1 ELSE 0 END) AS non_null_cnt,
+    COUNT(*) AS total_cnt
+  FROM grades
+  WHERE thesisID = ?
+");
+$gq->execute([$thesisID]);
+list($nonNullCnt, $totalCnt) = array_map('intval', $gq->fetch(PDO::FETCH_NUM));
+
+// Προϋπόθεση: ακριβώς 3 εγγραφές και ΚΑΜΙΑ calc_grade NULL
+$after_enabled = ($totalCnt === 3 && $nonNullCnt === 3);
+
 
   echo '<h3>Διαχείριση Διπλωματικής — Υπό Εξέταση (EXAM)</h3>';
   echo '<p>Η πτυχιακή είναι σε κατάσταση <strong>Υπό Εξέταση</strong>.</p>';
