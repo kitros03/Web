@@ -1,4 +1,4 @@
-// secretary_manage_theses.js
+// secretary_manage_theses.js  (βελτιωμένο error handling)
 (function () {
   const listDiv = document.getElementById('manageList');
   const searchBox = document.getElementById('searchBox');
@@ -39,12 +39,10 @@
       listDiv.innerHTML = '<p>Δεν βρέθηκαν ενεργές διπλωματικές.</p>';
       return;
     }
-
     const rows = [];
     rows.push('<table class="table"><thead><tr>');
     rows.push('<th>Κωδ.</th><th>Τίτλος</th><th>Κατάσταση</th><th>Επιβλέπων</th><th>Φοιτητής</th><th>Από ανάθεση</th><th>GS</th><th>Ενέργειες</th>');
     rows.push('</tr></thead><tbody>');
-
     items.forEach(it => {
       rows.push('<tr>');
       rows.push(`<td>${it.thesisID}</td>`);
@@ -55,24 +53,23 @@
       rows.push(`<td>${daysLabel(it.days_since_assignment)}</td>`);
       rows.push(`<td>${it.gs_numb ?? '—'}</td>`);
       rows.push(`<td>
-        <button class="sidebarButton act-toggle" data-id="${it.thesisID}">Ενέργειες</button>
+        <button class="sidebarButton act-start" data-id="${it.thesisID}">Ενέργειες</button>
+        
       </td>`);
       rows.push('</tr>');
-
-      // κρυφό row για φόρμες (ΠΑΡΑΜΕΝΕΙ ΟΠΩΣ ΗΤΑΝ)
       rows.push(`<tr class="row-forms" data-for="${it.thesisID}" style="display:none;">
         <td colspan="8">
           <div class="form-group" style="margin-bottom:12px;">
-            <h4>Καταχώριση GS Number</h4>
+            <h4>Έναρξη Εξέτασης</h4>
             <label>GS Number</label>
-            <input type="text" class="gs-input" placeholder value="${it.gs_numb ?? ''}">
-            <button class="submit-btn do-start" data-id="${it.thesisID}">Καταχώριση GS</button>
+            <input type="text" class="gs-input" placeholder" value="${it.gs_numb ?? ''}">
+            <button class="submit-btn do-start" data-id="${it.thesisID}">Καταχώριση & Μετάβαση σε Εξέταση</button>
           </div>
           <hr>
           <div class="form-group">
             <h4>Ακύρωση Διπλωματικής</h4>
             <label>GA Number</label>
-            <input type="text" class="ga-input" placeholder>
+            <input type="text" class="ga-input" >
             <label>GA Date</label>
             <input type="date" class="ga-date">
             <label>Αιτιολογία</label>
@@ -82,7 +79,6 @@
         </td>
       </tr>`);
     });
-
     rows.push('</tbody></table>');
     listDiv.innerHTML = rows.join('');
   }
@@ -108,13 +104,13 @@
   searchBox?.addEventListener('input', render);
 
   document.addEventListener('click', async (e) => {
-    // ΜΟΝΟ ένα κουμπί: Ενέργειες (toggle)
-    const toggleBtn = e.target.closest('button.act-toggle[data-id]');
+    const startBtn = e.target.closest('button.act-start[data-id]');
+    const cancelBtn = e.target.closest('button.act-cancel[data-id]');
     const doStart   = e.target.closest('button.do-start[data-id]');
     const doCancel  = e.target.closest('button.do-cancel[data-id]');
 
-    if (toggleBtn) {
-      const id = toggleBtn.dataset.id;
+    if (startBtn || cancelBtn) {
+      const id = (startBtn || cancelBtn).dataset.id;
       const row = document.querySelector(`tr.row-forms[data-for="${id}"]`);
       if (row) row.style.display = (row.style.display === 'none' ? 'table-row' : 'none');
       return;
@@ -134,7 +130,7 @@
         });
         const out = await res.json();
         if (!out.success) throw new Error(out.message || 'Αποτυχία');
-        alert('Καταχωρήθηκε το GS Number.');
+        alert('Η διπλωματική μπήκε σε εξέταση.');
         await loadList();
       } catch (err) { alert('Σφάλμα: ' + err.message); }
       return;
