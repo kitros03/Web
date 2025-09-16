@@ -30,7 +30,7 @@ function dotted($value, $fallback='………………………………'){
 try {
   $sql = "
     SELECT 
-      t.thesisID, t.title, t.supervisor,
+      t.thesisID, t.title, t.supervisor, t.gs_numb,
       s.s_fname, s.s_lname,
       tem.exam_datetime, tem.exam_room,
       c.member1, c.member2
@@ -95,6 +95,11 @@ try {
 
   $supervisorFull = $sup['full'] ?? '………………………………';
 
+  // gs_numb για τη φράση “με αριθμό …”
+  $gsText = (isset($row['gs_numb']) && $row['gs_numb'] !== null && $row['gs_numb'] !== '')
+            ? h($row['gs_numb'])
+            : '…………………';
+
 } catch (Throwable $e) {
   http_response_code(500);
   echo 'Σφάλμα φόρτωσης δεδομένων.';
@@ -142,7 +147,9 @@ try {
       <?php endif; ?>
     </ol>
 
-    <p>οι οποίοι ορίσθηκαν από την Συνέλευση του ΤΜΗΥΠ, στην συνεδρίαση της με αριθμό ………………</p>
+    <p>
+      οι οποίοι ορίσθηκαν από την Συνέλευση του ΤΜΗΥΠ, στην συνεδρίαση της με αριθμό <?php echo $gsText; ?>
+    </p>
 
     <p><strong>Ο/Η φοιτητής/φοιτήτρια</strong> κ. <?php echo h($studentFull); ?>
        ανέπτυξε το θέμα της Διπλωματικής του/της Εργασίας, με τίτλο
