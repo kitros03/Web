@@ -50,6 +50,48 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // ADD NOTE FORM SUBMISSION
+  const addNoteForm = document.getElementById('addNoteForm');
+  if(addNoteForm){
+    addNoteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const description = document.getElementById('description').value.trim();
+      if(!description){
+        alert('Description is required.');
+        return;
+      }
+
+      const thesisID = addNoteForm.querySelector('input[name="thesisID"]')?.value || addNoteForm.getAttribute('data-thesis-id');
+      if(!thesisID){
+        alert('Thesis ID is required before adding a note.');
+        return;
+      }
+
+      try{
+        const formData = new FormData();
+        formData.append('description', description);
+        formData.append('thesisID', thesisID);
+
+        const response = await fetch('activethesis.php',{
+          method: 'POST',
+          credentials: 'same-origin',
+          body: formData
+        });
+        const result = await response.json();
+
+        alert(result.message);
+
+        if(result.success){
+          // Close popup and reload notes or reload page as you like
+          window.location.reload();
+        }
+      } catch(error){
+        console.error('Add note error:', error);
+        alert('Error adding note.');
+      }
+    });
+  }
+
   // UNASSIGN FORM
   const form = document.getElementById('unassignForm');
   if (form) {
@@ -75,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         const result = await response.text();
-        alert(result); // Show backend message
+        alert(result);
 
         if (result.includes('success')) {
           window.location.href = `viewtheses.php`;
@@ -101,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!confirm('Are you sure you want to start the exam?')) return;
 
       const formData = new FormData(startExamForm);
-      formData.set('start_examination', '1'); // match PHP POST key
+      formData.set('start_examination', '1');
       formData.set('thesisID', thesisID);
 
       try {
@@ -112,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         const result = await response.text();
-        alert(result); // Always show the backend message
+        alert(result);
 
         if (result.includes('success')) {
           alert('Exam started successfully. Redirecting to exam page.');
@@ -124,4 +166,5 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   }
+
 });

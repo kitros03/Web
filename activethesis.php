@@ -45,12 +45,11 @@ $stmt = $pdo->prepare("SELECT * FROM teachernotes WHERE thesisID = ? AND teacher
 $stmt->execute([$thesisID, $teacher['id']]);
 $teachernotes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// need to get the date of the active thesis status, thesis is currenty active so last changeTo should be 'ACTIVE'
+// get thesis active date and compare
 $stmt = $pdo->prepare("SELECT changeDate FROM thesisStatusChanges WHERE thesisID = ? ORDER BY changeDate DESC LIMIT 1");
 $stmt->execute([$thesisID]);
 $changeDate = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// now i need to add 2 years to the changeDate and compare it with the current date
 $activeDate = new DateTime($changeDate['changeDate']);
 $activeDate->modify('+2 years');
 $currentDate = new DateTime();
@@ -90,13 +89,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-?>
 
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <link rel="stylesheet" href="style.css">
+<title>Active Thesis</title>
 </head>
 <body>
 <header>
@@ -113,7 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div id="popupWindow1" class="popup-window" style="display:none;">
         <div class="popup-content">
             <h3>Add Note</h3>
-            <form id="addNoteForm">
+            <form id="addNoteForm" data-thesis-id="<?= htmlspecialchars($thesisID) ?>">
+                <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
                 <label for="description">Description:</label>
                 <textarea id="description" name="description" required></textarea>
                 <button type="submit">Save Note</button>
@@ -124,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <button class="submit-btn" id="viewNotesBtn">View Notes</button>
     <div id="popupWindow2" class="popup-window" style="display:none;">
         <div class="popup-content">
-            <?php if (isset($teachernotes)): ?>
+            <?php if (isset($teachernotes) && count($teachernotes) > 0): ?>
                 <h3>Notes</h3>
                 <ul class="notes-list">
                 <?php foreach ($teachernotes as $note): ?>
@@ -139,33 +140,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button id="closePopupBtn2" class="close-popup-btn" aria-label="Close">&times;</button>
         </div>
     </div>    
-    <?php if($committeeID['supervisor'] === $teacher['id']):?>
+    <?php if($committeeID['supervisor'] === $teacher['id']): ?>
         <h2>Unassign Thesis</h2>
         <?php if($currentDate > $activeDate): ?>
-            <p> The thesis has been active for more than 2 years, you can now unassign it.</p>
+            <p>The thesis has been active for more than 2 years, you can now unassign it.</p>
             <form id="unassignForm" method="post">
                 <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
                 <button type="submit" class="unassign-btn">Unassign Thesis</button>
             </form>
         <?php else: ?>
-            <p> The thesis has been active for less than 2 years, you cannot unassign it yet.</p>
+            <p>The thesis has been active for less than 2 years, you cannot unassign it yet.</p>
         <?php endif; ?>
-        <h2> Start examination</h2>
+        <h2>Start Examination</h2>
         <?php if($thesis['gs_numb']): ?>
             <form id="startExamForm" method="post" data-thesis-id="<?= htmlspecialchars($thesisID) ?>">
                 <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
                 <button type="submit" class="submit-btn">Start Examination</button>
             </form>
         <?php else: ?>
-            <p> You cannot start the examination until the secretary has provided the number of the GS.</p>
+            <p>You cannot start the examination until the secretary has provided the number of the GS.</p>
         <?php endif; ?>
     <?php else: ?>
         <p>You are not authorized for further actions.</p>
     <?php endif; ?>
     <script src="activethesis.js"></script>
-    </main> 
+</main> 
 <footer>
-        <p class="footer">© 2025 Thesis Management System</p>
+    <p class="footer">&copy; 2025 Thesis Management System</p>
 </footer>
 </body>
 </html>
