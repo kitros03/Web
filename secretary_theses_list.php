@@ -8,38 +8,47 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
   echo json_encode(['error' => 'Forbidden']); exit;
 }
 
-require_once __DIR__ . '/dbconnect.php'; // έρχεται το $pdo
+require_once __DIR__ . '/dbconnect.php'; // $pdo
 
+// Επιστρέφουμε ΔΕ με ACTIVE, EXAM ή DONE
 $sql = "
+WITH latest_change AS (
+  SELECT sc.thesisID, sc.changeTo AS latest_status, sc.changeDate
+  FROM thesisStatusChanges sc
+  JOIN (
+    SELECT thesisID, MAX(changeDate) AS maxd
+    FROM thesisStatusChanges
+    GROUP BY thesisID
+  ) x ON x.thesisID = sc.thesisID AND x.maxd = sc.changeDate
+)
 SELECT
   t.thesisID,
   t.title,
   t.th_description,
-  t.th_status,
+  COALESCE(t.th_status, lc.latest_status) AS th_status,
   CONCAT(te.t_fname, ' ', te.t_lname) AS supervisor_name,
   CONCAT(s.s_fname, ' ', s.s_lname)   AS student_name,
   (
     SELECT MIN(changeDate)
-    FROM thesisStatusChanges sc
-    WHERE sc.thesisID = t.thesisID AND sc.changeTo = 'ASSIGNED'
+    FROM thesisStatusChanges scA
+    WHERE scA.thesisID = t.thesisID AND scA.changeTo = 'ASSIGNED'
   ) AS assigned_date_assigned,
   (
     SELECT MIN(changeDate)
-    FROM thesisStatusChanges sc
-    WHERE sc.thesisID = t.thesisID AND sc.changeTo = 'ACTIVE'
+    FROM thesisStatusChanges scB
+    WHERE scB.thesisID = t.thesisID AND scB.changeTo = 'ACTIVE'
   ) AS assigned_date_active
 FROM thesis t
+LEFT JOIN latest_change lc ON lc.thesisID = t.thesisID
 LEFT JOIN teacher te ON te.id = t.supervisor
 LEFT JOIN student s  ON s.thesisID = t.thesisID
-WHERE t.th_status IN ('ACTIVE','EXAM')
+WHERE (t.th_status IN ('ACTIVE','EXAM','DONE') OR lc.latest_status IN ('ACTIVE','EXAM','DONE'))
 ORDER BY t.thesisID DESC
 ";
-
 $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-$out = [];
 $today = new DateTimeImmutable('today');
-
+$out = [];
 foreach ($rows as $r) {
   $assigned = $r['assigned_date_assigned'] ?: $r['assigned_date_active'];
   $days = null;
@@ -56,5 +65,4 @@ foreach ($rows as $r) {
     'days_since_assignment' => $days
   ];
 }
-
 echo json_encode($out);
