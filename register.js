@@ -1,5 +1,5 @@
 document.getElementById('backBtn').onclick = () => {
-    window.location.href = 'index.html';
+    window.location.href = 'index.php';
 }
 document.getElementById('registerForm').addEventListener('submit', async function (e){
     e.preventDefault();
