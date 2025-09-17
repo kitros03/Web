@@ -33,8 +33,8 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
 
   <main class="dashboard-with-sidebar">
     <section class="announcements">
-      <h2>Διαχείριση Διπλωματικών (μόνο Ενεργές)</h2>
-      <p>Επιλέξτε μια ΔΕ για καταχώριση GS ή ακύρωση.</p>
+      <h2>Διαχείριση Διπλωματικών (Ενεργές & Περατωμένες)</h2>
+      <p>Επιλέξτε μια ΔΕ για καταχώριση GS ή ακύρωση (μόνο στις Ενεργές).</p>
     </section>
 
     <section>
@@ -47,7 +47,8 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
 </div>
 
 <script src="secretarydashboard.js"></script>
-<script src="secretary_manage_theses.js?v=4"></script>
+<!-- cache-bust -->
+<script src="secretary_manage_theses.js?v=5"></script>
 <footer class="footer">
   <p>&copy; 2025 Thesis Management System</p>
 </footer>

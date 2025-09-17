@@ -9,7 +9,7 @@
     'ASSIGNED':     'Ανατεθειμένη',
     'ACTIVE':       'Ενεργή',
     'EXAM':         'Υπό Εξέταση',
-    'DONE':         'Ολοκληρωμένη',
+    'DONE':         'Περατωμένη',
     'CANCELLED':    'Ακυρωμένη'
   }[s] || s);
 
@@ -36,7 +36,7 @@
   function render() {
     const items = filtered();
     if (!items.length) {
-      listDiv.innerHTML = '<p>Δεν βρέθηκαν ενεργές διπλωματικές.</p>';
+      listDiv.innerHTML = '<p>Δεν βρέθηκαν ενεργές/υπό εξέταση/περατωμένες διπλωματικές.</p>';
       return;
     }
 
@@ -54,31 +54,42 @@
       rows.push(`<td>${it.student_name ?? '—'}</td>`);
       rows.push(`<td>${daysLabel(it.days_since_assignment)}</td>`);
       rows.push(`<td>${it.gs_numb ?? '—'}</td>`);
-      rows.push(`<td><button class="sidebarButton act-toggle" data-id="${it.thesisID}">Ενέργειες</button></td>`);
+
+      if (it.th_status === 'ACTIVE') {
+        rows.push(`<td><button class="sidebarButton act-toggle" data-id="${it.thesisID}">Ενέργειες</button></td>`);
+      } else if (it.th_status === 'EXAM' && it.ready_finalize) {
+        const link = it.repository_url ? `<a href="${it.repository_url}" target="_blank" rel="noopener">Αποθετήριο</a>` : '—';
+        const g = (it.final_grade != null && !Number.isNaN(Number(it.final_grade))) ? Number(it.final_grade).toFixed(2) : '—';
+        rows.push(`<td>${link} · Βαθμός: ${g} &nbsp; <button class="submit-btn do-finalize" data-id="${it.thesisID}">Περάτωση</button></td>`);
+      } else {
+        rows.push('<td>—</td>');
+      }
       rows.push('</tr>');
 
-      // φόρμες (κρυφές – φαίνονται με το "Ενέργειες")
-      rows.push(`<tr class="row-forms" data-for="${it.thesisID}" style="display:none;">
-        <td colspan="8">
-          <div class="form-group" style="margin-bottom:12px;">
-            <h4>Καταχώριση GS Number</h4>
-            <label>GS Number</label>
-            <input type="text" class="gs-input" value="${it.gs_numb ?? ''}">
-            <button class="submit-btn do-start" data-id="${it.thesisID}">Καταχώριση GS</button>
-          </div>
-          <hr>
-          <div class="form-group">
-            <h4>Ακύρωση Διπλωματικής</h4>
-            <label>GA Number</label>
-            <input type="text" class="ga-input">
-            <label>GA Date</label>
-            <input type="date" class="ga-date">
-            <label>Αιτιολογία</label>
-            <input type="text" class="ga-reason">
-            <button class="submit-btn danger do-cancel" data-id="${it.thesisID}">Καταχώριση Ακύρωσης</button>
-          </div>
-        </td>
-      </tr>`);
+      // Φόρμες ΜΟΝΟ για ACTIVE
+      if (it.th_status === 'ACTIVE') {
+        rows.push(`<tr class="row-forms" data-for="${it.thesisID}" style="display:none;">
+          <td colspan="8">
+            <div class="form-group" style="margin-bottom:12px;">
+              <h4>Καταχώριση GS Number</h4>
+              <label>GS Number</label>
+              <input type="text" class="gs-input" value="${it.gs_numb ?? ''}">
+              <button class="submit-btn do-start" data-id="${it.thesisID}">Καταχώριση GS</button>
+            </div>
+            <hr>
+            <div class="form-group">
+              <h4>Ακύρωση Διπλωματικής</h4>
+              <label>GA Number</label>
+              <input type="text" class="ga-input">
+              <label>GA Date</label>
+              <input type="date" class="ga-date">
+              <label>Αιτιολογία</label>
+              <input type="text" class="ga-reason">
+              <button class="submit-btn danger do-cancel" data-id="${it.thesisID}">Καταχώριση Ακύρωσης</button>
+            </div>
+          </td>
+        </tr>`);
+      }
     });
 
     rows.push('</tbody></table>');
@@ -109,8 +120,8 @@
     const toggleBtn = e.target.closest('button.act-toggle[data-id]');
     const doStart   = e.target.closest('button.do-start[data-id]');
     const doCancel  = e.target.closest('button.do-cancel[data-id]');
+    const doFinalize= e.target.closest('button.do-finalize[data-id]');
 
-    // άνοιγμα/κλείσιμο φόρμας
     if (toggleBtn) {
       const id = toggleBtn.dataset.id;
       const row = document.querySelector(`tr.row-forms[data-for="${id}"]`);
@@ -118,7 +129,6 @@
       return;
     }
 
-    // καταχώριση GS (ΔΕΝ αλλάζει status)
     if (doStart) {
       const id = doStart.dataset.id;
       const row = document.querySelector(`tr.row-forms[data-for="${id}"]`);
@@ -139,7 +149,6 @@
       return;
     }
 
-    // ακύρωση
     if (doCancel) {
       const id = doCancel.dataset.id;
       const row = document.querySelector(`tr.row-forms[data-for="${id}"]`);
@@ -159,6 +168,29 @@
         alert('Η διπλωματική ακυρώθηκε.');
         await loadList();
       } catch (err) { alert('Σφάλμα: ' + err.message); }
+      return;
+    }
+
+    if (doFinalize) {
+      const id = Number(doFinalize.dataset.id);
+      doFinalize.disabled = true;
+      doFinalize.textContent = 'Ενημέρωση…';
+      try {
+        const res = await fetch('secretary_mark_done.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ thesisID: id })
+        });
+        const out = await res.json();
+        if (!out.success) throw new Error(out.message || 'Αποτυχία');
+        alert('Η διπλωματική χαρακτηρίστηκε ως Περατωμένη.');
+        await loadList();
+      } catch (err) {
+        alert('Σφάλμα: ' + err.message);
+        doFinalize.disabled = false;
+        doFinalize.textContent = 'Περάτωση';
+      }
       return;
     }
   });
