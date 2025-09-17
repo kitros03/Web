@@ -155,7 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <th>Title</th>
                 <th>Description</th>
                 <th>Student</th>
-                <th>Finalized</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -166,14 +165,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   <td><?= htmlspecialchars($thesis['title']) ?></td>
                   <td><?= htmlspecialchars($thesis['th_description']) ?></td>
                   <td><?= htmlspecialchars($thesis['studentUsername']) ?></td>
-                  <td><?= $thesis['finalized'] ? 'Yes' : 'No' ?></td>
                   <td>
                     <?php if (!$thesis['finalized']): ?>
                       <form method="post" class="remove-form" data-thesis-id="<?= $thesis['thesisID'] ?>">
                         <input class="submit-btn" type="submit" value="Remove">
                       </form>
                     <?php else: ?>
-                      Finalized
+                      <p>Η διπλωματική έχει οριστικοποιηθεί</p>
                     <?php endif; ?>
                   </td>
                 </tr>

@@ -31,7 +31,6 @@ title varchar(50) not null,
 th_description varchar(500),
 pdf_description longblob,
 assigned boolean default 0,
-finalized boolean default 0, 
 th_status enum ('NOT_ASSIGNED','ASSIGNED','ACTIVE','EXAM','DONE','CANCELLED'),
 foreign key (supervisor)
 references teacher (id) on delete cascade,
