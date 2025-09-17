@@ -10,10 +10,7 @@ if (empty($_SESSION['username'])) {
   exit;
 }
 $thesisID = (int)($_GET['thesisID'] ?? 0);
-if ($thesisID <= 0) {
-  echo 'Λείπει thesisID';
-  exit;
-}
+if ($thesisID <= 0) { echo 'Λείπει thesisID'; exit; }
 
 /* Helpers */
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
@@ -44,14 +41,12 @@ try {
   $row = $st->fetch(PDO::FETCH_ASSOC);
   if (!$row) { echo 'Δεν βρέθηκαν στοιχεία για την πτυχιακή.'; exit; }
 
-  // Βαθμός (AVG(grade) – προσαρμόζεται αν χρειάζεται)
+  // Βαθμός (AVG(grade))
   $avgGrade = null;
   $qg = $pdo->prepare("SELECT AVG(grade) AS avg_grade FROM grades WHERE thesisID = ?");
   $qg->execute([$thesisID]);
   $g = $qg->fetch(PDO::FETCH_ASSOC);
-  if ($g && $g['avg_grade'] !== null) {
-    $avgGrade = round((float)$g['avg_grade'], 1);
-  }
+  if ($g && $g['avg_grade'] !== null) { $avgGrade = round((float)$g['avg_grade'], 1); }
   $finalGradeText = $avgGrade !== null ? h($avgGrade) : '………………';
 
   // Συνάρτηση εύρεσης διδάσκοντα
@@ -128,10 +123,10 @@ try {
     <div class="document-subtitle">ΤΗΣ ΤΡΙΜΕΛΟΥΣ ΕΠΙΤΡΟΠΗΣ</div>
     <div class="document-subtitle2">ΓΙΑ ΤΗΝ ΠΑΡΟΥΣΙΑΣΗ ΚΑΙ ΚΡΙΣΗ ΤΗΣ ΔΙΠΛΩΜΑΤΙΚΗΣ ΕΡΓΑΣΙΑΣ</div>
 
-    <!-- ΟΝΟΜΑ ακριβώς κάτω από τον τίτλο, με ίδια τοπολογία -->
-    <div class="title-name">Κ. <?php echo h($studentFull); ?></div>
-
+    <!-- Γραμμή “του/της …” -->
     <div class="italic">του/της φοιτητή/φοιτήτρια</div>
+    <!-- ΟΝΟΜΑ κάτω από τη γραμμή, ΧΩΡΙΣ bold -->
+    <div class="student-name">Κ. <?php echo h($studentFull); ?></div>
   </div>
 
   <div class="content">
