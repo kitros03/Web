@@ -7,7 +7,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         echo json_encode(['error' => 'unauthorized']);
     } else {
-        header('Location: index.html');
+        header('Location: index.php');
     }
     exit;
 }
