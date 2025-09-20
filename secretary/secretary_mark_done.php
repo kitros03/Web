@@ -7,7 +7,7 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
   http_response_code(403);
   echo json_encode(['success'=>false,'message'=>'Forbidden']); exit;
 }
-require_once __DIR__ . '/dbconnect.php'; 
+require_once '../dbconnect.php'; 
 try {
   $data = json_decode(file_get_contents('php://input'), true);
   $thesisID = (int)($data['thesisID'] ?? 0);
@@ -26,3 +26,4 @@ try {
   if ($pdo->inTransaction()) $pdo->rollBack();
   echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
 }
+?>

@@ -10,6 +10,6 @@ document.getElementById('managethesesBtn').onclick = () => {
   window.location.href = 'managethesesBtn.php';
 };
 document.getElementById('logoutBtn').onclick = () => {
-  window.location.href = 'logout.php';
+  window.location.href = '../logout.php';
 };
 

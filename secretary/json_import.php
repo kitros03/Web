@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 header('Content-Type: application/json');
-require_once __DIR__ . '/dbconnect.php'; 
+require_once '../dbconnect.php'; 
 
 try {
     $raw = file_get_contents('php://input');
@@ -193,3 +193,4 @@ try {
 } catch (Throwable $e) {
     echo json_encode(['success' => false, 'message' => 'Server error.']);
 }
+?>
