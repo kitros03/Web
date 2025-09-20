@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'/dbconnect.php';
+require_once '../dbconnect.php';
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
@@ -44,7 +44,6 @@ try {
   $hist->execute([$thesisID, $toStatus]);
 
   if ($toStatus === 'EXAM') {
-    // Δημιούργησε meta αν δεν υπάρχει
     $pdo->prepare("
       INSERT IGNORE INTO thesis_exam_meta (thesisID, created_at, updated_at)
       VALUES (?, NOW(), NOW())

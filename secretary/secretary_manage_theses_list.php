@@ -7,7 +7,7 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
   http_response_code(403);
   echo 'Forbidden'; exit;
 }
-require_once __DIR__ . '/dbconnect.php'; // $pdo
+require_once '../dbconnect.php'; 
 
 try {
   $sql = "

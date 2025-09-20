@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('committeeinvitationsBtn').onclick = () => location.href = 'committeeinvitations.php';
     document.getElementById('viewstatsBtn').onclick = () => location.href = 'viewstats.php';
     document.getElementById('managethesesBtn').onclick = () => location.href = 'viewtheses.php';
-    document.getElementById('logoutBtn').onclick = () => location.href = 'logout.php';
+    document.getElementById('logoutBtn').onclick = () => location.href = '../logout.php';
 
     // Δυναμική φόρτωση ανακοινώσεων
     const announcementsSection = document.getElementById('announcementsSection');
