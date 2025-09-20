@@ -88,14 +88,14 @@
     setText('#supervisorFull2', d.supervisorFull);
     setText('#studentNameInline4', d.studentFull);
 
-    // Βαθμός σε όλα τα slots
+    
     const grade = (d.finalGradeText ?? '………………').toString();
     document.querySelectorAll('.grade-slot').forEach(el => el.textContent = grade);
 
     // Πίνακας υπογραφών
     fillSignatureTable('#signatureTable', d.membersAlpha || [], 3);
 
-    // Τελευταίες επαναλήψεις
+    
     setText('#studentNameInline5', d.studentFull);
   }
 

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 session_start();
 if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'student') {
-  header('Location: index.html'); exit;
+  header('Location: index.php'); exit;
 }
 header('Content-Type: text/html; charset=utf-8');
 ?>
@@ -16,11 +16,12 @@ header('Content-Type: text/html; charset=utf-8');
 </head>
 <body>
   <header>
-    <div class="logo-title-row">
-      <img src="../logo2.jpg" alt="Logo" class="logo" />
-      <h1 class="site-title">Student Dashboard</h1>
-    </div>
-  </header>
+        <div class="logo-title-row">
+            <img src="../logo2.jpg" alt="Logo" class="logo" />
+            <h1 class="site-title">Σελίδα Φοιτητή</h1>
+        </div>
+    </header>
+  
 
   <div class="dashboard-container">
     <aside class="sidebar">

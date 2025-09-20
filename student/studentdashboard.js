@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const panel = document.querySelector('.announcements');
   const listEl = document.getElementById('announcementsList');
 
-  // Announcements (AJAX)
+  // Announcements 
   async function loadAnnouncements() {
     try {
       const r = await fetch('announcements_fetch.php', { credentials:'same-origin', cache:'no-store', headers:{'Accept':'application/json'} });
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Manage Thesis (AJAX JSON)
+  
   const manageBtn = document.getElementById('managethesesBtn');
   if (manageBtn && panel) {
     manageBtn.addEventListener('click', e => { e.preventDefault(); loadManage(); });

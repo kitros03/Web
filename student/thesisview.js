@@ -1,4 +1,4 @@
-// thesisview.js (απόσπασμα render)
+
 function renderThesis(j) {
   const box = document.getElementById('thesis-details');
   if (!box) return;

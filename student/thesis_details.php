@@ -37,7 +37,7 @@ if (!empty($supervisor_name))       $committee[] = $supervisor_name;
 if (!empty($th['member1_name']))    $committee[] = $th['member1_name'];
 if (!empty($th['member2_name']))    $committee[] = $th['member2_name'];
 
-// Auto-promotion + καθάρισμα pending
+
 $currStatus = $th['th_status'] ?? 'NOT_ASSIGNED';
 if ($currStatus === 'ASSIGNED' && count($committee) >= 3) {
   $pdo->prepare("UPDATE thesis SET th_status='ACTIVE' WHERE thesisID=?")->execute([(int)$th['thesisID']]);

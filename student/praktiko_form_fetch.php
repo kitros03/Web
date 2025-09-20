@@ -4,14 +4,14 @@ declare(strict_types=1);
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
-// Πρόσβαση
+
 if (empty($_SESSION['username'])) {
   http_response_code(401);
   echo json_encode(['error' => 'Μη εξουσιοδοτημένη πρόσβαση'], JSON_UNESCAPED_UNICODE);
   exit;
 }
 
-// Είσοδος
+
 $thesisID = (int)($_GET['thesisID'] ?? $_POST['thesisID'] ?? 0);
 if ($thesisID <= 0) {
   http_response_code(400);
@@ -19,7 +19,7 @@ if ($thesisID <= 0) {
   exit;
 }
 
-// MySQLi τοπική σύνδεση (δεν αλλάζει το δικό σου dbconnect)
+// MySQLi τοπική σύνδεση 
 $host = 'localhost';
 $db   = 'projectweb';
 $user = 'root';
@@ -34,14 +34,14 @@ if ($mysqli->connect_errno) {
 }
 $mysqli->set_charset('utf8mb4');
 
-// Helpers
+
 function fullName($f,$l){ $n=trim(($f??'').' '.($l??'')); return $n!==''?$n:'………………………………'; }
 function dotted($v,$fb='………………………………'){ $s=trim((string)$v); return $s!==''?$s:$fb; }
 
 $thesisIDEsc = (int)$thesisID;
 
 try {
-  // Κύρια φόρτωση
+  
   $sql = "
     SELECT 
       t.thesisID, t.title, t.supervisor, t.gs_numb,
@@ -69,7 +69,7 @@ try {
     exit;
   }
 
-  // Τελικός βαθμός από grades.grade (μέσος όρος, 1 δεκαδικό)
+  
   $resG = $mysqli->query("SELECT AVG(grade) AS avg_grade FROM grades WHERE thesisID = {$thesisIDEsc}");
   $avgGrade = null;
   if ($resG !== false) {
@@ -79,7 +79,7 @@ try {
   }
   $finalGradeText = $avgGrade !== null ? number_format($avgGrade, 1, '.', '') : '………………';
 
-  // Διδάσκοντες
+  
   $teacherById = function(int $id) use ($mysqli){
     if ($id<=0) return null;
     $r = $mysqli->query("SELECT t_fname, t_lname FROM teacher WHERE id = {$id} LIMIT 1");
@@ -94,7 +94,7 @@ try {
     ];
   };
 
-  // Συναρμολόγηση
+  
   $studentFull = fullName($row['s_fname'] ?? null, $row['s_lname'] ?? null);
   $title       = dotted($row['title'] ?? '');
   $room        = dotted($row['exam_room'] ?? '');

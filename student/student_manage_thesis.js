@@ -3,7 +3,11 @@ async function fetchJSON(url, opts={}) {
   if (!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
+  const backBtn = document.getElementById('backBtn');
 
+    backBtn?.addEventListener('click', () => {
+        window.location.href = 'studentdashboard.php';
+    });
 function renderAssigned(container, data){
   const { title, note, teachers, inviteTable } = data;
   container.innerHTML = `
@@ -52,7 +56,7 @@ function renderExam(container, data){
   const linksText = (meta.external_links || []).join('\n');
   const hasFile = meta.has_file;
   const fileName = meta.draft_file ? meta.draft_file.split('/').pop() : '';
-  const fileSizeHtml = ''; // προαιρετικό async HEAD για μέγεθος
+  const fileSizeHtml = ''; 
 
   container.innerHTML = `
     <h3>${title}</h3>
@@ -216,7 +220,7 @@ export async function loadStudentManageThesis(containerSelector){
   }
 }
 
-// Προαιρετικά auto-init
+
 document.addEventListener('DOMContentLoaded', ()=> {
-  // Καλέστε loadStudentManageThesis('#studentManageThesisRoot') από την σελίδα όπου θα τοποθετηθεί το panel
+  
 });

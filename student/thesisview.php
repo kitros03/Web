@@ -36,7 +36,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'student') {
       <main class="dashboard-with-sidebar">
         <section class="announcements">
           <h2>Προβολή Θέματος</h2>
-          <!-- Το JavaScript θα γεμίσει αυτό το div με τα στοιχεία -->
+         
           <div id="thesis-details">
             <p class="muted">Φόρτωση στοιχείων πτυχιακής...</p>
           </div>

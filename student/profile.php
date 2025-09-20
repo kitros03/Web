@@ -28,9 +28,9 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     <title>Student Dashboard</title>
     <link rel="stylesheet" href="../style.css">
     <style>
-      /* ΜΟΝΟ για το περιεχόμενο του panel (το γύρω design παραμένει από style.css) */
+      
 
-      /* Γραμμές προφίλ: τρεις στήλες Label | Value/Edit | Buttons */
+      
       .profile-rows { margin-top: 6px; }
       .profile-row {
         display: grid;
@@ -42,28 +42,28 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
         border-bottom: 1px solid rgba(0,0,0,0.06);
       }
 
-      /* Label με κουκκίδα (όπως στην Προβολή Θέματος) */
+      
       .profile-label { font-weight: 700; position: relative; padding-left: 14px; }
       .profile-label::before { content: '•'; position: absolute; left: 0; top: 0; }
 
-      /* Περιοχή προβολής/επεξεργασίας */
+      
       .profile-value [data-view] { display: inline; }
-      .profile-value [data-edit] { display: none; }             /* κλειστό */
-      .profile-value [data-edit].is-open { display: flex !important; } /* ανοικτό */
+      .profile-value [data-edit] { display: none; }             
+      .profile-value [data-edit].is-open { display: flex !important; } 
 
-      /* Inputs */
+      
       .profile-input { min-width: 360px; max-width: 560px; padding: 6px 8px; box-sizing: border-box; }
       .profile-addr-grid { display: grid; grid-template-columns: repeat(4, minmax(130px,1fr)); gap: 6px; width: 100%; }
       .profile-addr-grid input { padding: 6px 8px; box-sizing: border-box; }
 
-      /* Actions δεξιά */
+      
       .profile-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
       .profile-btn { min-width: 120px; padding: 6px 12px; text-align: center; white-space: nowrap; }
       .profile-btn:disabled { opacity: .6; cursor: not-allowed; }
     </style>
   </head>
   <body>
-    <!-- Header -->
+    
     <header>
       <div class="logo-title-row">
         <img src="../logo2.jpg" alt="Logo" class="logo" />
@@ -84,14 +84,14 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
         </nav>
       </aside>
 
-      <!-- Main -->
+      
       <main class="dashboard-with-sidebar">
         <section class="announcements">
           <h2>Επεξεργασία Προφίλ</h2>
 
           <div class="profile-rows">
 
-            <!-- Διεύθυνση (4 πεδία) -->
+            <!-- Διεύθυνση  -->
             <div class="profile-row" data-row="address">
               <div class="profile-label">Πλήρης διεύθυνση:</div>
               <div class="profile-value">
@@ -162,13 +162,13 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     </div>
 
     <script>
-    // Routing ίδιο με dashboard
+    
     document.getElementById('thesisviewBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='thesisview.php'; });
     document.getElementById('profileBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='profile.php'; });
     document.getElementById('managethesesBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='thesisview.php?tab=manage'; });
     document.getElementById('logoutBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='../logout.php'; });
 
-    // Βοηθητικά
+    
     function parts(rowEl){
       return {
         view:    rowEl.querySelector('[data-view]'),
@@ -182,7 +182,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
       if (!p.view || !p.editBox) return;
       p.view.style.display = 'none';
       p.editBox.classList.add('is-open');
-      p.editBox.style.display = 'flex'; // διασφαλίζει ορατότητα ακόμη κι αν άλλο CSS βάζει display:none
+      p.editBox.style.display = 'flex'; 
     }
     function closeEdit(rowEl){
       const p = parts(rowEl);
@@ -205,7 +205,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     }
     const same = (a,b) => JSON.stringify(a)===JSON.stringify(b);
 
-    // Setup ανά γραμμή
+    
     document.querySelectorAll('.profile-row').forEach(rowEl => {
       const kind = rowEl.getAttribute('data-row');
       const p = parts(rowEl);
@@ -253,7 +253,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
           const j = await r.json();
           if (!j || !j.success) { alert(j && j.message ? j.message : 'Αποτυχία αποθήκευσης'); return; }
 
-          // Ενημέρωση προβολής και κλείσιμο
+         
           if (kind === 'address') {
             const s = snapshot(rowEl);
             p.view.textContent = `${s.street} ${s.streetno}, ${s.city} ${s.postcode}`.trim();

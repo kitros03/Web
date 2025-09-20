@@ -1,5 +1,5 @@
 <?php
-// student_manage_thesis_content.php — AJAX actions (PDO)
+
 declare(strict_types=1);
 session_start();
 require_once '../dbconnect.php';
@@ -17,7 +17,7 @@ try {
 
 if (empty($_SESSION['username']) || (($_SESSION['role']??'')!=='student')) fail('Unauthorized', 401);
 
-// Βρες φοιτητή + thesis
+
 $st = $pdo->prepare("SELECT s.studentID, s.thesisID, t.th_status FROM student s JOIN thesis t ON t.thesisID=s.thesisID WHERE s.username=? LIMIT 1");
 $st->execute([$_SESSION['username']]);
 $me = $st->fetch(PDO::FETCH_ASSOC);
@@ -27,7 +27,7 @@ $studentID = (int)$me['studentID'];
 $thesisID  = (int)$me['thesisID'];
 $thStatus  = strtoupper((string)$me['th_status']);
 
-// Διασφάλιση meta row
+
 $pdo->beginTransaction();
 $chk = $pdo->prepare("SELECT 1 FROM thesis_exam_meta WHERE thesisID=?");
 $chk->execute([$thesisID]);
@@ -137,9 +137,9 @@ if ($action === 'save_schedule') {
   ok(['message'=>'Αποθηκεύτηκε η δήλωση εξέτασης']);
 }
 
-// 4) Save after (repository)
+// 4) Save after (αποθετήριο)
 if ($action === 'save_after') {
-  // Προαπαιτούμενο grading=1
+  
   $g = $pdo->prepare("SELECT grading FROM thesis WHERE thesisID=?");
   $g->execute([$thesisID]);
   $flag = (int)$g->fetchColumn();

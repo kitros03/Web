@@ -1,29 +1,29 @@
 <?php
-// thesis_exam_actions.php — MySQLi + AJAX JSON
+
 session_start();
-require_once '../dbconnect.php'; // πρέπει να εκθέτει $connection (mysqli)
+require_once '../dbconnect.php'; 
 
 header('Content-Type: application/json; charset=utf-8');
 
 function ok($p=[]) { echo json_encode(['success'=>true]+$p, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES); exit; }
 function fail($m, $code=400){ http_response_code($code); echo json_encode(['success'=>false,'message'=>$m], JSON_UNESCAPED_UNICODE); exit; }
 
-// Auth
+
 if (empty($_SESSION['username'])) fail('Unauthorized', 401);
 $role = $_SESSION['role'] ?? '';
 $username = $_SESSION['username'];
 if ($role === 'secretary') fail('Μη εξουσιοδοτημένη πρόσβαση (Γραμματεία)', 403);
 
-// DB
+
 if (!isset($connection) || mysqli_connect_errno()) fail('DB error: '.mysqli_connect_error(), 500);
 
-// Input
+
 $thesisID = (int)($_POST['thesisID'] ?? 0);
 if ($thesisID <= 0) fail('Λείπει thesisID');
 
 $action = $_POST['action'] ?? '';
 
-// Φόρτωση thesis + student username + status
+
 $sql = "SELECT t.thesisID, t.th_status, t.supervisor, s.studentID, s.username AS student_username
         FROM thesis t LEFT JOIN student s ON s.thesisID=t.thesisID
         WHERE t.thesisID=? LIMIT 1";
@@ -36,7 +36,7 @@ mysqli_stmt_close($stmt);
 if (!$T) fail('Δεν βρέθηκε η πτυχιακή', 404);
 if (($T['th_status'] ?? '') !== 'EXAM') fail('Η πτυχιακή δεν είναι σε κατάσταση Υπό Εξέταση', 400);
 
-// Access check: student ή teacher (supervisor/committee)
+
 $can = false;
 if ($role === 'student' && $username === ($T['student_username'] ?? '')) $can = true;
 if (!$can && $role === 'teacher') {
@@ -60,7 +60,7 @@ if (!$can && $role === 'teacher') {
 }
 if (!$can) fail('Δεν έχεις δικαίωμα πρόσβασης σε αυτή την πτυχιακή', 403);
 
-// Διασφάλισε εγγραφή στο thesis_exam_meta
+
 $stmt = mysqli_prepare($connection, "SELECT thesisID FROM thesis_exam_meta WHERE thesisID=?");
 mysqli_stmt_bind_param($stmt, "i", $thesisID);
 mysqli_stmt_execute($stmt);
@@ -75,7 +75,7 @@ if (!$hasMeta) {
 }
 
 if ($action === 'save_draft') {
-  // Parse external_links (URLs ανά γραμμή)
+  
   $linksRaw = trim((string)($_POST['external_links'] ?? ''));
   $urls = [];
   if ($linksRaw !== '') {
@@ -116,7 +116,7 @@ if ($action === 'save_draft') {
     mysqli_stmt_close($stmt);
     if ($old && file_exists(__DIR__.'/'.$old)) @unlink(__DIR__.'/'.$old);
 
-    // UPDATE file + links
+    
     $stmt = mysqli_prepare($connection, "UPDATE thesis_exam_meta SET draft_file=?, external_links=?, updated_at=NOW() WHERE thesisID=?");
     mysqli_stmt_bind_param($stmt, "ssi", $rel, $linksJson, $thesisID);
     if (!mysqli_stmt_execute($stmt)) { mysqli_stmt_close($stmt); fail('Αποτυχία αποθήκευσης στη βάση', 500); }
@@ -125,7 +125,7 @@ if ($action === 'save_draft') {
     $fileUploaded = true;
     $savedPath = $rel;
   } else {
-    // UPDATE μόνο links
+    
     $stmt = mysqli_prepare($connection, "UPDATE thesis_exam_meta SET external_links=?, updated_at=NOW() WHERE thesisID=?");
     mysqli_stmt_bind_param($stmt, "si", $linksJson, $thesisID);
     if (!mysqli_stmt_execute($stmt)) { mysqli_stmt_close($stmt); fail('Αποτυχία αποθήκευσης συνδέσμων', 500); }
