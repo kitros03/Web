@@ -3,6 +3,11 @@
 (function () {
   'use strict';
 
+  // Κύριο endpoint λίστας για την "Προβολή ΔΕ"
+  var PRIMARY_LIST_ENDPOINT = './secretary_theses_list.php';
+  // Fallback αν το primary λείπει:
+  var FALLBACK_LIST_ENDPOINT = './secretary_manage_thesis_list.php';
+
   var listDiv    = document.getElementById('thesesList');
   var detailsDiv = document.getElementById('thesisDetails');
   var searchBox  = document.getElementById('searchBox');
@@ -63,7 +68,6 @@
       rows.push('<td>' + (it.supervisor_name || '—') + '</td>');
       rows.push('<td>' + (it.student_name || '—') + '</td>');
       rows.push('<td>' + daysLabel(it.days_since_assignment) + '</td>');
-      // ΜΟΝΟ “Λεπτομέρειες”
       rows.push('<td><button class="sidebarButton btn-details" data-id="' + it.thesisID + '">Λεπτομέρειες</button></td>');
       rows.push('</tr>');
     });
@@ -83,6 +87,7 @@
           data = JSON.parse(text);
         } catch (e) {
           var preview = (text || '').slice(0, 400);
+          // Αν 404 από Apache/Nginx => HTML "Not Found", θα πιάσει εδώ
           throw new Error('Μη έγκυρη JSON απόκριση από ' + url + '. Πρώτα bytes:\n' + preview);
         }
         if (!res.ok) {
@@ -94,33 +99,31 @@
     });
   }
 
-  function loadList() {
+  function loadListFrom(url, fallbackUrl) {
     if (listDiv) listDiv.innerHTML = '<p>Φόρτωση…</p>';
-    fetchJSON('secretary_theses_list.php')
+    fetchJSON(url)
       .then(function (data) {
         cachedList = Array.isArray(data) ? data : [];
         renderList(cachedList);
       })
       .catch(function (e) {
-        if (listDiv) listDiv.innerHTML = '<p class="error">' + e.message + '</p>';
-        if (window.console && console.error) console.error(e);
+        // Αν το πρώτο απέτυχε και υπάρχει fallback, δοκίμασέ το μία φορά
+        var notFoundHtml = /Not Found/i.test(String(e.message || ''));
+        if (fallbackUrl && notFoundHtml) {
+          fetchJSON(fallbackUrl)
+            .then(function (data2) {
+              cachedList = Array.isArray(data2) ? data2 : [];
+              renderList(cachedList);
+            })
+            .catch(function (e2) {
+              if (listDiv) listDiv.innerHTML = '<p class="error">' + e2.message + '</p>';
+              if (window.console && console.error) console.error(e2);
+            });
+        } else {
+          if (listDiv) listDiv.innerHTML = '<p class="error">' + e.message + '</p>';
+          if (window.console && console.error) console.error(e);
+        }
       });
-  }
-
-  function filtered() {
-    var q = '';
-    if (searchBox && typeof searchBox.value === 'string') {
-      q = searchBox.value.toLowerCase().trim();
-    }
-    if (!q) return cachedList.slice();
-
-    return cachedList.filter(function (x) {
-      var t1 = (x.title || '').toLowerCase();
-      var t2 = (x.supervisor_name || '').toLowerCase();
-      var t3 = (x.student_name || '').toLowerCase();
-      var t4 = String(x.thesisID || '').toLowerCase();
-      return t1.indexOf(q) !== -1 || t2.indexOf(q) !== -1 || t3.indexOf(q) !== -1 || t4.indexOf(q) !== -1;
-    });
   }
 
   function buildDetailsHTML(d) {
@@ -138,7 +141,6 @@
 
   document.addEventListener('click', function (e) {
     var target = e.target || e.srcElement;
-
     var btnDetails = target && target.closest ? target.closest('button.btn-details[data-id]') : null;
     if (btnDetails) {
       var thesisID = btnDetails.getAttribute('data-id');
@@ -162,10 +164,18 @@
 
   if (searchBox) {
     searchBox.addEventListener('input', function () {
-      renderList(filtered());
+      // client-side filter
+      var q = searchBox.value.toLowerCase().trim();
+      var filtered = cachedList.filter(function (x) {
+        return (x.title || '').toLowerCase().indexOf(q) !== -1 ||
+               (x.supervisor_name || '').toLowerCase().indexOf(q) !== -1 ||
+               (x.student_name || '').toLowerCase().indexOf(q) !== -1 ||
+               String(x.thesisID || '').indexOf(q) !== -1;
+      });
+      renderList(filtered);
     });
   }
 
-  // αρχικό load
-  loadList();
+  // αρχική φόρτωση με fallback
+  loadListFrom(PRIMARY_LIST_ENDPOINT, FALLBACK_LIST_ENDPOINT);
 })();

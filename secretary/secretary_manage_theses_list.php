@@ -1,13 +1,35 @@
 <?php
 declare(strict_types=1);
 session_start();
-header('Content-Type: application/json');
 
-if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') {
+ob_start();
+header('Content-Type: application/json; charset=UTF-8');
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
+if (!isset($_SESSION['username']) || (($_SESSION['role'] ?? '') !== 'secretary')) {
   http_response_code(403);
-  echo 'Forbidden'; exit;
+  ob_clean();
+  echo json_encode(['error' => 'Forbidden'], JSON_UNESCAPED_UNICODE);
+  exit;
 }
-require_once '../dbconnect.php'; 
+
+require_once __DIR__ . '/../dbconnect.php';
+
+if (!isset($host, $db, $user, $pass)) {
+  http_response_code(500);
+  ob_clean();
+  echo json_encode(['error' => 'DB credentials not found in dbconnect.php'], JSON_UNESCAPED_UNICODE);
+  exit;
+}
+$mysqli = @new mysqli($host, $user, $pass, $db);
+if ($mysqli->connect_errno) {
+  http_response_code(500);
+  ob_clean();
+  echo json_encode(['error' => 'DB connection failed', 'details' => $mysqli->connect_error], JSON_UNESCAPED_UNICODE);
+  exit;
+}
+@$mysqli->set_charset(isset($charset) ? $charset : 'utf8mb4');
 
 try {
   $sql = "
@@ -45,7 +67,13 @@ try {
           AND EXISTS (SELECT 1 FROM grades gg WHERE gg.thesisID = t.thesisID))
     ORDER BY t.thesisID DESC
   ";
-  $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+  $result = $mysqli->query($sql);
+  if (!$result) throw new RuntimeException('Query failed: ' . $mysqli->error);
+
+  $rows = [];
+  while ($row = $result->fetch_assoc()) { $rows[] = $row; }
+  $result->free();
 
   $today = new DateTimeImmutable('today');
   $out = [];
@@ -53,7 +81,8 @@ try {
     $assigned = $r['assigned_date_assigned'] ?: $r['assigned_date_active'];
     $days = null;
     if ($assigned) {
-      try { $days = (int)$today->diff(new DateTimeImmutable($assigned))->format('%a'); } catch (Throwable $e) {}
+      try { $days = (int)$today->diff(new DateTimeImmutable($assigned))->format('%a'); }
+      catch (Throwable $e) { $days = null; }
     }
     $out[] = [
       'thesisID' => (int)$r['thesisID'],
@@ -61,17 +90,21 @@ try {
       'th_description' => $r['th_description'],
       'th_status'=> $r['th_status'],
       'gs_numb'  => $r['gs_numb'],
-      'supervisor_name' => $r['supervisor_name'] ?: null,
-      'student_name'    => $r['student_name'] ?: null,
+      'supervisor_name' => ($r['supervisor_name'] !== null && $r['supervisor_name'] !== '') ? $r['supervisor_name'] : null,
+      'student_name'    => ($r['student_name'] !== null && $r['student_name'] !== '') ? $r['student_name'] : null,
       'days_since_assignment' => $days,
-      'repository_url' => $r['repository_url'] ?: null,
+      'repository_url' => ($r['repository_url'] !== null && $r['repository_url'] !== '') ? $r['repository_url'] : null,
       'final_grade'    => isset($r['final_grade']) ? (float)$r['final_grade'] : null,
       'ready_finalize' => (bool)$r['ready_finalize'],
     ];
   }
-  echo json_encode($out);
+
+  ob_clean();
+  echo json_encode($out, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
   http_response_code(500);
-  echo 'Server error: ' . $e->getMessage();
+  ob_clean();
+  echo json_encode(['error' => 'Server error', 'details' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+} finally {
+  if (isset($mysqli) && $mysqli instanceof mysqli) { @$mysqli->close(); }
 }
-?>
