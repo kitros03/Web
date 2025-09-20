@@ -18,17 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (profileBtn.tagName === 'A') profileBtn.setAttribute('href', 'profile.php');
   }
 
-  const logoutBtn  = document.getElementById('logoutBtn');
+  const logoutBtn  = document.getElementById('../logoutBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      window.location.href = 'logout.php';
+      window.location.href = '../logout.php';
     });
-    if (logoutBtn.tagName === 'A') logoutBtn.setAttribute('href', 'logout.php');
+    if (logoutBtn.tagName === 'A') logoutBtn.setAttribute('href', '../logout.php');
   }
 
   // Διαχείριση ΔΕ (partial loader)
-  const panel = document.querySelector('.announcements');
+  const panel = document.querySelector('../announcements');
   const manageBtn = document.getElementById('managethesesBtn');
   if (!panel || !manageBtn) return;
 

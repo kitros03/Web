@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'/dbconnect.php';
+require_once '../dbconnect.php';
 session_start();
 if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'student') {
   header('Location: index.html'); exit;
@@ -26,7 +26,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   <head>
     <meta charset="UTF-8">
     <title>Student Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
     <style>
       /* ΜΟΝΟ για το περιεχόμενο του panel (το γύρω design παραμένει από style.css) */
 
@@ -66,7 +66,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     <!-- Header -->
     <header>
       <div class="logo-title-row">
-        <img src="logo2.jpg" alt="Logo" class="logo" />
+        <img src="../logo2.jpg" alt="Logo" class="logo" />
         <h1 class="site-title">Student Dashboard</h1>
       </div>
     </header>
@@ -166,7 +166,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     document.getElementById('thesisviewBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='thesisview.php'; });
     document.getElementById('profileBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='profile.php'; });
     document.getElementById('managethesesBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='thesisview.php?tab=manage'; });
-    document.getElementById('logoutBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='logout.php'; });
+    document.getElementById('logoutBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); location.href='../logout.php'; });
 
     // Βοηθητικά
     function parts(rowEl){

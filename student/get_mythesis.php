@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'dbconnect.php';
+require_once '../dbconnect.php';
 
 if (empty($_SESSION['username'])) {
     echo json_encode(['success' => false, 'message' => 'User not authenticated.']);

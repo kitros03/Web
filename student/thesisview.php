@@ -11,12 +11,12 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'student') {
   <head>
     <meta charset="UTF-8">
     <title>Student Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
   </head>
   <body>
     <header>
       <div class="logo-title-row">
-        <img src="logo2.jpg" alt="Logo" class="logo" />
+        <img src="../logo2.jpg" alt="Logo" class="logo" />
         <h1 class="site-title">Student Dashboard</h1>
       </div>
     </header>

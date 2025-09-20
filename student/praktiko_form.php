@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/dbconnect.php';
+require_once  '../dbconnect.php';
 session_start();
 header('Content-Type: text/html; charset=utf-8');
 
@@ -18,7 +18,7 @@ if ($thesisID <= 0) { echo 'Λείπει thesisID'; exit; }
 <head>
   <meta charset="UTF-8">
   <title>Πρακτικό Εξέτασης Διπλωματικής Εργασίας</title>
-  <link rel="stylesheet" href="praktiko_exam.css">
+  <link rel="stylesheet" href="../praktiko_exam.css">
   <script>
     window.__PRAKTIKO__ = {
       thesisID: <?php echo json_encode($thesisID, JSON_UNESCAPED_UNICODE); ?>
