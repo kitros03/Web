@@ -4,11 +4,7 @@ session_start();
 header('Content-Type: text/html; charset=utf-8');
 
 // Access control
-if (empty($_SESSION['username'])) {
-  http_response_code(401);
-  echo 'Μη εξουσιοδοτημένη πρόσβαση';
-  exit;
-}
+if (empty($_SESSION['username'])) { http_response_code(401); echo 'Μη εξουσιοδοτημένη πρόσβαση'; exit; }
 
 $thesisID = (int)($_GET['thesisID'] ?? 0);
 if ($thesisID <= 0) { echo 'Λείπει thesisID'; exit; }
@@ -20,9 +16,7 @@ if ($thesisID <= 0) { echo 'Λείπει thesisID'; exit; }
   <title>Πρακτικό Εξέτασης Διπλωματικής Εργασίας</title>
   <link rel="stylesheet" href="../praktiko_exam.css">
   <script>
-    window.__PRAKTIKO__ = {
-      thesisID: <?php echo json_encode($thesisID, JSON_UNESCAPED_UNICODE); ?>
-    };
+    window.__PRAKTIKO__ = { thesisID: <?php echo json_encode($thesisID, JSON_UNESCAPED_UNICODE); ?> };
   </script>
   <script defer src="praktiko_form.js"></script>
 </head>
@@ -100,7 +94,8 @@ if ($thesisID <= 0) { echo 'Λείπει thesisID'; exit; }
     <p>
       Μετά της έγκριση, ο εισηγητής κ. <span id="supervisorFull2">………………………………</span>,
       προτείνει στα μέλη της Τριμελούς Επιτροπής, να απονεμηθεί στο/στη φοιτητή/τρια
-      κ. <span id="studentNameInline4">………………………………</span> ο βαθμός <span id="finalGradeText">………………”</span>
+      κ. <span id="studentNameInline4">………………………………</span>
+      ο βαθμός <span class="grade-slot" id="finalGradeText">………………</span>
     </p>
 
     <p>Τα μέλη της Τριμελούς Επιτροπής, απομένουν την παραπάνω βαθμολογία:</p>
@@ -120,7 +115,8 @@ if ($thesisID <= 0) { echo 'Λείπει thesisID'; exit; }
     </table>
 
     <p>
-      Μετά την έγκριση και την απονομή του βαθμού <span id="finalGradeText2">………………</span>, η Τριμελής Επιτροπή, προτείνει να προχωρήσει
+      Μετά την έγκριση και την απονομή του βαθμού
+      <span class="grade-slot" id="finalGradeText2">………………</span>, η Τριμελής Επιτροπή, προτείνει να προχωρήσει
       στην διαδικασία για να ανακηρύξει τον κ. <span id="studentNameInline5">………………………………</span>, σε διπλωματούχο του Προγράμματος
       Σπουδών του «ΤΜΗΜΑΤΟΣ ΜΗΧΑΝΙΚΩΝ, ΗΛΕΚΤΡΟΝΙΚΩΝ ΥΠΟΛΟΓΙΣΤΩΝ ΚΑΙ ΠΛΗΡΟΦΟΡΙΚΗΣ ΠΑΝΕΠΙΣΤΗΜΙΟΥ ΠΑΤΡΩΝ»
       και να του απονέμει το Δίπλωμα Μηχανικού Η/Υ το οποίο αναγνωρίζεται ως Ενιαίος Τίτλος Σπουδών Μεταπτυχιακού Επιπέδου.

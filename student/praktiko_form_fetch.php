@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 session_start();
 header('Content-Type: application/json; charset=utf-8');
@@ -18,8 +19,7 @@ if ($thesisID <= 0) {
   exit;
 }
 
-
-
+// MySQLi τοπική σύνδεση (δεν αλλάζει το δικό σου dbconnect)
 $host = 'localhost';
 $db   = 'projectweb';
 $user = 'root';
@@ -34,7 +34,7 @@ if ($mysqli->connect_errno) {
 }
 $mysqli->set_charset('utf8mb4');
 
-// Βοηθητικά
+// Helpers
 function fullName($f,$l){ $n=trim(($f??'').' '.($l??'')); return $n!==''?$n:'………………………………'; }
 function dotted($v,$fb='………………………………'){ $s=trim((string)$v); return $s!==''?$s:$fb; }
 
@@ -69,7 +69,7 @@ try {
     exit;
   }
 
-  // Μέσος βαθμός
+  // Τελικός βαθμός από grades.grade (μέσος όρος, 1 δεκαδικό)
   $resG = $mysqli->query("SELECT AVG(grade) AS avg_grade FROM grades WHERE thesisID = {$thesisIDEsc}");
   $avgGrade = null;
   if ($resG !== false) {
@@ -77,11 +77,11 @@ try {
     if ($g && $g['avg_grade'] !== null) $avgGrade = round((float)$g['avg_grade'], 1);
     $resG->free();
   }
-  $finalGradeText = $avgGrade !== null ? (string)$avgGrade : '………………';
+  $finalGradeText = $avgGrade !== null ? number_format($avgGrade, 1, '.', '') : '………………';
 
-  // Συνάρτηση ευρέσεως διδάσκοντα
-  $teacherById = function($id) use ($mysqli){
-    $id = (int)$id; if ($id<=0) return null;
+  // Διδάσκοντες
+  $teacherById = function(int $id) use ($mysqli){
+    if ($id<=0) return null;
     $r = $mysqli->query("SELECT t_fname, t_lname FROM teacher WHERE id = {$id} LIMIT 1");
     if ($r === false) return null;
     $x = $r->fetch_assoc();
@@ -94,7 +94,7 @@ try {
     ];
   };
 
-  // Συναρμολόγηση απαντήσεων όπως τις περιμένει το JS
+  // Συναρμολόγηση
   $studentFull = fullName($row['s_fname'] ?? null, $row['s_lname'] ?? null);
   $title       = dotted($row['title'] ?? '');
   $room        = dotted($row['exam_room'] ?? '');
@@ -139,7 +139,7 @@ try {
     'finalGradeText'  => $finalGradeText
   ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
-  error_log('praktiko_form_fetch (mysqli) error: '.$e->getMessage());
+  error_log('praktiko_form_fetch error: '.$e->getMessage());
   http_response_code(500);
   echo json_encode(['error' => 'Προέκυψε σφάλμα κατά τη φόρτωση δεδομένων.'], JSON_UNESCAPED_UNICODE);
 } finally {

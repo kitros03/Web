@@ -1,62 +1,80 @@
 /* Βασικά */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
-  font-family: "Times New Roman", serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 12pt;
   line-height: 1.5;
-  max-width: 800px;
+  max-width: 820px;
   margin: 0 auto;
+  padding: 28px 36px;
   color: #000;
+  background: #fff;
 }
 
-.header { text-align: center; margin-bottom: 20px; }
-
+/* Επικεφαλίδα */
+.header { text-align: center; margin-bottom: 12px; }
 .university-name { font-weight: bold; font-size: 11pt; }
-.department-name { font-weight: bold; font-size: 10pt; font-style: italic; margin-bottom: 15px; }
+.department-name { font-weight: bold; font-size: 10pt; font-style: italic; margin-bottom: 10px; }
 
-.document-title { font-weight: bold; font-size: 13pt; margin: 10px 0; text-decoration: underline; }
-.document-subtitle, .document-subtitle2 { font-weight: bold; font-size: 11pt; }
+.document-title {
+  font-weight: bold;
+  font-size: 13pt;
+  margin: 8px 0 6px;
+  text-decoration: underline;
+  letter-spacing: .2px;
+}
+.document-subtitle, .document-subtitle2 {
+  font-weight: bold; font-size: 11pt; margin: 0;
+}
 
-/* Γραμμή “του/της φοιτητή/φοιτήτρια” */
-.italic { font-style: italic; margin-top: 6px; }
-
-/* ΟΝΟΜΑ κάτω από τη γραμμή “του/της …”, χωρίς bold */
+/* Γραμμή “του/της …” */
+.italic { font-style: italic; margin-top: 4px; }
 .student-name {
   display: block;
   width: 100%;
   text-align: center;
-  margin: 6px 0 16px 0;
-  font-weight: normal;      /* χωρίς bold */
-  font-size: 12pt;          /* ελαφρώς μικρότερο από τον τίτλο */
+  margin: 6px 0 14px;
+  font-weight: normal;
+  font-size: 12pt;
 }
 
-/* Περιεχόμενο */
-.content p { margin: 12px 0; text-align: justify; }
-ol { margin: 10px 0 10px 20px; }
-ol li { margin-bottom: 5px; text-align: justify; }
+/* Κείμενο */
+.content { margin-top: 6px; }
+.content p { margin: 10px 0; text-align: justify; }
+
+/* Λίστες */
+ol { margin: 8px 0 8px 26px; padding-left: 18px; }
+ol li { margin-bottom: 6px; text-align: justify; }
 
 /* Πίνακας υπογραφών */
 .signature-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 20px 0;
+  margin: 18px 0 8px;
   border: 2px solid #000;
 }
 .signature-table thead th {
-  background: #dfe6f1;
+  background: #e5ebf5;
   border: 1px solid #000;
   padding: 8px 6px;
   text-align: center;
   font-weight: bold;
   font-style: italic;
-  letter-spacing: 0.5px;
+  letter-spacing: .2px;
 }
 .signature-table tbody td {
   border: 1px solid #000;
   padding: 18px 10px;
   text-align: center;
+  min-height: 28px;
 }
+
+/* Τονισμοί τελειών (προαιρετικό) */
+.grade-slot { font-weight: bold; }
 
 /* Εκτύπωση */
 @media print {
-  body { font-size: 11pt; }
+  body { font-size: 11pt; padding: 0; margin: 0 auto; }
+  .signature-table { page-break-inside: avoid; }
 }

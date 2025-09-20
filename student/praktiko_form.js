@@ -73,29 +73,29 @@
     setText('#examTime', d.timeStr, '………………');
     setText('#gsText', d.gsText, '…………………');
 
-    // Ονόματα και τίτλος σε όλα τα σημεία που επαναλαμβάνονται
+    // Ονόματα και τίτλος
     setText('#studentNameInline', d.studentFull);
     setText('#thesisTitle', d.title);
     setText('#supervisorFull', d.supervisorFull);
     setText('#studentNameInline2', d.studentFull);
 
-    // Λίστα «Φυσική σειρά»
+    // Λίστες
     fillListOrdered('#membersOriginalList', d.membersOriginal || [], 3);
-
-    // Λίστα «Αλφαβητική σειρά»
     fillListOrdered('#membersAlphaList', d.membersAlpha || [], 3);
 
     // Κείμενα που ακολουθούν
     setText('#studentNameInline3', d.studentFull);
     setText('#supervisorFull2', d.supervisorFull);
     setText('#studentNameInline4', d.studentFull);
-    setText('#finalGradeText', d.finalGradeText, '………………');
 
-    // Πίνακας υπογραφών από αλφαβητική σειρά
+    // Βαθμός σε όλα τα slots
+    const grade = (d.finalGradeText ?? '………………').toString();
+    document.querySelectorAll('.grade-slot').forEach(el => el.textContent = grade);
+
+    // Πίνακας υπογραφών
     fillSignatureTable('#signatureTable', d.membersAlpha || [], 3);
 
     // Τελευταίες επαναλήψεις
-    setText('#finalGradeText2', d.finalGradeText, '………………');
     setText('#studentNameInline5', d.studentFull);
   }
 
