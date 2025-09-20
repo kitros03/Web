@@ -8,7 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeGrading = document.getElementById("closeGrading");
     const presentationInfo = document.getElementById("presentationInfo");
     const gradingContent = document.getElementById("gradingContent");
+    const backBtn = document.getElementById('backBtn');
 
+    backBtn?.addEventListener('click', () => {
+        window.location.href = 'teacherdashboard.php';
+    });
+
+    
     // Retrieve thesisID from URL or sessionStorage
     function getThesisId() {
         const params = new URLSearchParams(window.location.search);
@@ -23,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const thesisId = getThesisId();
 
     if (!thesisId) {
-        alert("Thesis ID is missing.");
+        alert("Missing thesisID.");
         return;
     }
 
@@ -78,16 +84,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const thesis = data.thesis || {};
         let html = "";
         if (meta.announce) {
-            html += `<p>Student: ${escapeHtml(student.s_fname)} ${escapeHtml(student.s_lname)}</p>`;
-            html += `<p>Thesis: ${escapeHtml(thesis.title)}</p>`;
-            html += `<p>Date & Time: ${escapeHtml(meta.exam_datetime)}</p>`;
+            html += `<p>Φοιτητής: ${escapeHtml(student.s_fname)} ${escapeHtml(student.s_lname)}</p>`;
+            html += `<p>Θέμα: ${escapeHtml(thesis.title)}</p>`;
+            html += `<p>Ημ/νία και Ώρα: ${escapeHtml(meta.exam_datetime)}</p>`;
             if (meta.exam_meeting_url) {
                 html += `<p>Link: <a href="${escapeHtml(meta.exam_meeting_url)}" target="_blank">${escapeHtml(meta.exam_meeting_url)}</a></p>`;
             } else if (meta.exam_room) {
-                html += `<p>Room: ${escapeHtml(meta.exam_room)}</p>`;
+                html += `<p>Αίθουσα: ${escapeHtml(meta.exam_room)}</p>`;
             }
         } else {
-            html = `<p>Presentation details not set</p>`;
+            html = `<p>Δεν υπάρχουν πληροφορίες</p>`;
         }
         presentationInfo.innerHTML = html;
     });
@@ -106,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
         popupGrading.style.display = "flex";
         const data = await fetchData();
         if (!data) {
-            gradingContent.textContent = "Failed to load grading data.";
+            gradingContent.textContent = "Αποτυχία φόρτωσης δεδομένων.";
             return;
         }
         const grades = data.grades || [];
@@ -132,22 +138,22 @@ document.addEventListener("DOMContentLoaded", () => {
             const hasSubmitted = grades.some(g => Number(g.teacherID) === currentTeacherId);
             if (!hasSubmitted) {
                 html = `<form id="gradeForm" style="margin-top:1em;">
-                    <label>Quality</label>
+                    <label>Ποιότητα Δ.Ε.</label>
                     <input name="quality_grade" type="number" min="0" max="10" step="0.1" required />
-                    <label>Time</label>
+                    <label>Χρόνος εκπόνησης</label>
                     <input name="time" type="number" min="0" max="10" step="0.1" required />
-                    <label>Completeness</label>
+                    <label>Πληρότητα Κειμένου</label>
                     <input name="rest" type="number" min="0" max="10" step="0.1" required />
-                    <label>Presentation</label>
+                    <label>Συνολική εικόνα</label>
                     <input name="presentation" type="number" min="0" max="10" step="0.1" required />
                     <button type="submit">Submit</button>
                 </form>`;
             } else {
-                html = "<p>You have already submitted grades.</p>";
+                html = "<p>Έχετε ήδη βαθμολογήσει.</p>";
             }
 
             if (grades.length) {
-                html += "<table border='1' style='border-collapse: collapse; margin-top: 1em; width: 100%;'><thead><tr><th>Teacher</th><th>Quality</th><th>Time</th><th>Completeness</th><th>Presentation</th><th>Avg</th></tr></thead><tbody>";
+                html += "<table border='1' style='border-collapse: collapse; margin-top: 1em; width: 100%;'><thead><tr><th>Καθηγητής</th><th>Ποιότητα Δ.Ε.</th><th>Χρόνος εκπόνησης</th><th>Πληρότητα Κειμένου</th><th>Συνολική εικόνα</th><th>Βαθμός</th></tr></thead><tbody>";
                 for (const grade of grades) {
                     html += `<tr>
                         <td>${escapeHtml(grade.t_fname)} ${escapeHtml(grade.t_lname)}</td>

@@ -3,7 +3,7 @@ session_start();
 require_once '../dbconnect.php';
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
-    header('Location: index.php');
+    header('Location: ../index.php');
     exit;
 }
 
@@ -11,32 +11,30 @@ $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$teacher) {
-    header('Location: index.php');
+    header('Location: ../index.php');
     exit;
 }
 
 $teacherId = $teacher['id'];
 $thesisID = $_GET['thesisID'] ?? null;
-if (!$thesisID) {
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-        http_response_code(400);
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Thesis ID is required']);
-    } else {
-        echo "Thesis ID is required";
-    }
-    exit;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
     strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     header('Content-Type: application/json');
-    if (isset($_POST['remove'], $_POST['thesisID'])) {
-        $thesisRemoveID = trim($_POST['thesisID']);
-        $stmtCheck = $pdo->prepare("SELECT finalized FROM thesis WHERE thesisID = ?");
+
+    $remove = $_POST['remove'] ?? null;
+    $thesisRemoveID = trim($_POST['thesisID'] ?? '');
+
+    if (!$thesisRemoveID) {
+        echo json_encode(['success' => false, 'message' => 'Thesis ID is required']);
+        exit;
+    }
+
+    if ($remove !== null) {
+        $stmtCheck = $pdo->prepare("SELECT th_status FROM thesis WHERE thesisID = ?");
         $stmtCheck->execute([$thesisRemoveID]);
         $result = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-        if ($result && !$result['finalized']) {
+        if ($result['th_status'] === 'ASSIGNED') {
             $pdo->beginTransaction();
             try {
                 $stmt1 = $pdo->prepare("UPDATE thesis SET assigned = 0, th_status='NOT_ASSIGNED' WHERE thesisID = ?");
@@ -50,38 +48,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 $stmt4->execute([$thesisRemoveID]);
 
                 $pdo->commit();
-                echo json_encode(['success' => true, 'message' => 'Thesis unassigned successfully.']);
+                echo json_encode(['success' => true, 'message' => 'Επιτυχής αναίρεση.']);
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo json_encode(['success' => false, 'message' => 'Failed to unassign thesis: ' . $e->getMessage()]);
+                echo json_encode(['success' => false, 'message' => 'Αποτυχία αναίρεσης: ' . $e->getMessage()]);
             }
         } else {
-            echo json_encode(['success' => false, 'message' => 'Finalized or nonexistent thesis.']);
+            echo json_encode(['success' => false, 'message' => 'Σφάλμα: μη έγκυρο ή τελικό θέμα.']);
         }
-        exit;
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Παρουσίασαν ελλείψεις δεδομένων.']);
     }
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
     strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     header('Content-Type: application/json');
 
-    // Committee members
+    if (!$thesisID) {
+        echo json_encode(['success' => false, 'message' => 'Thesis ID is required']);
+        exit;
+    }
+
     $stmt = $pdo->prepare("SELECT supervisor, member1, member2 FROM committee WHERE thesisID = ?");
     $stmt->execute([$thesisID]);
     $committee = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Invitations
+    if ($committee) {
+        if (!empty($committee['member1'])) {
+            $stmtM1 = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
+            $stmtM1->execute([$committee['member1']]);
+            $m1Name = $stmtM1->fetch(PDO::FETCH_ASSOC);
+            $committee['member1Name'] = $m1Name ? ($m1Name['t_fname'] . ' ' . $m1Name['t_lname']) : 'Ν/Α.';
+        } else {
+            $committee['member1Name'] = 'Ν/Α.';
+        }
+        if (!empty($committee['member2'])) {
+            $stmtM2 = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
+            $stmtM2->execute([$committee['member2']]);
+            $m2Name = $stmtM2->fetch(PDO::FETCH_ASSOC);
+            $committee['member2Name'] = $m2Name ? ($m2Name['t_fname'] . ' ' . $m2Name['t_lname']) : 'Ν/Α.';
+        } else {
+            $committee['member2Name'] = 'Ν/Α.';
+        }
+    }
+
     $stmt = $pdo->prepare("SELECT * FROM committeeinvitations WHERE senderID = ?");
     $stmt->execute([$teacherId]);
     $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Get teacher names for invitations
     foreach ($invitations as &$invitation) {
         $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
         $stmt->execute([$invitation['receiverID']]);
         $name = $stmt->fetch(PDO::FETCH_ASSOC);
-        $invitation['receiverName'] = $name['t_fname'] . ' ' . $name['t_lname'];
+        $invitation['receiverName'] = $name ? ($name['t_fname'] . ' ' . $name['t_lname']) : 'Ανώνυμος';
     }
 
     echo json_encode([
@@ -92,50 +113,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WI
     ]);
     exit;
 }
-
-header('Location: index.php');
-exit;
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
 <head>
-<meta charset="UTF-8">
-<title>Assigned Thesis</title>
-<link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../style.css" />
+    <title>Ανατεθεμένο Θέμα</title>
 </head>
 <body>
 <header>
     <div class="logo-title-row">
-        <button class="back-btn" id="backBtn">
+        <button class="back-btn" id="backBtn" aria-label="Back to dashboard">
             <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
-        <h1 class="site-title">Assigned Thesis</h1>
+        <h1 class="site-title">Ανατεθεμένο Θέμα</h1>
     </div>
 </header>
-<main class="dashboard-main">
-    <h2>Thesis Details</h2>
-    <table class="table" id="committeeTable">
+<main class="dashboard-main" role="main">
+    <h2>Πληροφορίες Θέματος</h2>
+    <table class="table" id="committeeTable" aria-describedby="committeeDescription">
         <thead>
             <tr>
-                <th>Committee Member 1</th>
-                <th>Committee Member 2</th>
+                <th>Μέλος 1</th>
+                <th>Μέλος 2</th>
             </tr>
         </thead>
         <tbody>
-            <!-- Filled by JS -->
+            <!-- ajax -->
         </tbody>
     </table>
-    <h3>Invitations</h3>
+    <p id="committeeDescription" class="sr-only">Πίνακας με τα μέλη της επιτροπής</p>
+
+    <h3>Προσκλήσεις</h3>
     <ul class="invitation-list" id="invitationList">
-        <!-- Filled by JS -->
+        <!-- ajax -->
     </ul>
+
     <form id="unassignForm" style="display:none;">
-        <input type="hidden" name="thesisID" id="thesisID" value="<?= htmlspecialchars($thesisID) ?>" />
-        <button class="submit-btn" type="submit" id="unassignBtn">Unassign Thesis</button>
+        <input type="hidden" name="thesisID" id="thesisID" value="<?= htmlspecialchars($thesisID, ENT_QUOTES) ?>" />
+        <button type="submit" class="submit-btn">Αναίρεση Ανάθεσης</button>
     </form>
 </main>
-<footer class="footer">
+<footer class="footer" role="contentinfo">
     <p>© 2025 Thesis Management System</p>
 </footer>
 <script src="assignedthesis.js"></script>

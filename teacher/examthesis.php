@@ -153,9 +153,9 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
         <h1 class="site-title">Εξέταση Διπλωματικής</h1>
     </div>
     </header>
-    <main class="dashboard-main">
+    <main class="dashboard-centered">
         <div class="centered-body">
-            <a id="draftLink" href="#" target="_blank" class="submit-btn">Προβολή Πρόχειρο</a>
+            <a id="draftLink" href="#" target="_blank" class="submit-btn">Προβολή Πρόχειρου</a>
         </div>
         <div class="centered-body">
             <button id="btnPresentation" class="submit-btn">Παρουσίαση</button>
