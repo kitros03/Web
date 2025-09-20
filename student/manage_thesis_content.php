@@ -187,6 +187,12 @@ if ($thStatus === 'DONE') {
     'thesisID' => $thesisID
   ]);
 }
-
+// Fallback
+ok([
+  'view'  => 'ACTIVE',
+  'title' => 'Διαχείριση Διπλωματικής — Ενεργή',
+  'html'  => '<div class="announcements" style="min-height:220px;"></div>',
+  'thesisID' => $thesisID
+]);
 
 
