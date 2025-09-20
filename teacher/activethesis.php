@@ -228,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WI
 
 <footer><p>© 2025</p></footer>
 
-<script src="../activethesis.js"></script>
+<script src="activethesis.js"></script>
 
 </body>
 </html>

@@ -158,20 +158,20 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
             <a id="draftLink" href="#" target="_blank" class="submit-btn">Προβολή Πρόχειρο</a>
         </div>
         <div class="centered-body">
-            <button id="btnPresentation" class="submit-btn">Presentation</button>
+            <button id="btnPresentation" class="submit-btn">Παρουσίαση</button>
             <div id="popupPresentation" class="popup-window" style="display:none;">
                 <div class="popup-content">
-                    <h3>Presentation</h3>
+                    <h3>Παρουσίαση</h3>
                     <div id="presentationInfo"></div>
                     <button id="closePresentation" class="close-popup-btn" aria-label="Close">×</button>
                 </div>
             </div>
         </div>
         <div class="centered-body">
-            <button id="btnGrading" class="submit-btn">Grading</button>
+            <button id="btnGrading" class="submit-btn">Βαθμολογία</button>
             <div id="popupGrading" class="popup-window" style="display:none;">
                 <div class="popup-content">
-                    <h3>Grading</h3>
+                    <h3>Βαθμολογίες</h3>
                     <div id="gradingContent"></div>
                     <button id="closeGrading" class="close-popup-btn" aria-label="Close">×</button>
                 </div>
@@ -179,7 +179,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
         </div>
     </main>
     <footer>
-        <p class="footer">© 2023</p>
+        <p class="footer">&copy; 2025 Thesis Management System</p>
     </footer>
     <script src="examthesis.js"></script>
 </body>
