@@ -62,3 +62,4 @@ try {
   if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
   echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
 }
+?>
