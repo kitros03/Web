@@ -1,6 +1,6 @@
 // studentdashboard.js – handler για Manage
 document.addEventListener('DOMContentLoaded', () => {
-  const panel = document.querySelector('.announcements');
+  const panel = document.querySelector('../announcements');
   const manageBtn = document.getElementById('managethesesBtn');
   if (!panel || !manageBtn) return;
 

@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'/dbconnect.php';
+require_once '../dbconnect.php';
 session_start();
 header('Content-Type: text/html; charset=utf-8');
 
