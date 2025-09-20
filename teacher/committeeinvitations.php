@@ -118,8 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' &&
     exit;
 }
 
-http_response_code(405);
-echo 'Method not allowed';
 ?>
 
 <!DOCTYPE html>
@@ -131,7 +129,7 @@ echo 'Method not allowed';
 </head>
 <body>
   <header>
-  <div class="logo-title-row">
+    <div class="logo-title-row">
         <button class="back-btn" id="backBtn">
             <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>

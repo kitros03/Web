@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   const tbody = document.getElementById('invitationBody');
+  const backBtn = document.getElementById('backBtn');
 
+    backBtn?.addEventListener('click', () => {
+        window.location.href = 'teacherdashboard.php';
+    });
+    
   async function loadInvitations() {
     try {
       const response = await fetch('committeeinvitations.php', {

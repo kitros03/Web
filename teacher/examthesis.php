@@ -1,229 +1,169 @@
-<?php 
+<?php
 session_start();
 header("Content-Type: text/html; charset=utf-8");
 
 require_once("../dbconnect.php");
 
-if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
-    header('Location: index.html');
+if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'teacher') {
+    header('Location: ../index.php');
     exit;
 }
 
-// Βρες το τρέχον id καθηγητή
-$stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
+$stmt = $pdo->prepare("SELECT id, t_fname, t_lname FROM teacher WHERE username=?");
 $stmt->execute([$_SESSION['username']]);
-$teacher = $stmt->fetch(PDO::FETCH_ASSOC);
+$teacher = $stmt->fetch();
 
-// Λήψη thesisID από GET ή POST
-$thesisID = $_GET['thesisID'] ?? $_POST['thesisID'] ?? null;
-if (!$thesisID) {
-    http_response_code(400);
+$teacherId = $teacher['id'] ?? 0;
+$thesisId = $_GET['thesisID'] ?? null;
+
+if (!$thesisId) {
     echo "Thesis ID is required";
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+    header('Content-Type: application/json');
+    $action = $_POST['action'] ?? '';
 
-// Βρες στοιχεία εργασίας
-$stmt = $pdo->prepare("SELECT * FROM thesis WHERE thesisID = ?");
-$stmt->execute([$thesisID]);
-$thesis = $stmt->fetch(PDO::FETCH_ASSOC);
-//στοιχεια φοιτητη
-$stmt = $pdo->prepare("SELECT s_fname, s_lname FROM student WHERE thesisID = ?");
-$stmt->execute([$thesisID]);
-$student = $stmt->fetch(PDO::FETCH_ASSOC);
-
-
-// Βρες επιτροπή
-$stmt = $pdo->prepare("SELECT supervisor, member1, member2 FROM committee WHERE thesisID = ?");
-$stmt->execute([$thesisID]);
-$committeeID = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// Βρες στοιχεία καθηγητών επιτροπής
-$stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
-$stmt->execute([$committeeID['supervisor']]);
-$supervisor = $stmt->fetch(PDO::FETCH_ASSOC);
-$stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
-$stmt->execute([$committeeID['member1']]);
-$member1 = $stmt->fetch(PDO::FETCH_ASSOC);
-$stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
-$stmt->execute([$committeeID['member2']]);
-$member2 = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// Ενέργεια ενεργοποίησης βαθμολόγησης
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'activateGrading' && isset($_POST['thesisID'])) {
+    if ($action === 'activateGrading' && isset($_POST['thesisID'])) {
         $stmt = $pdo->prepare("UPDATE thesis SET grading = 1 WHERE thesisID = ?");
         $stmt->execute([$_POST['thesisID']]);
-        echo json_encode(['success' => true, 'message' => 'Grading activated.']);
+        echo json_encode(['success' => true, 'message' => 'Grading activated!']);
         exit;
     }
-    if ($_POST['action'] === 'submitGrades' && isset($_POST['thesisID'])) {
-        $teacherID = $teacher['id'];
-        $thesisID = $_POST['thesisID'];
-        $quality_grade = $_POST['quality_grade'];
-        $time_grade = $_POST['time_grade'];
-        $rest_quality_grade = $_POST['rest_quality_grade'];
-        $presentation_grade = $_POST['presentation_grade'];
-        $calc_grade = $quality_grade * 0.6 + $time_grade * 0.15 + $rest_quality_grade * 0.15 + $presentation_grade * 0.1;
-        $stmt = $pdo->prepare('INSERT INTO grades (thesisID, teacherID, quality_grade, time_grade, rest_quality_grade, presentation_grade, calc_grade) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$thesisID, $teacherID, $quality_grade, $time_grade, $rest_quality_grade, $presentation_grade, $calc_grade]);
-        echo json_encode(['success' => true, 'message' => 'Η βαθμολογία μπήκε!']);
+
+    if ($action === 'submitGrades') {
+        $stmt_check = $pdo->prepare("SELECT id FROM grades WHERE thesisID = ? AND teacherID = ?");
+        $stmt_check->execute([$_POST['thesisID'], $teacherId]);
+        if ($stmt_check->fetch()) {
+            echo json_encode(['success' => false, 'message' => 'You have already submitted grades.']);
+            exit;
+        }
+
+        $quality = floatval($_POST['quality_grade'] ?? 0);
+        $time = floatval($_POST['time'] ?? 0);
+        $rest = floatval($_POST['rest'] ?? 0);
+        $presentation = floatval($_POST['presentation'] ?? 0);
+        $calc = $quality * 0.6 + $time * 0.15 + $rest * 0.15 + $presentation * 0.1;
+
+        $stmt = $pdo->prepare("INSERT INTO grades (thesisID, teacherID, quality_grade, time, rest, presentation, calc) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$_POST['thesisID'], $teacherId, $quality, $time, $rest, $presentation, $calc]);
+        echo json_encode(['success' => true, 'message' => 'Grades submitted!']);
+        exit;
+    }
+
+    if ($action === 'announce' && isset($_POST['thesisID'])) {
+        $stmt = $pdo->prepare("UPDATE thesis SET announce = 1 WHERE thesisID = ?");
+        $stmt->execute([$_POST['thesisID']]);
+        echo json_encode(['success' => true, 'message' => 'Announcement sent!']);
         exit;
     }
 }
 
-    // fetch grades if grading is active
+$loadData = function () use ($pdo, $thesisId, $teacherId, $teacher) {
+    $stmt = $pdo->prepare("SELECT * FROM thesis WHERE thesisID = ?");
+    $stmt->execute([$thesisId]);
+    $thesis = $stmt->fetch();
+
+    $stmt = $pdo->prepare("SELECT s_fname, s_lname FROM student WHERE thesisID = ?");
+    $stmt->execute([$thesisId]);
+    $student = $stmt->fetch();
+
+    $stmt = $pdo->prepare("SELECT * FROM committee WHERE thesisID = ?");
+    $stmt->execute([$thesisId]);
+    $committee = $stmt->fetch();
+
+    $getName = function ($id) use ($pdo) {
+        if (!$id) return null;
+        $stmt = $pdo->prepare("SELECT CONCAT(t_fname, ' ', t_lname) FROM teacher WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetchColumn();
+    };
+
+    $committeeNames = [
+        'supervisor' => $getName($committee['supervisor'] ?? null),
+        'member1' => $getName($committee['member1'] ?? null),
+        'member2' => $getName($committee['member2'] ?? null),
+    ];
+
     $grades = [];
-    if ($thesis['grading']) {
+    if (!empty($thesis['grading'])) {
         $stmt = $pdo->prepare("SELECT g.*, t.t_fname, t.t_lname FROM grades g JOIN teacher t ON g.teacherID = t.id WHERE g.thesisID = ?");
-        $stmt->execute([$thesisID]);
-        $grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->execute([$thesisId]);
+        $grades = $stmt->fetchAll();
     }
 
-    //if all 3 teachers grades are in, calculate final grade and update thesis
-    if (count($grades) === 3 && $grades['grade'] === null) {
-        $finalGrade = round(array_sum(array_column($grades, 'calc_grade')) / 3, 2);
-        $stmt = $pdo->prepare("UPDATE grades SET grade = ? WHERE thesisID = ?");
-        $stmt->execute([$finalGrade, $thesisID]);
-        $thesis['grade'] = $finalGrade; // update local variable
-    }
-
-
-    //fetch thesis meta
     $stmt = $pdo->prepare("SELECT * FROM thesis_exam_meta WHERE thesisID = ?");
-    $stmt->execute([$thesisID]);
-    $thesis_meta = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt->execute([$thesisId]);
+    $meta = $stmt->fetch();
 
-    //handle announcement submission
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'announceExam' && isset($_POST['thesisID'])) {
-    // ενημέρωση ανακοίνωσης στο DB
-    $stmt = $pdo->prepare("UPDATE thesis_exam_meta SET announce = 1 WHERE thesisID = ?");
-    $stmt->execute([$_POST['thesisID']]);
-    $thesis_meta['announce'] = 1; // ενημέρωση τοπικής μεταβλητής
+    if ($committee) {
+        $thesis['supervisor'] = $committee['supervisor'];
+    }
+
+    return [
+        'thesis' => $thesis,
+        'student' => $student,
+        'committee' => $committee,
+        'committeeNames' => $committeeNames,
+        'grades' => $grades,
+        'meta' => $meta,
+        'teacher' => $teacher,
+    ];
+};
+
+if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     header('Content-Type: application/json');
-    echo json_encode(['success' => true, 'message' => 'Η ανακοίνωση στάλθηκε!']);
+    echo json_encode($loadData());
     exit;
 }
-
 ?>
+
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="../style.css">
-    <title>Υπό Εξέταση</title>
+    <meta charset="UTF-8" />
+    <title>Examined Thesis</title>
+    <link rel="stylesheet" href="../style.css" />
 </head>
+
 <body>
-<header>
-    <div class="logo-title-row">
-        <button class="back-btn" id="backBtn">
-            <img src="../logo2.jpg" alt="Logo" class="logo" />
-        </button>
-        <h1 class="site-title">Υπό Εξέταση</h1>
-    </div>
-</header>
-<main class="dashboard-centered">
-    <div class="centered-body">
-        <a href="<?php echo htmlspecialchars($thesis_meta['draft_file']); ?>"  class="submit-btn">Προβολή Προχείρου</a></div>
-    <div class="centered-body">
-        <button class="submit-btn" id="presentationbtn">Παρουσίαση</button>
-        <div id="popup2" class="popup-window">
-            <div class="popup-content">
-                <button id="closePopupBtn2" class="close-popup-btn" aria-label="Close">&times;</button>
-                <?php if ($thesis_meta['announce']): ?>
-                    <h3>Ανακοίνωση Παρουσίασης</h3>   
-                    <p><strong>Φοιτητής:</strong> <?= htmlspecialchars($student['s_fname'] . ' ' . $student['s_lname']) ?></p>
-                    <p><strong>Θέμα:</strong> <?= htmlspecialchars($thesis['title']) ?></p>
-                    <p><strong>Ημερομηνία & Ώρα:</strong> <?= htmlspecialchars(date('d/m/Y H:i', strtotime($thesis_meta['exam_datetime']))) ?></p>
-                    <?php if ($thesis_meta['exam_meeting_url']): ?>
-                        <p><strong>Σύνδεσμος Συνάντησης:</strong> <a href="<?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?>" target="_blank"><?= htmlspecialchars($thesis_meta['exam_meeting_url']) ?></a></p>
-                    <?php elseif ($thesis_meta['exam_room']): ?>
-                        <p><strong>Αίθουσα:</strong> <?= htmlspecialchars($thesis_meta['exam_room']) ?></p>
-                <?php endif; ?> 
-                <?php elseif ($thesis_meta['exam_datetime'] && ($thesis_meta['exam_meeting_url'] || $thesis_meta['exam_room'])): ?>
-                    <form id="announceForm" method="POST">
-                        <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
-                        <input type="hidden" name="announceExam" value="1">
-                        <button id="announceBtn" class="submit-btn">Ανακοίνωση Παρουσίασης</button>
-                    </form>
-                <?php else: ?>
-                    <h3>Δεν έχουν οριστεί ακόμα λεπτομέρειες παρουσίασης.</h3>
-                <?php endif; ?>      
+    <header>
+        <div class="logo-container">
+            <img src="../logo.jpg" alt="Logo" class="logo" />
+            <h1 class="site-title">Examined Thesis</h1>
+        </div>
+    </header>
+    <main class="dashboard-main">
+        <div class="centered-body">
+            <a id="draftLink" href="#" target="_blank" class="submit-btn">View Draft</a>
+        </div>
+        <div class="centered-body">
+            <button id="btnPresentation" class="submit-btn">Presentation</button>
+            <div id="popupPresentation" class="popup-window" style="display:none;">
+                <div class="popup-content">
+                    <h3>Presentation</h3>
+                    <div id="presentationInfo"></div>
+                    <button id="closePresentation" class="close-popup-btn" aria-label="Close">×</button>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="centered-body">
-        <button class="submit-btn" id="gradebtn">Βαθμολογία</button>
-        <div id="popup3" class="popup-window">
-            <div class="popup-content">
-                <h3>Βαθμολογία</h3>
-                <?php if($teacher['id']===$committeeID['supervisor'] && !$thesis['grading']):?>
-                    <form id="activateGradingForm" method="POST">
-                        <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
-                        <button type="submit" class="submit-btn">Ενεργοποίηση Βαθμολόγησης</button>
-                    </form>
-                <?php elseif(!$thesis['grading']):?>
-                    <p> Ο επιβλέπων καθηγητής δεν έχει ενεργοποιήσει την βαθμολόγηση</p>
-                <?php endif; ?>
-                <?php if($thesis['grading']):?>
-                    <?php if (isset($grades) && array_search($teacher['id'], array_column($grades, 'teacherID')) === false): ?>
-                    <form id="gradeForm">
-                        <input type="hidden" name="thesisID" value="<?= htmlspecialchars($thesisID) ?>">
-                        <div class="form-group">
-                            <label for="quality-grade">Βαθμός Ποιότητας Δ.Ε.</label>
-                            <input type="number" id="quality-grade" name="quality_grade" min="0" max="10" step="0.1" required>
-                            <label for="time-grade">Βαθμός Χρονικού Διαστήματος</label>
-                            <input type="number" id="time-grade" name="time_grade" min="0" max="10" step="0.1" required>
-                            <label for="rest-quality-grade">Βαθμός Ποιότητας και Πληρότητας υπόλοιπων παραδοτέων</label>
-                            <input type="number" id="rest-quality-grade" name="rest_quality_grade" min="0" max="10" step="0.1" required>
-                            <label for="presentation-grade">Βαθμός Παρουσίασης</label>
-                            <input type="number" id="presentation-grade" name="presentation_grade" min="0" max="10" step="0.1" required>
-                        </div>
-                        <button type="submit" class="submit-btn">Υποβολή Βαθμολογίας</button>
-                    </form>
-                    <?php else: ?>
-                        <p>Έχετε ήδη υποβάλει τη βαθμολογία σας για αυτή την εργασία.</p>
-                    <?php endif; ?>
-                    <table class="table grades-table">
-                        <thead>
-                            <tr>
-                                <th>Καθηγητής</th>
-                                <th>Βαθμός Ποιότητας Δ.Ε.</th>
-                                <th>Βαθμός Χρονικού Διαστήματος</th>
-                                <th>Βαθμός Ποιότητας και Πληρότητας υπόλοιπων παραδοτέων</th>
-                                <th>Βαθμός Παρουσίασης</th>
-                                <th>Μέσος Όρος</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            foreach ($grades as $grade): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($grade['t_fname'] . ' ' . $grade['t_lname']) ?></td>
-                                    <td><?= htmlspecialchars($grade['quality_grade']) ?></td>
-                                    <td><?= htmlspecialchars($grade['time_grade']) ?></td>
-                                    <td><?= htmlspecialchars($grade['rest_quality_grade']) ?></td>
-                                    <td><?= htmlspecialchars($grade['presentation_grade']) ?></td>
-                                    <td><?= htmlspecialchars($grade['calc_grade']) ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                            <?php if ($grades['grade'] !== null): ?>
-                                <tr>
-                                    <td colspan="5"><strong>Τελικός Βαθμός</strong></td>
-                                    <td><strong><?= htmlspecialchars($grades['grade']) ?></strong></td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-                <button id="closePopupBtn3" class="close-popup-btn" aria-label="Close">&times;</button>
+        <div class="centered-body">
+            <button id="btnGrading" class="submit-btn">Grading</button>
+            <div id="popupGrading" class="popup-window" style="display:none;">
+                <div class="popup-content">
+                    <h3>Grading</h3>
+                    <div id="gradingContent"></div>
+                    <button id="closeGrading" class="close-popup-btn" aria-label="Close">×</button>
+                </div>
             </div>
         </div>
-    </div>
-    <script src="examthesis.js"> </script>
-</main>
-<footer>
-    <p class="footer">© 2025 Thesis Management System</p>
-</footer>
+    </main>
+    <footer>
+        <p class="footer">© 2023</p>
+    </footer>
+    <script src="examthesis.js"></script>
 </body>
+
 </html>
