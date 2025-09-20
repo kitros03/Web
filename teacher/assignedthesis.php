@@ -141,14 +141,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WI
             </tr>
         </thead>
         <tbody>
-            <!-- AJAX content will go here -->
+            <!-- ajax -->
         </tbody>
     </table>
     <p id="committeeDescription" class="sr-only">Πίνακας με τα μέλη της επιτροπής</p>
 
     <h3>Προσκλήσεις</h3>
     <ul class="invitation-list" id="invitationList">
-        <!-- AJAX content -->
+        <!-- ajax -->
     </ul>
 
     <form id="unassignForm" style="display:none;">
