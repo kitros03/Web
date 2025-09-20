@@ -12,6 +12,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     exit;
 }
 
+// den xreiazetai ajax edw
 $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -32,7 +33,6 @@ function safeRound($val) {
 $teacherIDArr = ['teacherID' => $teacher['id']];
 $teacherIDDoubleArr = ['teacherID1' => $teacher['id'], 'teacherID2' => $teacher['id']];
 
-// Αν είναι AJAX αίτημα, επιστρέφουμε JSON με τα στατιστικά
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     $stmt = $pdo->prepare("
         SELECT AVG(DATEDIFF(done.changeDate, active.changeDate)) AS avgCompletionDays
@@ -96,7 +96,6 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQU
 <html lang="el">
 <head>
 <meta charset="UTF-8" />
-<title>View Statistics</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="../style.css" />
 <style>
@@ -114,7 +113,7 @@ canvas { background: #fff; margin-top: 10px; border: 1px solid #ccc; }
     <button class="back-btn" onclick="history.back()">
       <img src="../logo2.jpg" alt="Logo" class="logo" style="height:40px;" />
     </button>
-    <h1 class="site-title">View Statistics</h1>
+    <h1 class="site-title">Στατιστικά</h1>
   </div>
 </header>
 <main class="dashboard-centered">

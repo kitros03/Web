@@ -97,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="../style.css" />
-    <title>Edit Thesis</title>
 </head>
 <body>
     <header>
@@ -105,33 +104,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button class="back-btn" id="backBtn">
                 <img src="../logo2.jpg" alt="Logo" class="logo" />
             </button>
-            <h1 class="site-title">Thesis Edit</h1>
+            <h1 class="site-title">Επεξεργασία Διπλωματικής</h1>
         </div>
     </header>
     <div class="dashboard-main">
-        <h2>Edit Thesis</h2>
+        <h2>Επεξεργασία</h2>
         <main class="dashboard-container">
             <form id="thesisForm" method="post" enctype="multipart/form-data" autocomplete="off">
                 <div class="form-group">
-                    <label for="title">Title</label>
+                    <label for="title">Τίτλος</label>
                     <input type="text" name="title" id="title" required />
                 </div>
                 <div class="form-group">
-                    <label for="description">Description</label>
+                    <label for="description">Περιγραφή</label>
                     <textarea name="description" id="description" rows="6" required></textarea>
                 </div>
                 <div class="form-group" id="pdfSection">
                     <label>PDF File</label>
                     <div id="currentPdfStatus" style="margin-bottom: 0.6rem;"></div>
                     <input class="input" type="file" name="new_pdf" id="new_pdf" accept="application/pdf" />
-                    <div style="font-size:small; color:#555; margin-top:0.3em;">Leave empty if not replacing PDF.</div>
+                    <div style="font-size:small; color:#555; margin-top:0.3em;">Αν δεν αντικαταστείτε το PDF, αφήστε κενό.</div>
                     <label style="font-weight:400;">
-                        <input type="checkbox" name="remove_pdf" value="1" id="removePdfCheckbox" /> Remove PDF
+                        <input type="checkbox" name="remove_pdf" value="1" id="removePdfCheckbox" /> Αφαίρεση υπάρχοντος PDF
                     </label>
                 </div>
                 <div style="margin-top: 2rem;">
-                    <button type="submit" class="submit-btn">Save Changes</button>
-                    <button type="button" id="backBtn2" class="submit-btn">Back</button>
+                    <button type="submit" class="submit-btn">Αποθήκευση</button>
+                    <button type="button" id="backBtn2" class="submit-btn">Πίσω</button>
                 </div>
                 <div id="result" style="margin-top:1.1em;"></div>
             </form>

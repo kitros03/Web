@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderCharts(data) {
         clearCharts();
 
-        // Completion time chart
         timeCanvas.chart = new Chart(timeCanvas.getContext('2d'), {
             type: 'bar',
             data: {
@@ -32,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
             options: { scales: { y: { beginAtZero: true } } }
         });
 
-        // Average grade chart
         gradeCanvas.chart = new Chart(gradeCanvas.getContext('2d'), {
             type: 'bar',
             data: {
@@ -46,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
             options: { scales: { y: { beginAtZero: true, max: 10 } } }
         });
 
-        // Count chart
         countCanvas.chart = new Chart(countCanvas.getContext('2d'), {
             type: 'bar',
             data: {

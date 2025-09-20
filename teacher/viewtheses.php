@@ -39,9 +39,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQU
     $stmt->execute([$teacherId, $teacherId, $teacherId]);
     $theses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Προετοιμασία ονομάτων και αλλαγών
     foreach ($theses as &$thesis) {
-        // Ονόματα μελών επιτροπής
         $thesis['member1Name'] = null;
         $thesis['member2Name'] = null;
         if ($thesis['member1']) {
@@ -54,17 +52,15 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQU
             $stmt->execute([$thesis['member2']]);
             $thesis['member2Name'] = $stmt->fetchColumn();
         }
-        // Αλλαγές κατάστασης
+        // allages katastasis
         $stmt = $pdo->prepare("SELECT changeDate, changeTo FROM thesisStatusChanges WHERE thesisID = ? ORDER BY changeDate ASC");
         $stmt->execute([$thesis['thesisID']]);
         $thesis['changes'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Ρόλος και όνομα επιβλέποντα
         $thesis['role'] = $thesis['supervisor'] == $teacherId ? 'Supervisor' : 'Committee';
         $stmt = $pdo->prepare("SELECT CONCAT(t_fname, ' ', t_lname) FROM teacher WHERE id = ?");
         $stmt->execute([$thesis['supervisor']]);
         $thesis['supervisorName'] = $stmt->fetchColumn() ?: '';
-        // Χρήση κενής τιμής βαθμού αν δεν υπάρχει
         $thesis['grade'] = $thesis['grade'] ?? '';
     }
     unset($thesis);
@@ -77,7 +73,6 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQU
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Manage Theses</title>
 <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
@@ -86,31 +81,31 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQU
         <button class="back-btn" id="backBtn">
             <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
-        <h1 class="site-title">Manage Theses</h1>
+        <h1 class="site-title">Διαχείρηση Διπλωματικών</h1>
     </div>
 </header>
 <main class="dashboard-main">
-    <h2>Theses</h2>
+    <h2>Διπλωματικές</h2>
     <table class="table" id="thesesTable">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Title</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Supervisor</th>
-                <th>Member 1</th>
-                <th>Member 2</th>
-                <th>Grade</th>
-                <th>Changes Timeline</th>
-                <th>Manage</th>
+                <th>Τίτλος</th>
+                <th>Ρόλος</th>
+                <th>Κατάσταση</th>
+                <th>Επιβλέπων</th>
+                <th>Μέλος</th>
+                <th>Μέλος</th>
+                <th>Βαθμός</th>
+                <th>Αλλαγές Κατάστασης</th>
+                <th>Διαχείρηση</th>
             </tr>
         </thead>
         <tbody>
-            <!-- AJAX δυναμικά δεδομένα εδώ -->
+            <!-- AJAX -->
         </tbody>
     </table>
-    <p id="noThesesMsg" style="display:none;">No theses found</p>
+    <p id="noThesesMsg" style="display:none;">Δεν βρέθηκαν διπλωματικές</p>
 </main>
 <footer class="footer">
     <p>© 2025 Thesis Management System</p>

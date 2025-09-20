@@ -98,7 +98,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="../style.css">
-    <title>Thesis Creation</title>
 </head>
 <body>
     <header>
@@ -106,32 +105,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <button class="back-btn" id="backBtn">
                 <img src="../logo2.jpg" alt="Logo" class="logo" />
             </button>
-            <h1 class="site-title">Thesis Creation</h1>
+            <h1 class="site-title">Δημιουργία Διπλωματικής</h1>
         </div>
     </header>
     <div class="dashboard-main">
-        <h2>Create a New Thesis</h2>
-        <p>Fill out the form below to create a new thesis.</p>
+        <h2>Δημιουργία Καινούριας Διπλωματικής</h2>
+        <p>Γεμίστε την παρακάτω φόρμα.</p>
         <form class="form-group" id="thesisForm" method="post" enctype="multipart/form-data">
-            <label for="title">Thesis Title:</label>
+            <label for="title">Τίτλος:</label>
             <input type="text" name="title" id="title" required><br><br>
-            <label for="description">Description:</label>
+            <label for="description">Περιγραφή:</label>
             <textarea rows="8" cols="50" name="desc"></textarea><br><br>
-            <label for="pdf">PDF (optional):</label>
+            <label for="pdf">PDF (προαιρετικό):</label>
             <input class="file-input" type="file" name="pdf" id="pdf" accept="application/pdf"><br><br>
-            <button class="submit-btn" type="submit">Create Thesis</button>
+            <button class="submit-btn" type="submit">Δημιουργία</button>
         </form>
         <div id="result"></div>
 
-        <h2>Previously Created Theses</h2>
+        <h2>Διπλωματικές</h2>
         <table class="table" id="ajaxThesesTable">
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Title</th>
-                    <th>Description</th>
+                    <th>Τίτλος</th>
+                    <th>Περιγραφή</th>
                     <th>PDF</th>
-                    <th>Action</th>
+                    <th>Ενέργεια</th>
                 </tr>
             </thead>
             <tbody>

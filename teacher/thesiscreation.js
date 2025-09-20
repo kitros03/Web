@@ -55,8 +55,8 @@ async function loadTheses() {
                 <td>${thesis.thesisID}</td>
                 <td>${thesis.title}</td>
                 <td>${thesis.th_description}</td>
-                <td>${thesis.pdf_description ? `<a href="${thesis.pdf_description}" target="_blank">View PDF</a>` : 'No PDF'}</td>
-                <td><button class="edit-btn" type="button" data-thesis-id="${thesis.thesisID}">Edit</button></td>
+                <td>${thesis.pdf_description ? `<a href="${thesis.pdf_description}" target="_blank">View PDF</a>` : 'Ν/Α'}</td>
+                <td><button class="edit-btn" type="button" data-thesis-id="${thesis.thesisID}">Επεξεργασία</button></td>
             `;
             tableBody.appendChild(row);
         });

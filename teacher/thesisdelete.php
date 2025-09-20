@@ -26,10 +26,10 @@ if ($thesis && !empty($thesis['pdf_description']) && file_exists($thesis['pdf_de
 // Delete the thesis record
 $stmt = $pdo->prepare("DELETE FROM thesis WHERE thesisID = ?");
 if ($stmt->execute([$thesisID])) {
-    echo json_encode(['success' => true, 'message' => 'Thesis deleted successfully.']);
+    echo json_encode(['success' => true, 'message' => 'Επιτυχής διαγραφή διπλωματικής.']);
     exit;
 } else {
-    echo json_encode(['success' => false, 'message' => 'Error deleting thesis.']);
+    echo json_encode(['success' => false, 'message' => 'Σφάλμα κατά την διαγραφή.']);
     exit;
 }
 ?>

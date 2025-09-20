@@ -140,20 +140,22 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
 
 <head>
     <meta charset="UTF-8" />
-    <title>Examined Thesis</title>
+    <title>Εξέταση Διπλωματικής</title>
     <link rel="stylesheet" href="../style.css" />
 </head>
 
 <body>
     <header>
-        <div class="logo-container">
-            <img src="../logo.jpg" alt="Logo" class="logo" />
-            <h1 class="site-title">Examined Thesis</h1>
-        </div>
+        <div class="logo-title-row">
+        <button class="back-btn" id="backBtn">
+            <img src="../logo2.jpg" alt="Logo" class="logo" />
+        </button>
+        <h1 class="site-title">Εξέταση Διπλωματικής</h1>
+    </div>
     </header>
     <main class="dashboard-main">
         <div class="centered-body">
-            <a id="draftLink" href="#" target="_blank" class="submit-btn">View Draft</a>
+            <a id="draftLink" href="#" target="_blank" class="submit-btn">Προβολή Πρόχειρο</a>
         </div>
         <div class="centered-body">
             <button id="btnPresentation" class="submit-btn">Presentation</button>

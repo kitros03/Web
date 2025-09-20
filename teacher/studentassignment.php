@@ -111,7 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Student Assignment</title>
   <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
@@ -120,24 +119,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         <button class="back-btn" id="backBtn">
             <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
-        <h1 class="site-title">Student Assignment</h1>
+        <h1 class="site-title">Ανάθεση Θέματος</h1>
     </div>
   </header>
   <div class="dashboard-container">
     <main class="dashboard-main">
-      <h2>Assign Thesis to Student</h2>
+      <h2>Ανάθεση Θέματος σε Φοιτητή</h2>
       <form id="assignmentForm" class="form-group">
         <select name="thesis" class="select"></select>
         <select name="student" class="select"></select>
-        <button type="submit" class="submit-btn">Assign</button>
+        <button type="submit" class="submit-btn">Ανάθεση</button>
       </form>
       <div id="result"></div>
-      <h2>Assigned Theses</h2>
+      <h2>Ανατεθειμένα Θέματα</h2>
       <div id="assignedTheses"></div>
     </main>
   </div>
   <footer>
-  <p>&copy; 2025</p>
+  <p>&copy; 2025 Thesis Management System</p>
   </footer>
   <script src="studentassignment.js"></script>
 </body>

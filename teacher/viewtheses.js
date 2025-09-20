@@ -19,11 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createChangesHtml(changes) {
-        if (!changes || changes.length === 0) return '<p>No changes recorded for this thesis.</p>';
+        if (!changes || changes.length === 0) return '<p>Δεν υπήρξαν αλλαγές κατάστασης για αυτή την διπλωματική.</p>';
         return '<ul class="changes-list">' + changes.map(c =>
             `<li><strong>${escapeHtml(c.changeDate)} ${escapeHtml(c.changeTo)}</strong></li>`).join('') + '</ul>';
     }
 
+    // emfanisi grammis pinaka
     function createRow(thesis) {
         const changesHtml = createChangesHtml(thesis.changes);
         return `<tr>
@@ -32,11 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${escapeHtml(thesis.role)}</td>
                 <td>${escapeHtml(thesis.th_status)}</td>
                 <td>${escapeHtml(thesis.supervisorName)}</td>
-                <td>${escapeHtml(thesis.member1Name || 'No first member in committee.')}</td>
-                <td>${escapeHtml(thesis.member2Name || 'No second member in committee.')}</td>
+                <td>${escapeHtml(thesis.member1Name || 'Ν/Α')}</td>
+                <td>${escapeHtml(thesis.member2Name || 'Ν/Α')}</td>
                 <td>${escapeHtml(thesis.grade || '')}</td>
                 <td>
-                    <button class="popupBtn">View Changes</button>
+                    <button class="popupBtn">Προβολή Αλλαγών</button>
                     <div class="popupWindow popup-window" style="display:none;">
                         <div class="popup-content">
                             <h3>Changes Timeline</h3>
@@ -48,12 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>
                     ${(thesis.th_status === 'ASSIGNED' || thesis.th_status === 'ACTIVE' || thesis.th_status === 'EXAM')
                         ? `<button class="submit-btn open-btn" data-thesis-id="${thesis.thesisID}" 
-                            data-th-status="${thesis.th_status}">Open</button>` 
+                            data-th-status="${thesis.th_status}">Επιλογή</button>` 
                         : `<span>N/A</span>`}
                 </td>
         </tr>`;
     }
 
+    // fortosi dedomenon
     async function loadTheses() {
         try {
             const response = await fetch('viewtheses.php', {

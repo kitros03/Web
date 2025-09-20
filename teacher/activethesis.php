@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WI
 <head>
 <meta charset="UTF-8" />
 <title>Active Thesis</title>
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="../style.css" />
 </head>
 <body>
 <header>

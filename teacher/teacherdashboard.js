@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Navigation κουμπιά
     document.getElementById('thesiscreationBtn').onclick = () => location.href = 'thesiscreation.php';
     document.getElementById('studentassignmentBtn').onclick = () => location.href = 'studentassignment.php';
     document.getElementById('committeeinvitationsBtn').onclick = () => location.href = 'committeeinvitations.php';
@@ -7,11 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('managethesesBtn').onclick = () => location.href = 'viewtheses.php';
     document.getElementById('logoutBtn').onclick = () => location.href = '../logout.php';
 
-    // Δυναμική φόρτωση ανακοινώσεων
+    // fortosi anakoinoseon
     const announcementsSection = document.getElementById('announcementsSection');
     async function loadAnnouncements() {
         try {
-            const response = await fetch('announcements.php', {
+            const response = await fetch('../announcements.php', {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await response.json();

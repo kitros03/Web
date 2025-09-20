@@ -7,9 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const backBtn = document.getElementById('backBtn');
 
     backBtn?.addEventListener('click', () => {
-      window.location.href = 'teacherdashboard.php';
+        window.location.href = 'teacherdashboard.php';
     });
-
 
     function escapeHtml(text) {
         return text ? text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;") : "";
@@ -22,11 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             let data = await response.json();
             if (!data.success) {
-                resultDiv.textContent = data.message || "Failed to load data.";
+                resultDiv.textContent = data.message || "Αποτυχία φόρτωσης δεδομένων.";
                 return;
             }
 
-            thesisSelect.innerHTML = '<option value="">-- Select Thesis --</option>';
+            thesisSelect.innerHTML = '<option value="">-- Επιλέξτε --</option>';
             for(const thesis of data.theses) {
                 let option = document.createElement('option');
                 option.value = thesis.thesisID;
@@ -34,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 thesisSelect.appendChild(option);
             }
 
-            studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+            studentSelect.innerHTML = '<option value="">-- Επιλέξτε --</option>';
             for(const student of data.students) {
                 let option = document.createElement('option');
                 option.value = student.username;
@@ -43,24 +42,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (data.assignedTheses.length === 0) {
-                assignedContainer.innerHTML = "<p>No assigned theses yet.</p>";
+                assignedContainer.innerHTML = "<p>Δεν υπάρχουν ανατεθειμένα θέματα.</p>";
             } else {
-                let html = `<table class="table"><thead><tr><th>ID</th><th>Title</th><th>Description</th><th>Student</th><th>Action</th></tr></thead><tbody>`;
+                let html = `<table class="table"><thead><tr><th>ID</th><th>Τίτλος</th><th>Περιγραφή</th><th>Φοιτητής</th><th>Ενέργεια</th></tr></thead><tbody>`;
                 for (const thesis of data.assignedTheses) {
                     html += `<tr><td>${thesis.thesisID}</td><td>${escapeHtml(thesis.title)}</td><td>${escapeHtml(thesis.thesis_description)}</td><td>${escapeHtml(thesis.studentUsername)}</td><td>`;
-                    if (!thesis.finalized) {
-                        html += `<button data-id="${thesis.thesisID}" class="submit-btn">Remove</button>`;
+                    if (thesis.th_status==='ASSIGNED') {
+                        html += `<button data-id="${thesis.thesisID}" class="submit-btn">Αναίρεση</button>`;
                     } else {
-                        html += "Finalized";
+                        html += "N/A";
                     }
                     html += "</td></tr>";
                 }
                 html += "</tbody></table>";
                 assignedContainer.innerHTML = html;
 
-                assignedContainer.querySelectorAll(".remove-btn").forEach(button => {
+                assignedContainer.querySelectorAll(".submit-btn").forEach(button => {
                     button.addEventListener("click", async () => {
-                        if (!confirm("Are you sure to remove this assignment?")) return;
+                        if (!confirm("Σίγουρα θέλετε να αναιρέσετε την ανάθεση θέματος;")) return;
                         const id = button.getAttribute("data-id");
                         let formData = new FormData();
                         formData.append("remove", "1");
@@ -71,18 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                 method: "POST",
                                 body: formData
                             });
-                            let text = await res.text();
-                            alert(text);
-                            loadData();
+                            let json = await res.json();
+                            resultDiv.textContent = json.message;
+                            if (json.success) loadData();
                         } catch (e) {
-                            alert("Failed to remove assignment");
+                            resultDiv.textContent = "Αποτυχία αναίρεσης ανάθεσης.";
                             console.error(e);
                         }
                     });
                 });
             }
         } catch (e) {
-            resultDiv.textContent = "Failed to load initial data.";
+            resultDiv.textContent = "Αποτυχία φόρτωσης δεδομένων.";
             console.error(e);
         }
     }
@@ -91,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         resultDiv.textContent = "";
         if (!thesisSelect.value || !studentSelect.value) {
-            resultDiv.textContent = "Please select Thesis and Student.";
+            resultDiv.textContent = "παρακαλώ επιλέξτε θέμα και φοιτητή.";
             return;
         }
         try {
@@ -107,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadData();
             }
         } catch (e) {
-            resultDiv.textContent = "Failed to submit assignment.";
+            resultDiv.textContent = "Αποτυχία ανάθεσης θέματος.";
             console.error(e);
         }
     });
