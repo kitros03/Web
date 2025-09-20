@@ -60,6 +60,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 throw new Exception("Database insert failed");
             }
             echo json_encode(['success' => true, 'message' => 'Grades submitted!']);
+            $stmt2 = $pdo->prepare("SELECT COUNT(*) FROM grades WHERE thesisID = ?");
+            $stmt2->execute([$_POST['thesisID']]);
+            $count = $stmt2->fetchColumn();
+            if ($count === 3) {
+                $stmt = $pdo->prepare("SELECT calc_grade FROM grades WHERE thesisID = ?");
+                $stmt->execute([$_POST['thesisID']]);
+                $grades = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                $finalGrade = round(array_sum($grades) / count($grades), 2);
+                $stmt = $pdo->prepare("UPDATE grades SET grade = ? WHERE thesisID = ?");
+                $stmt->execute([$finalGrade, $_POST['thesisID']]);
+            }
             exit;
         } catch (Exception $ex) {
             error_log("SubmitGrades error: " . $ex->getMessage());
