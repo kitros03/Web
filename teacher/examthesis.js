@@ -8,16 +8,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeGrading = document.getElementById("closeGrading");
     const presentationInfo = document.getElementById("presentationInfo");
     const gradingContent = document.getElementById("gradingContent");
-    const params = new URLSearchParams(window.location.search);
-    const thesisId = params.get("thesisID");
+
+    // Retrieve thesisID from URL or sessionStorage
+    function getThesisId() {
+        const params = new URLSearchParams(window.location.search);
+        let id = params.get("thesisID");
+        if (id) {
+            sessionStorage.setItem("thesisID", id);
+            return id;
+        }
+        return sessionStorage.getItem("thesisID");
+    }
+
+    const thesisId = getThesisId();
+
+    if (!thesisId) {
+        alert("Thesis ID is missing.");
+        return;
+    }
 
     function escapeHtml(text) {
-        if (!text) return "";
-        return text.replace(/&/g, "&amp;")
-                   .replace(/</g, "&lt;")
-                   .replace(/>/g, "&gt;")
-                   .replace(/"/g, "&quot;")
-                   .replace(/'/g, "&#039;");
+        if (text === null || text === undefined) return "";
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     async function fetchData() {
@@ -26,7 +43,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "X-Requested-With": "XMLHttpRequest" },
             });
             if (!res.ok) throw new Error("Network error");
-            return await res.json();
+            const data = await res.json();
+            console.log("Fetched data:", data);
+            return data;
         } catch (e) {
             alert("Failed to load data");
             console.error(e);
@@ -86,22 +105,23 @@ document.addEventListener("DOMContentLoaded", () => {
     btnGrading.addEventListener("click", async () => {
         popupGrading.style.display = "flex";
         const data = await fetchData();
-        console.log("Grading data:", data);
         if (!data) {
             gradingContent.textContent = "Failed to load grading data.";
             return;
         }
         const grades = data.grades || [];
-        const meta = data.meta || {};
         const thesis = data.thesis || {};
         const teacher = data.teacher || {};
-        console.log("Teacher ID:", teacher.id);
-        console.log("Thesis supervisor:", thesis.supervisor);
+
         let html = "";
 
-        if (!thesis.grading) {
-            if (teacher.id != null && teacher.id === thesis.supervisor) {
-                html = `<form id="activateGrading">
+        const gradingActive = thesis.grading ? true : false;
+        const currentTeacherId = teacher.id ? Number(teacher.id) : 0;
+        const supervisorId = thesis.supervisor ? Number(thesis.supervisor) : 0;
+
+        if (!gradingActive) {
+            if (currentTeacherId !== 0 && currentTeacherId === supervisorId) {
+                html = `<form id="activateGrading" style="margin-top:1em;">
                     <input type="hidden" name="thesisID" value="${escapeHtml(thesis.thesisID || thesis.id || '')}" />
                     <button type="submit">Activate Grading</button>
                 </form>`;
@@ -109,9 +129,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 html = "<p>Supervisor has not activated grading.</p>";
             }
         } else {
-            const hasSubmitted = grades.some(g => String(g.teacherID) === String(teacher.id));
+            const hasSubmitted = grades.some(g => Number(g.teacherID) === currentTeacherId);
             if (!hasSubmitted) {
-                html = `<form id="gradeForm">
+                html = `<form id="gradeForm" style="margin-top:1em;">
                     <label>Quality</label>
                     <input name="quality_grade" type="number" min="0" max="10" step="0.1" required />
                     <label>Time</label>
@@ -127,25 +147,22 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (grades.length) {
-                html += "<table><thead><tr><th>Teacher</th><th>Quality</th><th>Time</th><th>Completeness</th><th>Presentation</th><th>Avg</th></tr></thead><tbody>";
+                html += "<table border='1' style='border-collapse: collapse; margin-top: 1em; width: 100%;'><thead><tr><th>Teacher</th><th>Quality</th><th>Time</th><th>Completeness</th><th>Presentation</th><th>Avg</th></tr></thead><tbody>";
                 for (const grade of grades) {
                     html += `<tr>
                         <td>${escapeHtml(grade.t_fname)} ${escapeHtml(grade.t_lname)}</td>
                         <td>${escapeHtml(grade.quality_grade)}</td>
-                        <td>${escapeHtml(grade.time)}</td>
-                        <td>${escapeHtml(grade.rest)}</td>
-                        <td>${escapeHtml(grade.presentation)}</td>
-                        <td>${escapeHtml(grade.calc)}</td>
+                        <td>${escapeHtml(grade.time_grade)}</td>
+                        <td>${escapeHtml(grade.rest_quality_grade)}</td>
+                        <td>${escapeHtml(grade.presentation_grade)}</td>
+                        <td>${escapeHtml(Number(grade.calc_grade).toFixed(2))}</td>
                     </tr>`;
                 }
                 html += "</tbody></table>";
             }
         }
 
-        gradingContent.innerHTML = "";
-        const container = document.createElement("div");
-        container.innerHTML = html || "<p>No grading information available.</p>";
-        gradingContent.appendChild(container);
+        gradingContent.innerHTML = html;
 
         const activateForm = document.getElementById("activateGrading");
         if (activateForm) {
@@ -154,7 +171,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const formData = new FormData(activateForm);
                 formData.append("action", "activateGrading");
                 try {
-                    const res = await fetch("examthesis.php", { method: "POST", body: formData });
+                    const res = await fetch("examthesis.php", {
+                        method: "POST",
+                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                        body: formData
+                    });
                     const json = await res.json();
                     alert(json.message);
                     if (json.success) location.reload();
@@ -172,12 +193,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 formData.append("action", "submitGrades");
                 formData.append("thesisID", thesis.thesisID || thesis.id);
                 try {
-                    const res = await fetch("examthesis.php", { method: "POST", body: formData });
+                    const res = await fetch("examthesis.php", {
+                        method: "POST",
+                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                        body: formData
+                    });
+                    if (!res.ok) throw new Error(`Network response was not ok (${res.status})`);
                     const json = await res.json();
+                    console.log("Submit grades response:", json);
                     alert(json.message);
                     if (json.success) location.reload();
-                } catch {
+                } catch (error) {
                     alert("Failed to submit grades");
+                    console.error("Submit grades fetch error:", error);
                 }
             });
         }

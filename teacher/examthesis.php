@@ -4,6 +4,19 @@ header("Content-Type: text/html; charset=utf-8");
 
 require_once("../dbconnect.php");
 
+// Save thesisID from GET to session if present
+if (isset($_GET['thesisID']) && !empty($_GET['thesisID'])) {
+    $_SESSION['thesisID'] = $_GET['thesisID'];
+}
+
+// Use thesisID from GET or session
+$thesisId = $_GET['thesisID'] ?? ($_SESSION['thesisID'] ?? null);
+
+if (!$thesisId) {
+    echo "Thesis ID is required";
+    exit;
+}
+
 if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'teacher') {
     header('Location: ../index.php');
     exit;
@@ -14,12 +27,6 @@ $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch();
 
 $teacherId = $teacher['id'] ?? 0;
-$thesisId = $_GET['thesisID'] ?? null;
-
-if (!$thesisId) {
-    echo "Thesis ID is required";
-    exit;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     header('Content-Type: application/json');
@@ -33,23 +40,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
     }
 
     if ($action === 'submitGrades') {
-        $stmt_check = $pdo->prepare("SELECT id FROM grades WHERE thesisID = ? AND teacherID = ?");
-        $stmt_check->execute([$_POST['thesisID'], $teacherId]);
-        if ($stmt_check->fetch()) {
-            echo json_encode(['success' => false, 'message' => 'You have already submitted grades.']);
+        try {
+            $stmt_check = $pdo->prepare("SELECT id FROM grades WHERE thesisID = ? AND teacherID = ?");
+            $stmt_check->execute([$_POST['thesisID'], $teacherId]);
+            if ($stmt_check->fetch()) {
+                echo json_encode(['success' => false, 'message' => 'You have already submitted grades.']);
+                exit;
+            }
+
+            $quality = floatval($_POST['quality_grade'] ?? 0);
+            $time = floatval($_POST['time'] ?? 0);
+            $rest = floatval($_POST['rest'] ?? 0);
+            $presentation = floatval($_POST['presentation'] ?? 0);
+            $calc = $quality * 0.6 + $time * 0.15 + $rest * 0.15 + $presentation * 0.1;
+
+            // Insert using correct column names
+            $stmt = $pdo->prepare("INSERT INTO grades (thesisID, teacherID, quality_grade, time_grade, rest_quality_grade, presentation_grade, calc_grade) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            if (!$stmt->execute([$_POST['thesisID'], $teacherId, $quality, $time, $rest, $presentation, $calc])) {
+                throw new Exception("Database insert failed");
+            }
+            echo json_encode(['success' => true, 'message' => 'Grades submitted!']);
+            exit;
+        } catch (Exception $ex) {
+            error_log("SubmitGrades error: " . $ex->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Failed to submit grades: ' . $ex->getMessage()]);
             exit;
         }
-
-        $quality = floatval($_POST['quality_grade'] ?? 0);
-        $time = floatval($_POST['time'] ?? 0);
-        $rest = floatval($_POST['rest'] ?? 0);
-        $presentation = floatval($_POST['presentation'] ?? 0);
-        $calc = $quality * 0.6 + $time * 0.15 + $rest * 0.15 + $presentation * 0.1;
-
-        $stmt = $pdo->prepare("INSERT INTO grades (thesisID, teacherID, quality_grade, time, rest, presentation, calc) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$_POST['thesisID'], $teacherId, $quality, $time, $rest, $presentation, $calc]);
-        echo json_encode(['success' => true, 'message' => 'Grades submitted!']);
-        exit;
     }
 
     if ($action === 'announce' && isset($_POST['thesisID'])) {
@@ -87,7 +103,7 @@ $loadData = function () use ($pdo, $thesisId, $teacherId, $teacher) {
     ];
 
     $grades = [];
-    if (!empty($thesis['grading'])) {
+    if (!empty($thesis) && intval($thesis['grading']) === 1) {
         $stmt = $pdo->prepare("SELECT g.*, t.t_fname, t.t_lname FROM grades g JOIN teacher t ON g.teacherID = t.id WHERE g.thesisID = ?");
         $stmt->execute([$thesisId]);
         $grades = $stmt->fetchAll();
@@ -98,7 +114,7 @@ $loadData = function () use ($pdo, $thesisId, $teacherId, $teacher) {
     $meta = $stmt->fetch();
 
     if ($committee) {
-        $thesis['supervisor'] = $committee['supervisor'];
+        $thesis['supervisor'] = intval($committee['supervisor']);
     }
 
     return [
