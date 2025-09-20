@@ -1,4 +1,3 @@
-// secretary_view_theses.js
 (function () {
   'use strict';
 
