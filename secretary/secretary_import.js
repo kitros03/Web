@@ -3,6 +3,7 @@
   const uploadBtn = document.getElementById('uploadBtn');
   const resultBox = document.getElementById('result');
 
+
   function showResult(html) {
     resultBox.style.display = 'block';
     resultBox.innerHTML = html;

@@ -2,13 +2,11 @@
 declare(strict_types=1);
 session_start();
 
-// Κρατάμε καθαρή την έξοδο
 ob_start();
 header('Content-Type: application/json; charset=UTF-8');
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
-// Έλεγχος ρόλου
 if (!isset($_SESSION['username']) || (($_SESSION['role'] ?? '') !== 'secretary')) {
   http_response_code(403);
   ob_clean();
@@ -16,10 +14,9 @@ if (!isset($_SESSION['username']) || (($_SESSION['role'] ?? '') !== 'secretary')
   exit;
 }
 
-// Φέρνουμε credentials από το υπάρχον dbconnect.php (ΔΕΝ το αλλάζουμε)
-require_once __DIR__ . '/../dbconnect.php';
+require_once  '/../dbconnect.php';
 
-// Άνοιγμα ΔΙΚΗΣ μας mysqli σύνδεσης με τα ίδια credentials (όχι PDO)
+
 if (!isset($host, $db, $user, $pass)) {
   http_response_code(500);
   ob_clean();
@@ -36,7 +33,7 @@ if ($mysqli->connect_errno) {
 }
 @$mysqli->set_charset(isset($charset) ? $charset : 'utf8mb4');
 
-// Helpers
+
 function select_one_assoc(mysqli $mysqli, string $sql, array $params, string $types): ?array {
   $stmt = $mysqli->prepare($sql);
   if (!$stmt) throw new RuntimeException('Prepare failed: ' . $mysqli->error);
@@ -69,7 +66,6 @@ function exec_stmt(mysqli $mysqli, string $sql, array $params, string $types): v
 }
 
 try {
-  // Διαβάζουμε JSON σώμα
   $raw = file_get_contents('php://input');
   $data = json_decode($raw, true);
   if (!is_array($data)) throw new Exception('Μη έγκυρο αίτημα.');
@@ -78,13 +74,11 @@ try {
   $thesisID = (int)($data['thesisID'] ?? 0);
   if ($thesisID <= 0) throw new Exception('Άκυρο thesisID.');
 
-  // Βεβαιώσου ότι η διπλωματική υπάρχει και είναι ACTIVE
   $row = select_one_assoc($mysqli, "SELECT th_status FROM thesis WHERE thesisID=? LIMIT 1", [$thesisID], 'i');
   if (!$row) throw new Exception('Η διπλωματική δεν βρέθηκε.');
   if ($row['th_status'] !== 'ACTIVE') throw new Exception('Η ενέργεια επιτρέπεται μόνο για Ενεργές διπλωματικές.');
 
   if ($action === 'startExam') {
-    // Καταχώρηση GS Number — ΔΕΝ αλλάζει status
     $gs = trim((string)($data['gs_numb'] ?? ''));
     if ($gs === '') throw new Exception('Συμπλήρωσε GS Number.');
     if (!ctype_digit($gs)) throw new Exception('Το GS πρέπει να είναι ακέραιος αριθμός.');
@@ -97,7 +91,6 @@ try {
   }
 
   if ($action === 'cancelThesis') {
-    // Ακύρωση διπλωματικής με GA Number/Date/Reason
     $gaNumber = trim((string)($data['gaNumber'] ?? ''));
     $gaDate   = trim((string)($data['gaDate'] ?? ''));
     $reason   = trim((string)($data['reason'] ?? ''));
@@ -128,7 +121,6 @@ try {
   throw new Exception('Άγνωστη ενέργεια.');
 } catch (Throwable $e) {
   if ($mysqli instanceof mysqli && $mysqli->errno) {
-    // best effort
   }
   http_response_code(200);
   ob_clean();
@@ -136,3 +128,4 @@ try {
 } finally {
   if (isset($mysqli) && $mysqli instanceof mysqli) { @$mysqli->close(); }
 }
+?>

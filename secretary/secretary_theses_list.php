@@ -2,13 +2,11 @@
 declare(strict_types=1);
 session_start();
 
-// Πάντα buffer για να μην “ξεφύγει” άσχετη έξοδος
 ob_start();
 header('Content-Type: application/json; charset=UTF-8');
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
-// Access check
 if (!isset($_SESSION['username']) || (($_SESSION['role'] ?? '') !== 'secretary')) {
   http_response_code(403);
   ob_clean();
@@ -16,10 +14,8 @@ if (!isset($_SESSION['username']) || (($_SESSION['role'] ?? '') !== 'secretary')
   exit;
 }
 
-// Φέρε το dbconnect ΜΕΧΡΙ να πάρουμε τα $host, $db, $user, $pass, $charset
-require_once __DIR__ . '/../dbconnect.php';
+require_once __DIR__ . '/../dbconnect.php'; // διαβάζουμε $host,$db,$user,$pass,$charset
 
-// Άνοιξε δική μας mysqli σύνδεση χρησιμοποιώντας τις ΜΕΤΑΒΛΗΤΕΣ από το dbconnect.php
 if (!isset($host, $db, $user, $pass)) {
   http_response_code(500);
   ob_clean();
@@ -34,17 +30,25 @@ if ($mysqli->connect_errno) {
   echo json_encode(['error' => 'DB connection failed', 'details' => $mysqli->connect_error], JSON_UNESCAPED_UNICODE);
   exit;
 }
-@$mysqli->set_charset($charset ?? 'utf8mb4');
+@$mysqli->set_charset(isset($charset) ? $charset : 'utf8mb4');
 
 try {
+  // Απλούστερο φίλτρο: δείξε ACTIVE, DONE, EXAM (ώστε να μη χάνεις καμία "Ενεργή")
   $sql = "
     SELECT
       t.thesisID,
       t.title,
       t.th_description,
       t.th_status,
+      t.gs_numb,
       CONCAT(te.t_fname, ' ', te.t_lname) AS supervisor_name,
       CONCAT(s.s_fname, ' ', s.s_lname)   AS student_name,
+      tem.repository_url,
+      (SELECT AVG(g.grade) FROM grades g WHERE g.thesisID = t.thesisID) AS final_grade,
+      (
+        tem.repository_url IS NOT NULL
+        AND EXISTS (SELECT 1 FROM grades g2 WHERE g2.thesisID = t.thesisID)
+      ) AS ready_finalize,
       (
         SELECT MIN(changeDate) FROM thesisStatusChanges sc
         WHERE sc.thesisID = t.thesisID AND sc.changeTo = 'ASSIGNED'
@@ -56,52 +60,48 @@ try {
     FROM thesis t
     LEFT JOIN teacher te ON te.id = t.supervisor
     LEFT JOIN student s  ON s.thesisID = t.thesisID
-    WHERE t.th_status IN ('ACTIVE','EXAM')
+    LEFT JOIN thesis_exam_meta tem ON tem.thesisID = t.thesisID
+    WHERE t.th_status IN ('ACTIVE','EXAM','DONE')
     ORDER BY t.thesisID DESC
   ";
 
   $result = $mysqli->query($sql);
-  if (!$result) {
-    throw new RuntimeException('Query failed: ' . $mysqli->error);
-  }
+  if (!$result) throw new RuntimeException('Query failed: ' . $mysqli->error);
 
   $rows = [];
-  while ($row = $result->fetch_assoc()) {
-    $rows[] = $row;
-  }
+  while ($row = $result->fetch_assoc()) { $rows[] = $row; }
   $result->free();
 
   $today = new DateTimeImmutable('today');
   $out = [];
-
   foreach ($rows as $r) {
     $assigned = $r['assigned_date_assigned'] ?: $r['assigned_date_active'];
     $days = null;
     if ($assigned) {
-      try {
-        $days = (int)$today->diff(new DateTimeImmutable($assigned))->format('%a');
-      } catch (Throwable $e) {
-        $days = null;
-      }
+      try { $days = (int)$today->diff(new DateTimeImmutable($assigned))->format('%a'); }
+      catch (Throwable $e) { $days = null; }
     }
     $out[] = [
       'thesisID' => (int)$r['thesisID'],
       'title'    => $r['title'],
       'th_description' => $r['th_description'],
       'th_status'=> $r['th_status'],
-      'supervisor_name' => $r['supervisor_name'] ?: null,
-      'student_name'    => $r['student_name'] ?: null,
-      'days_since_assignment' => $days
+      'gs_numb'  => $r['gs_numb'],
+      'supervisor_name' => ($r['supervisor_name'] !== null && $r['supervisor_name'] !== '') ? $r['supervisor_name'] : null,
+      'student_name'    => ($r['student_name'] !== null && $r['student_name'] !== '') ? $r['student_name'] : null,
+      'days_since_assignment' => $days,
+      'repository_url' => ($r['repository_url'] !== null && $r['repository_url'] !== '') ? $r['repository_url'] : null,
+      'final_grade'    => isset($r['final_grade']) ? (float)$r['final_grade'] : null,
+      'ready_finalize' => (bool)$r['ready_finalize'],
     ];
   }
 
-  ob_clean(); // καθάρισε τυχόν BOM/echo
+  ob_clean();
   echo json_encode($out, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
   http_response_code(500);
   ob_clean();
   echo json_encode(['error' => 'Server error', 'details' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } finally {
-  @$mysqli->close();
+  if (isset($mysqli) && $mysqli instanceof mysqli) { @$mysqli->close(); }
 }
-?>

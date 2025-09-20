@@ -42,9 +42,7 @@ try {
       CONCAT(te.t_fname, ' ', te.t_lname) AS supervisor_name,
       CONCAT(s.s_fname, ' ', s.s_lname)   AS student_name,
       tem.repository_url,
-      (
-        SELECT AVG(g.grade) FROM grades g WHERE g.thesisID = t.thesisID
-      ) AS final_grade,
+      (SELECT AVG(g.grade) FROM grades g WHERE g.thesisID = t.thesisID) AS final_grade,
       (
         tem.repository_url IS NOT NULL
         AND EXISTS (SELECT 1 FROM grades g2 WHERE g2.thesisID = t.thesisID)
@@ -61,10 +59,7 @@ try {
     LEFT JOIN teacher te ON te.id = t.supervisor
     LEFT JOIN student s  ON s.thesisID = t.thesisID
     LEFT JOIN thesis_exam_meta tem ON tem.thesisID = t.thesisID
-    WHERE
-      t.th_status IN ('ACTIVE','DONE')
-      OR (t.th_status = 'EXAM' AND tem.repository_url IS NOT NULL
-          AND EXISTS (SELECT 1 FROM grades gg WHERE gg.thesisID = t.thesisID))
+    WHERE t.th_status IN ('ACTIVE','EXAM','DONE')
     ORDER BY t.thesisID DESC
   ";
 
