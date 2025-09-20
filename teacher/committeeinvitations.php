@@ -124,7 +124,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' &&
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Committee Invitations</title>
   <link rel="stylesheet" href="../style.css">
 </head>
 <body>
@@ -133,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' &&
         <button class="back-btn" id="backBtn">
             <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
-        <h1 class="site-title">Committee Invitations</h1>
+        <h1 class="site-title">Προσκλήσεις Επιτροπής</h1>
     </div>
   </header>
   <main class="dashboard-main">

@@ -3,64 +3,72 @@ document.addEventListener('DOMContentLoaded', () => {
     const unassignForm = document.getElementById('unassignForm');
     const committeeTableBody = document.querySelector('#committeeTable tbody');
     const invitationList = document.getElementById('invitationList');
-    const thesisID = document.getElementById('thesisID').value;
+    const thesisIDElem = document.getElementById('thesisID');
+    const thesisID = thesisIDElem ? thesisIDElem.value : null;
 
     backBtn?.addEventListener('click', () => {
         window.location.href = 'teacherdashboard.php';
     });
 
     async function loadData() {
+        if (!thesisID) {
+            alert('Το ID του θέματος δεν είναι διαθέσιμο.');
+            return;
+        }
         try {
             const res = await fetch(`assignedthesis.php?thesisID=${encodeURIComponent(thesisID)}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await res.json();
             if (!data.success) {
-                alert(data.message || 'Failed to load data');
+                alert(data.message || 'Αποτυχία φόρτωσης δεδομένων');
                 return;
             }
 
-            // Committee members display
             if (data.committee && Object.keys(data.committee).length > 0) {
-                const m1 = data.committee.member1Name || 'No first member in committee.';
-                const m2 = data.committee.member2Name || 'No second member in committee.';
+                const m1 = data.committee.member1Name || 'Ν/Α.';
+                const m2 = data.committee.member2Name || 'Ν/Α.';
                 committeeTableBody.innerHTML = `<tr><td>${escapeHtml(m1)}</td><td>${escapeHtml(m2)}</td></tr>`;
             } else {
-                committeeTableBody.innerHTML = `<tr><td colspan="2">No committee members assigned</td></tr>`;
+                committeeTableBody.innerHTML = `<tr><td colspan="2">Δεν υπάρχουν μέλη.</td></tr>`;
             }
 
-            // Invitations display
             if (data.invitations && data.invitations.length > 0) {
                 invitationList.innerHTML = '';
                 data.invitations.forEach(inv => {
-                    let responseHtml = inv.response ? 
-                        `${escapeHtml(inv.response)} ${escapeHtml(inv.responseDate)}` : 
-                        '<p>Pending response</p>';
+                    let responseHtml = inv.response ?
+                        `${escapeHtml(inv.response)} ${escapeHtml(inv.responseDate)}` :
+                        '<p>Εκκρεμεί απάντηση</p>';
                     const item = document.createElement('li');
                     item.innerHTML = `${escapeHtml(inv.receiverName)} - ${responseHtml}`;
                     invitationList.appendChild(item);
                 });
             } else {
-                invitationList.innerHTML = '<p>No invitations sent.</p>';
+                invitationList.innerHTML = '<p>Δεν υπάρχουν προσκλήσεις.</p>';
             }
 
-            // Show unassign form only if supervisor is current teacher
-            if (data.teacherId && data.committee && data.committee.supervisor === data.teacherId) {
+            if (data.teacherId && data.committee && data.committee.supervisor == data.teacherId) {
                 unassignForm.style.display = 'block';
             } else {
                 unassignForm.style.display = 'none';
             }
         } catch (err) {
-            alert('Error loading data');
+            alert('Σφάλμα φόρτωσης δεδομένων');
             console.error(err);
         }
     }
 
     unassignForm?.addEventListener('submit', async e => {
         e.preventDefault();
-        if (!confirm('Are you sure you want to remove this assignment?')) return;
+        if (!confirm('Σίγουρα θέλετε να αναιρέσετε την ανάθεση θέματος;')) return;
+
         const formData = new FormData(unassignForm);
         formData.append('remove', '1');
+
+        if (!formData.get('thesisID')) {
+            alert('Απαιτείται το ID του θέματος για την ανάθεση.');
+            return;
+        }
 
         try {
             const res = await fetch('assignedthesis.php', {
@@ -75,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'viewtheses.php';
             }
         } catch (error) {
-            alert('Unable to remove assignment');
+            alert('Αποτυχία αναίρεσης.');
             console.error(error);
         }
     });
