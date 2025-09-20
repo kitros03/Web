@@ -1,20 +1,19 @@
-// secretary_manage_theses.js  (χωρίς "Λεπτομέρειες" + κουμπί Done)
+// secretary_manage_theses.js — GS / Ακύρωση / Done (με υποστήριξη ready_finalize)
 (function () {
   'use strict';
 
-  // Δοκιμάζουμε πρώτα το endpoint που επιστρέφει repository_url/final_grade,
-  // και αν λείπει κάνουμε fallback στην απλή λίστα.
+  // Προτιμάμε το endpoint της διαχείρισης (έχει repo/grade/ready_finalize). Fallback στην απλή λίστα.
   var LIST_ENDPOINTS = [
     'secretary_manage_theses_list.php',
     'secretary_theses_list.php'
   ];
 
-  var ACTIONS_ENDPOINT = 'secretary_manage_thesis_actions.php';
+  var ACTIONS_ENDPOINT   = 'secretary_manage_thesis_actions.php';
   var MARK_DONE_ENDPOINT = 'secretary_mark_done.php';
 
   function $(id){ return document.getElementById(id); }
 
-  // Άγκυρα κάτω από το searchBox για να μπαίνει στο σωστό layout
+  // Άγκυρα κάτω από το searchBox για σωστό layout
   var searchBox = $('searchBox');
   var anchor = searchBox ? (searchBox.parentNode || searchBox) : document.body;
 
@@ -38,11 +37,19 @@
     return d+' ημέρες';
   }
 
-  function hasReadyFinalize(it){
-    // Έχουμε κουμπί Done μόνο αν υπάρχουν ΚΑΙ link ΚΑΙ βαθμός, και δεν είναι ήδη DONE
-    var hasRepo = !!(it && it.repository_url);
-    var hasGrade = it && it.final_grade != null && !isNaN(Number(it.final_grade));
-    return !!(hasRepo && hasGrade && it.th_status !== 'DONE');
+  function canShowDone(it){
+    if (!it || it.th_status === 'DONE' || it.th_status === 'CANCELLED') return false;
+    // Επιτρέπουμε Done κυρίως για EXAM (και προαιρετικά ACTIVE)
+    if (['EXAM','ACTIVE'].indexOf(it.th_status) === -1) return false;
+
+    // 1) προτιμάμε explicit flag από API
+    if (typeof it.ready_finalize !== 'undefined') {
+      return !!it.ready_finalize;
+    }
+    // 2) διαφορετικά, ελέγχουμε repo + grade
+    var hasRepo  = !!it.repository_url;
+    var hasGrade = (it.final_grade != null) && !isNaN(Number(it.final_grade));
+    return hasRepo && hasGrade;
   }
 
   function renderList(items){
@@ -67,7 +74,7 @@
         actions.push('<button class="sidebarButton btn-start-exam" data-id="'+it.thesisID+'">Καταχώρηση GS</button>');
         actions.push('<button class="sidebarButton btn-cancel-thesis" data-id="'+it.thesisID+'">Ακύρωση</button>');
       }
-      if (hasReadyFinalize(it)) {
+      if (canShowDone(it)) {
         actions.push('<button class="sidebarButton btn-finalize" data-id="'+it.thesisID+'">Οριστική Περάτωση</button>');
       }
       rows.push('<td>' + (actions.length ? actions.join(' ') : '—') + '</td>');
@@ -116,14 +123,13 @@
         renderList(cachedList);
       })
       .catch(function(err){
-        // Αν ο πρώτος (manage) αποτύχει με HTML/404, κάνε fallback στον επόμενο
         if (err._nonJson || /404/.test(err.message)) { tryLoad(i+1); }
         else { listDiv.innerHTML = '<p class="error">'+err.message+'</p>'; }
       });
   }
   function loadList(){ tryLoad(0); }
 
-  // ΜΟΝΟ GS / Ακύρωση / Done
+  // Actions: GS / Ακύρωση / Done
   document.addEventListener('click', function(e){
     var t=e.target||e.srcElement;
 

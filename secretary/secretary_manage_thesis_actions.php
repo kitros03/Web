@@ -2,24 +2,25 @@
 declare(strict_types=1);
 session_start();
 
-ob_start();
+// Θα επιστρέφουμε πάντα JSON
 header('Content-Type: application/json; charset=UTF-8');
+
+// Μην εμφανίζεις PHP errors στο output (για να μην χαλάει το JSON)
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
+// ------ Session / Access control ------
 if (!isset($_SESSION['username']) || (($_SESSION['role'] ?? '') !== 'secretary')) {
   http_response_code(403);
-  ob_clean();
   echo json_encode(['success' => false, 'message' => 'Forbidden'], JSON_UNESCAPED_UNICODE);
   exit;
 }
 
-require_once  '/../dbconnect.php';
-
+// ------ DB connect (ΧΩΡΙΣ να αλλάξει το dbconnect.php) ------
+require_once __DIR__ . '/../dbconnect.php'; // << ΔΙΟΡΘΩΘΗΚΕ ΤΟ PATH
 
 if (!isset($host, $db, $user, $pass)) {
   http_response_code(500);
-  ob_clean();
   echo json_encode(['success' => false, 'message' => 'DB credentials not found in dbconnect.php'], JSON_UNESCAPED_UNICODE);
   exit;
 }
@@ -27,24 +28,17 @@ if (!isset($host, $db, $user, $pass)) {
 $mysqli = @new mysqli($host, $user, $pass, $db);
 if ($mysqli->connect_errno) {
   http_response_code(500);
-  ob_clean();
   echo json_encode(['success' => false, 'message' => 'DB connection failed', 'details' => $mysqli->connect_error], JSON_UNESCAPED_UNICODE);
   exit;
 }
 @$mysqli->set_charset(isset($charset) ? $charset : 'utf8mb4');
 
-
+// ------ μικρά helpers για prepared statements ------
 function select_one_assoc(mysqli $mysqli, string $sql, array $params, string $types): ?array {
   $stmt = $mysqli->prepare($sql);
   if (!$stmt) throw new RuntimeException('Prepare failed: ' . $mysqli->error);
-  if ($types !== '' && !empty($params)) {
-    $stmt->bind_param($types, ...$params);
-  }
-  if (!$stmt->execute()) {
-    $err = $stmt->error;
-    $stmt->close();
-    throw new RuntimeException('Execute failed: ' . $err);
-  }
+  if ($types !== '' && !empty($params)) { $stmt->bind_param($types, ...$params); }
+  if (!$stmt->execute()) { $err = $stmt->error; $stmt->close(); throw new RuntimeException('Execute failed: ' . $err); }
   $res = $stmt->get_result();
   $row = $res ? $res->fetch_assoc() : null;
   $stmt->close();
@@ -54,18 +48,14 @@ function select_one_assoc(mysqli $mysqli, string $sql, array $params, string $ty
 function exec_stmt(mysqli $mysqli, string $sql, array $params, string $types): void {
   $stmt = $mysqli->prepare($sql);
   if (!$stmt) throw new RuntimeException('Prepare failed: ' . $mysqli->error);
-  if ($types !== '' && !empty($params)) {
-    $stmt->bind_param($types, ...$params);
-  }
-  if (!$stmt->execute()) {
-    $err = $stmt->error;
-    $stmt->close();
-    throw new RuntimeException('Execute failed: ' . $err);
-  }
+  if ($types !== '' && !empty($params)) { $stmt->bind_param($types, ...$params); }
+  if (!$stmt->execute()) { $err = $stmt->error; $stmt->close(); throw new RuntimeException('Execute failed: ' . $err); }
   $stmt->close();
 }
 
+// ------ main ------
 try {
+  // Διαβάζουμε το JSON σώμα
   $raw = file_get_contents('php://input');
   $data = json_decode($raw, true);
   if (!is_array($data)) throw new Exception('Μη έγκυρο αίτημα.');
@@ -74,10 +64,12 @@ try {
   $thesisID = (int)($data['thesisID'] ?? 0);
   if ($thesisID <= 0) throw new Exception('Άκυρο thesisID.');
 
+  // Επιτρέπουμε ενέργειες ΜΟΝΟ σε Ενεργές διπλωματικές
   $row = select_one_assoc($mysqli, "SELECT th_status FROM thesis WHERE thesisID=? LIMIT 1", [$thesisID], 'i');
   if (!$row) throw new Exception('Η διπλωματική δεν βρέθηκε.');
   if ($row['th_status'] !== 'ACTIVE') throw new Exception('Η ενέργεια επιτρέπεται μόνο για Ενεργές διπλωματικές.');
 
+  // ---------- Καταχώρηση GS ----------
   if ($action === 'startExam') {
     $gs = trim((string)($data['gs_numb'] ?? ''));
     if ($gs === '') throw new Exception('Συμπλήρωσε GS Number.');
@@ -85,11 +77,11 @@ try {
 
     exec_stmt($mysqli, "UPDATE thesis SET gs_numb=? WHERE thesisID=?", [(int)$gs, $thesisID], 'ii');
 
-    ob_clean();
     echo json_encode(['success' => true, 'message' => 'Καταχωρήθηκε το GS Number. Η κατάσταση παραμένει ACTIVE.'], JSON_UNESCAPED_UNICODE);
     exit;
   }
 
+  // ---------- Ακύρωση ΔΕ ----------
   if ($action === 'cancelThesis') {
     $gaNumber = trim((string)($data['gaNumber'] ?? ''));
     $gaDate   = trim((string)($data['gaDate'] ?? ''));
@@ -101,11 +93,24 @@ try {
 
     $mysqli->begin_transaction();
     try {
+      // 1) thesis -> CANCELLED
       exec_stmt($mysqli, "UPDATE thesis SET th_status='CANCELLED' WHERE thesisID=?", [$thesisID], 'i');
-      exec_stmt($mysqli, "INSERT INTO cancelledThesis (thesisID, gaNumber, gaDate, reason) VALUES (?, ?, ?, ?)",
-        [$thesisID, $gaNumber, $gaDate, $reason], 'isss');
-      exec_stmt($mysqli, "INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, CURDATE(), 'CANCELLED')",
-        [$thesisID], 'i');
+
+      // 2) cancelledThesis (διόρθωση types: iiss)
+      exec_stmt(
+        $mysqli,
+        "INSERT INTO cancelledThesis (thesisID, gaNumber, gaDate, reason) VALUES (?, ?, ?, ?)",
+        [$thesisID, (int)$gaNumber, $gaDate, $reason],
+        'iiss'
+      );
+
+      // 3) thesisStatusChanges
+      exec_stmt(
+        $mysqli,
+        "INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, CURDATE(), 'CANCELLED')",
+        [$thesisID],
+        'i'
+      );
 
       $mysqli->commit();
     } catch (Throwable $inner) {
@@ -113,19 +118,15 @@ try {
       throw $inner;
     }
 
-    ob_clean();
     echo json_encode(['success' => true, 'message' => 'Η διπλωματική ακυρώθηκε.'], JSON_UNESCAPED_UNICODE);
     exit;
   }
 
   throw new Exception('Άγνωστη ενέργεια.');
 } catch (Throwable $e) {
-  if ($mysqli instanceof mysqli && $mysqli->errno) {
-  }
+  // Επιστρέφουμε HTTP 200 αλλά success=false, ώστε το front-end να πάρει JSON πάντα
   http_response_code(200);
-  ob_clean();
   echo json_encode(['success' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } finally {
   if (isset($mysqli) && $mysqli instanceof mysqli) { @$mysqli->close(); }
 }
-?>
