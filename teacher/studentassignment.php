@@ -1,6 +1,6 @@
 <?php
 session_start();
-require 'dbconnect.php';
+require '../dbconnect.php';
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: index.html');
@@ -112,13 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 <head>
   <meta charset="UTF-8" />
   <title>Student Assignment</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
   <header>
     <div class="logo-title-row">
         <button class="back-btn" id="backBtn">
-            <img src="logo2.jpg" alt="Logo" class="logo" />
+            <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
         <h1 class="site-title">Student Assignment</h1>
     </div>

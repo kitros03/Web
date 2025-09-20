@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'dbconnect.php';
+require_once '../dbconnect.php';
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     http_response_code(403);
@@ -98,7 +98,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQU
 <meta charset="UTF-8" />
 <title>View Statistics</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="../style.css" />
 <style>
 body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
 h1, h2 { color: #222; }
@@ -112,7 +112,7 @@ canvas { background: #fff; margin-top: 10px; border: 1px solid #ccc; }
 <header>
   <div class="logo-title-row">
     <button class="back-btn" onclick="history.back()">
-      <img src="logo2.jpg" alt="Logo" class="logo" style="height:40px;" />
+      <img src="../logo2.jpg" alt="Logo" class="logo" style="height:40px;" />
     </button>
     <h1 class="site-title">View Statistics</h1>
   </div>

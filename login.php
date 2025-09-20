@@ -39,11 +39,11 @@ else if (!password_verify($password, $user['pass'])) {
         exit;
     }
     if ($role === 'teacher') {
-        echo json_encode(['success' => true, 'dashboard' => 'teacherdashboard.php']);
+        echo json_encode(['success' => true, 'dashboard' => 'teacher/teacherdashboard.php']);
     } elseif ($role === 'student') {
-        echo json_encode(['success' => true, 'dashboard' => 'studentdashboard.php']);
+        echo json_encode(['success' => true, 'dashboard' => 'student/studentdashboard.php']);
     } else {
-        echo json_encode(['success' => true, 'dashboard' => 'secretarydashboard.php']);
+        echo json_encode(['success' => true, 'dashboard' => 'secretary/secretarydashboard.php']);
     }
     exit;
 }

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'dbconnect.php'; 
+require_once '../dbconnect.php'; 
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     http_response_code(403);
@@ -78,13 +78,13 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQU
 <head>
 <meta charset="UTF-8" />
 <title>Manage Theses</title>
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="../style.css" />
 </head>
 <body>
 <header>
     <div class="logo-title-row">
         <button class="back-btn" id="backBtn">
-            <img src="logo2.jpg" alt="Logo" class="logo" />
+            <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
         <h1 class="site-title">Manage Theses</h1>
     </div>

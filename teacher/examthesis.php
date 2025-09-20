@@ -2,7 +2,7 @@
 session_start();
 header("Content-Type: text/html; charset=utf-8");
 
-require_once("dbconnect.php");
+require_once("../dbconnect.php");
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: index.html');
@@ -110,14 +110,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
     <title>Υπό Εξέταση</title>
 </head>
 <body>
 <header>
     <div class="logo-title-row">
         <button class="back-btn" id="backBtn">
-            <img src="logo2.jpg" alt="Logo" class="logo" />
+            <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
         <h1 class="site-title">Υπό Εξέταση</h1>
     </div>

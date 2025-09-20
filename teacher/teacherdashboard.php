@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once("dbconnect.php");
+require_once("../dbconnect.php");
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: index.html');
@@ -15,12 +15,12 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
 <head>
     <meta charset="UTF-8" />
     <title>Teacher Dashboard</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
     <header>
         <div class="logo-title-row">
-            <img src="logo2.jpg" alt="Logo" class="logo" />
+            <img src="../logo2.jpg" alt="Logo" class="logo" />
             <h1 class="site-title">Teacher Dashboard</h1>
         </div>
     </header>

@@ -1,6 +1,6 @@
 <?php 
 session_start();
-require_once 'dbconnect.php';
+require_once '../dbconnect.php';
 
 // Auth check
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WI
 <header>
     <div class="logo-title-row">
         <button class="back-btn" id="backBtn">
-            <img src="logo2.jpg" alt="Logo" class="logo" />
+            <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
         <h1 class="site-title">Active Thesis</h1>
     </div>
@@ -228,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WI
 
 <footer><p>© 2025</p></footer>
 
-<script src="activethesis.js"></script>
+<script src="../activethesis.js"></script>
 
 </body>
 </html>

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "dbconnect.php"; 
+require_once "../dbconnect.php"; 
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ajax'])) {
@@ -97,14 +97,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
     <title>Thesis Creation</title>
 </head>
 <body>
     <header>
         <div class="logo-title-row">
             <button class="back-btn" id="backBtn">
-                <img src="logo2.jpg" alt="Logo" class="logo" />
+                <img src="../logo2.jpg" alt="Logo" class="logo" />
             </button>
             <h1 class="site-title">Thesis Creation</h1>
         </div>

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "dbconnect.php";
+require_once "../dbconnect.php";
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     if (isset($_GET['ajax'])) {
@@ -8,7 +8,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
         echo json_encode(['success' => false, 'message' => 'Unauthorized']);
         exit;
     }
-    header('Location: index.html');
+    header('Location: index.php');
     exit;
 }
 
@@ -96,14 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="../style.css" />
     <title>Edit Thesis</title>
 </head>
 <body>
     <header>
         <div class="logo-title-row">
             <button class="back-btn" id="backBtn">
-                <img src="logo2.jpg" alt="Logo" class="logo" />
+                <img src="../logo2.jpg" alt="Logo" class="logo" />
             </button>
             <h1 class="site-title">Thesis Edit</h1>
         </div>

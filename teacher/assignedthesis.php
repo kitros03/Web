@@ -1,9 +1,9 @@
 <?php
 session_start();
-require_once 'dbconnect.php';
+require_once '../dbconnect.php';
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
-    header('Location: index.html');
+    header('Location: index.php');
     exit;
 }
 
@@ -11,7 +11,7 @@ $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$teacher) {
-    header('Location: index.html');
+    header('Location: index.php');
     exit;
 }
 
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WI
     exit;
 }
 
-header('Location: index.html');
+header('Location: index.php');
 exit;
 ?>
 
@@ -102,13 +102,13 @@ exit;
 <head>
 <meta charset="UTF-8">
 <title>Assigned Thesis</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../style.css">
 </head>
 <body>
 <header>
     <div class="logo-title-row">
         <button class="back-btn" id="backBtn">
-            <img src="logo2.jpg" alt="Logo" class="logo" />
+            <img src="../logo2.jpg" alt="Logo" class="logo" />
         </button>
         <h1 class="site-title">Assigned Thesis</h1>
     </div>
