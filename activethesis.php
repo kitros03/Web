@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
     if (isset($_POST['remove'])) {
         $pdo->beginTransaction();
         try {
-            $stmt1 = $pdo->prepare("UPDATE thesis SET th_status = 'NOT_ASSIGNED' WHERE thesisID = ?");
+            $stmt1 = $pdo->prepare("UPDATE thesis SET th_status = 'NOT_ASSIGNED', assigned = 0 WHERE thesisID = ?");
             $stmt1->execute([$thesisID]);
 
             $stmt2 = $pdo->prepare("UPDATE student SET thesisID = NULL WHERE thesisID = ?");
@@ -174,14 +174,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_X_REQUESTED_WI
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
 <header>
     <div class="logo-title-row">
-        <button class="back-btn" id="backBtn"><img src="logo.jpg" alt="Logo" /></button>
+        <button class="back-btn" id="backBtn">
+            <img src="logo2.jpg" alt="Logo" class="logo" />
+        </button>
         <h1 class="site-title">Active Thesis</h1>
     </div>
 </header>
-
 <main class="dashboard-main">
     <h2>My Notes</h2>
     <button class="submit-btn" id="addNotesBtn">Add Note</button>

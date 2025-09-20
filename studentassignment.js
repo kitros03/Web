@@ -1,61 +1,125 @@
-document.getElementById('backBtn').onclick = () => {
-  window.location.href = 'teacherdashboard.php';
-};
+document.addEventListener('DOMContentLoaded', () => {
+    const assignmentForm = document.getElementById('assignmentForm');
+    const resultDiv = document.getElementById('result');
+    const thesisSelect = assignmentForm.querySelector('select[name="thesis"]');
+    const studentSelect = assignmentForm.querySelector('select[name="student"]');
+    const assignedContainer = document.getElementById('assignedTheses');
 
-document.getElementById('assignmentForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const form = document.getElementById('assignmentForm');
-  const formData = new FormData(form);
-  const resultDiv = document.getElementById('result');
+    async function loadData() {
+        try {
+            const response = await fetch('studentassignment.php', {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+            const data = await response.json();
+            if (!data.success) {
+                resultDiv.textContent = data.message || 'Failed to load data.';
+                return;
+            }
 
-  try {
-    const response = await fetch('studentassignment.php', {
-      method: 'POST',
-      credentials: 'same-origin',
-      body: formData
-    });
-    const data = await response.json();
-    resultDiv.innerHTML = `<p>${data.message}</p>`;
+            // Populate theses
+            thesisSelect.innerHTML = '<option value="">-- Select Thesis --</option>';
+            data.theses.forEach(th => {
+                const opt = document.createElement('option');
+                opt.value = th.thesisID;
+                opt.textContent = th.title;
+                thesisSelect.appendChild(opt);
+            });
 
-    if (data.success) {
-      setTimeout(() => window.location.reload(), 1000);
+            // Populate students
+            studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+            data.students.forEach(st => {
+                const opt = document.createElement('option');
+                opt.value = st.username;
+                opt.textContent = st.username;
+                studentSelect.appendChild(opt);
+            });
+
+            // Populate assigned theses
+            if (data.assignedTheses.length === 0) {
+                assignedContainer.innerHTML = '<p>No assigned theses yet.</p>';
+            } else {
+                let html = '<table class="table"><thead><tr><th>ID</th><th>Title</th><th>Description</th><th>Student</th><th>Action</th></tr></thead><tbody>';
+                data.assignedTheses.forEach(t => {
+                    html += `<tr>
+                        <td>${t.thesisID}</td>
+                        <td>${escapeHtml(t.title)}</td>
+                        <td>${escapeHtml(t.thesis_description || t.description || '')}</td>
+                        <td>${escapeHtml(t.studentUsername)}</td>`;
+                    if (!t.finalized) {
+                        html += `<td><button class="remove-btn" data-thesis-id="${t.thesisID}">Remove</button></td>`;
+                    } else {
+                        html += '<td>Finalized</td>';
+                    }
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                assignedContainer.innerHTML = html;
+
+                assignedContainer.querySelectorAll('.remove-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (!confirm('Are you sure to remove this assignment?')) return;
+                        const thesisId = btn.getAttribute('data-thesis-id');
+                        try {
+                            const formData = new FormData();
+                            formData.append('remove', '1');
+                            formData.append('thesisID', thesisId);
+                            const res = await fetch('studentassignment.php', {
+                                method: 'POST',
+                                body: formData,
+                                headers: {'X-Requested-With': 'XMLHttpRequest'}
+                            });
+                            const json = await res.json();
+                            alert(json.message);
+                            if (json.success) {
+                                loadData();
+                            }
+                        } catch (e) {
+                            alert('Failed to remove assignment.');
+                            console.error(e);
+                        }
+                    });
+                });
+            }
+        } catch (e) {
+            resultDiv.textContent = 'Failed to load data.';
+            console.error(e);
+        }
     }
-  } catch (error) {
-    resultDiv.innerHTML = `<p>Error: Could not submit the form.</p>`;
-    console.error("Error:", error);
-  }
-});
 
-document.addEventListener('DOMContentLoaded', function () {
-  const removeForms = document.querySelectorAll('.remove-form');
-
-  removeForms.forEach(function (form) {
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const thesisID = form.getAttribute('data-thesis-id');
-      if (!confirm('Are you sure you want to remove this assignment?')) return;
-
-      const formData = new FormData();
-      formData.append('remove', '1');
-      formData.append('thesisID', thesisID);
-
-      try {
-        const response = await fetch('studentassignment.php', {
-          method: 'POST',
-          credentials: 'same-origin',
-          body: formData
-        });
-        const result = await response.text();
-        alert('Assignment removed successfully.');
-        window.location.reload();
-
-        const row = form.closest('tr');
-        if (row) row.remove();
-      } catch (error) {
-        alert('Error: Could not remove assignment.');
-        console.error('Removal error:', error);
-      }
+    assignmentForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        resultDiv.textContent = '';
+        const thesisId = thesisSelect.value.trim();
+        const studentName = studentSelect.value.trim();
+        if (!thesisId || !studentName) {
+            resultDiv.textContent = 'Please select both thesis and student.';
+            return;
+        }
+        try {
+            const formData = new FormData(assignmentForm);
+            const res = await fetch('studentassignment.php', {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            });
+            const json = await res.json();
+            resultDiv.textContent = json.message;
+            if (json.success) {
+                assignmentForm.reset();
+                loadData();
+            }
+        } catch (e) {
+            resultDiv.textContent = 'Failed to submit assignment.';
+            console.error(e);
+        }
     });
-  });
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, '&amp;')
+                   .replace(/</g, '&lt;')
+                   .replace(/>/g, '&gt;')
+                   .replace(/"/g, '&quot;')
+                   .replace(/'/g, '&#039;');
+    }
+
+    loadData();
 });
