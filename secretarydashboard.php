@@ -10,7 +10,6 @@ if ($_SESSION['role'] !== 'secretary') {
     header('Location: index.html');
     exit;
 }
-//gather announcemets if there are any
 $announcements = [];
 $announcement_query = "SELECT * FROM thesis_exam_meta where announce=1 ORDER BY updated_at DESC ";
 $announcement_result = $pdo->query($announcement_query);

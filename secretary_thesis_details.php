@@ -8,7 +8,7 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
   echo json_encode(['error' => 'Forbidden']); exit;
 }
 
-require_once __DIR__ . '/dbconnect.php'; // $pdo
+require_once __DIR__ . '/dbconnect.php';
 
 $thesisID = isset($_GET['thesisID']) ? (int)$_GET['thesisID'] : 0;
 if ($thesisID <= 0) { http_response_code(400); echo json_encode(['error'=>'Invalid thesisID']); exit; }

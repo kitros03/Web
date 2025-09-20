@@ -1,4 +1,3 @@
-// secretary_view_theses.js
 (function () {
   const listDiv = document.getElementById('thesesList');
   const detailsDiv = document.getElementById('thesisDetails');
@@ -52,7 +51,6 @@
       rows.push(`<td>${it.supervisor_name ?? '—'}</td>`);
       rows.push(`<td>${it.student_name ?? '—'}</td>`);
       rows.push(`<td>${daysLabel(it.days_since_assignment)}</td>`);
-      // Αν είναι DONE → κουμπί "Done", αλλιώς "Λεπτομέρειες"
       if (it.th_status === 'DONE') {
         rows.push(`<td><button class="sidebarButton btn-done" data-id="${it.thesisID}">Done</button></td>`);
       } else {
@@ -96,7 +94,6 @@
       ? Number(info.final_grade).toFixed(2)
       : '—';
 
-    // Αν είναι ήδη DONE, εμφανίζουμε το κουμπί «Οριστική Περάτωση» απενεργοποιημένο
     const canFinalize = info.th_status !== 'DONE' ? '' : 'disabled';
 
     return `
@@ -121,11 +118,9 @@
   }
 
   document.addEventListener('click', async (e) => {
-    // κουμπί Λεπτομέρειες
     const btnDetails = e.target.closest('button.btn-details[data-id]');
     if (btnDetails) {
       const thesisID = btnDetails.dataset.id;
-      // toggle: αν ξαναπατήθηκε το ίδιο → κλείσιμο
       if (currentOpenId && String(currentOpenId) === String(thesisID)) {
         hideDetails(); return;
       }
@@ -143,7 +138,6 @@
       return;
     }
 
-    // κουμπί Done
     const btnDone = e.target.closest('button.btn-done[data-id]');
     if (btnDone) {
       const thesisID = btnDone.dataset.id;
@@ -164,7 +158,6 @@
       return;
     }
 
-    // κουμπί Οριστική Περάτωση (κάνει status= DONE)
     const finalizeBtn = e.target.closest('button.finalize-btn[data-id]');
     if (finalizeBtn) {
       const thesisID = Number(finalizeBtn.dataset.id);
@@ -180,7 +173,6 @@
         const out = await res.json();
         if (!out.success) throw new Error(out.message || 'Αποτυχία');
         alert('Η διπλωματική χαρακτηρίστηκε ως Περατωμένη.');
-        // ανανέωσε λίστα + panel
         await loadList();
         const r2 = await fetch('secretary_done_info.php?thesisID=' + thesisID, { credentials:'same-origin' });
         const info2 = await r2.json();
