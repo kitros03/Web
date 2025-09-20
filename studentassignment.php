@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Check if thesis exists
+        // Verify thesis exists
         $stmt = $pdo->prepare("SELECT * FROM thesis WHERE thesisID = ?");
         $stmt->execute([$thesisId]);
         if (!$stmt->fetch()) {
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Check if student exists
+        // Verify student exists
         $stmt = $pdo->prepare("SELECT * FROM student WHERE username = ?");
         $stmt->execute([$studentUsername]);
         if (!$stmt->fetch()) {
@@ -47,19 +47,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             $pdo->beginTransaction();
-            // Update thesis
-            $stmt = $pdo->prepare("UPDATE thesis SET assigned = 1, th_status = 'ASSIGNED' WHERE thesisID = ?");
+
+            $stmt = $pdo->prepare("UPDATE thesis SET assigned = 1, th_status='ASSIGNED' WHERE thesisID = ?");
             $stmt->execute([$thesisId]);
 
-            // Update student
             $stmt = $pdo->prepare("UPDATE student SET thesisID = ? WHERE username = ?");
             $stmt->execute([$thesisId, $studentUsername]);
 
-            // Log status change
             $stmt = $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, NOW(), 'ASSIGNED')");
             $stmt->execute([$thesisId]);
 
             $pdo->commit();
+
             echo json_encode(['success' => true, 'message' => 'Thesis assigned successfully.']);
         } catch (Exception $e) {
             $pdo->rollBack();
@@ -77,7 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result && $result['th_status'] === 'ASSIGNED') {
             try {
                 $pdo->beginTransaction();
-                $stmt = $pdo->prepare("UPDATE thesis SET assigned = 0, th_status = 'NOT_ASSIGNED' WHERE thesisID = ?");
+
+                $stmt = $pdo->prepare("UPDATE thesis SET assigned = 0, th_status='NOT_ASSIGNED' WHERE thesisID = ?");
                 $stmt->execute([$thesisId]);
 
                 $stmt = $pdo->prepare("UPDATE student SET thesisID = NULL WHERE thesisID = ?");
@@ -90,19 +90,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$thesisId]);
 
                 $pdo->commit();
+
                 echo json_encode(['success' => true, 'message' => 'Thesis unassigned successfully.']);
             } catch (Exception $e) {
                 $pdo->rollBack();
                 echo json_encode(['success' => false, 'message' => 'Unassignment failed: ' . $e->getMessage()]);
             }
         } else {
-            echo json_encode(['success' => false, 'message' => 'Cannot unassign finalized or nonexistent thesis.']);
+            echo json_encode(['success' => false, 'message' => 'Finalized or nonexistent thesis.']);
         }
         exit;
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Return minimal page on direct load (no JSON)
+    if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Assignment</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo-title-row">
+        <button class="back-btn" id="backBtn">
+            <img src="logo2.jpg" alt="Logo" class="logo" />
+        </button>
+        <h1 class="site-title">Student Assignment</h1>
+    </div>
+  </header>
+  <div class="dashboard-container">
+    <main class="dashboard-main">
+      <h2>Assign Thesis to Student</h2>
+      <form id="assignmentForm" class="form-group">
+        <select name="thesis" class="select"></select>
+        <select name="student" class="select"></select>
+        <button type="submit" class="submit-btn">Assign</button>
+      </form>
+      <div id="result"></div>
+      <h2>Assigned Theses</h2>
+      <div id="assignedTheses"></div>
+    </main>
+  </div>
+  <footer>
+  <p>&copy; 2025</p>
+  </footer>
+  <script src="studentassignment.js"></script>
+</body>
+</html>
+<?php
+        exit;
+    }
+    // Ajax GET request, return data JSON
     header('Content-Type: application/json');
     $stmt = $pdo->prepare("SELECT * FROM thesis WHERE supervisor = ? AND assigned = 0 ORDER BY thesisID DESC");
     $stmt->execute([$id]);
@@ -111,13 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $stmt = $pdo->query("SELECT username FROM student WHERE thesisID IS NULL");
     $students = $stmt->fetchAll();
 
-    $stmt = $pdo->prepare("
-        SELECT t.*, s.username AS studentUsername
-        FROM thesis t
-        JOIN student s ON s.thesisID = t.thesisID
-        WHERE t.supervisor = ? AND t.assigned = 1
-        ORDER BY t.thesisID DESC
-    ");
+    $stmt = $pdo->prepare("SELECT t.*, s.username AS studentUsername FROM thesis t JOIN student s ON s.thesisID = t.thesisID WHERE t.supervisor = ? AND t.assigned = 1 ORDER BY t.thesisID DESC");
     $stmt->execute([$id]);
     $assignedTheses = $stmt->fetchAll();
 
@@ -125,47 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'success' => true,
         'theses' => $theses,
         'students' => $students,
-        'assignedTheses' => $assignedTheses,
+        'assignedTheses' => $assignedTheses
     ]);
     exit;
 }
-
-// For any other requests, output minimal page with script loading only
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Student Assignment</title>
-    <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-<header>
-    <div class="logo-container">
-        <img src="logo.jpg" alt="Logo" class="logo" />
-        <h1 class="site-title">Student Assignment</h1>
-    </div>
-</header>
-<div class="dashboard-container">
-<main class="dashboard-main">
-<h2>Assign Thesis to Student</h2>
-<form id="assignmentForm" class="form-group">
-    <select name="thesis" class="select">
-        <option value="">-- Select Thesis --</option>
-    </select>
-    <select name="student" class="select">
-        <option value="">-- Select Student --</option>
-    </select>
-    <button type="submit" class="submit-btn">Assign</button>
-</form>
-<div id="result"></div>
-<h2>Assigned Theses</h2>
-<div id="assignedTheses"></div>
-</main>
-</div>
-<footer>
-<p>© 2025</p>
-</footer>
-<script src="studentassignment.js"></script>
-</body>
-</html>
