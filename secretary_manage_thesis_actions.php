@@ -17,7 +17,6 @@ try {
   $thesisID = (int)($data['thesisID'] ?? 0);
   if ($thesisID <= 0) throw new Exception('Άκυρο thesisID.');
 
-  // φέρε τρέχουσα κατάσταση
   $st = $pdo->prepare("SELECT th_status FROM thesis WHERE thesisID=? LIMIT 1");
   $st->execute([$thesisID]);
   $row = $st->fetch(PDO::FETCH_ASSOC);
@@ -25,7 +24,6 @@ try {
   if ($row['th_status'] !== 'ACTIVE') throw new Exception('Η ενέργεια επιτρέπεται μόνο για Ενεργές διπλωματικές.');
 
   if ($action === 'startExam') {
-    // ΜΟΝΟ GS — ΔΕΝ αλλάζουμε status
     $gs = trim((string)($data['gs_numb'] ?? ''));
     if ($gs === '') throw new Exception('Συμπλήρωσε GS Number.');
     if (!ctype_digit($gs)) throw new Exception('Το GS πρέπει να είναι ακέραιος αριθμός.');

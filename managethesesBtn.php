@@ -47,7 +47,6 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
 </div>
 
 <script src="secretarydashboard.js"></script>
-<!-- cache-bust -->
 <script src="secretary_manage_theses.js?v=5"></script>
 <footer class="footer">
   <p>&copy; 2025 Thesis Management System</p>

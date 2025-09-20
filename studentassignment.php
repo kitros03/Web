@@ -82,11 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle thesis removal
     if (isset($_POST['remove'], $_POST['thesisID'])) {
         $thesisID = trim($_POST['thesisID']);
-        $stmt = $pdo->prepare("SELECT finalized FROM thesis WHERE thesisID = ?");
+        $stmt = $pdo->prepare("SELECT th_status FROM thesis WHERE thesisID = ?");
         $stmt->execute([$thesisID]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($result && !$result['finalized']) {
+        if ($result['th_status'] === 'ASSIGNED') {
             $stmt1 = $pdo->prepare("UPDATE thesis SET assigned = 0, th_status='NOT_ASSIGNED' WHERE thesisID = ?");
             $stmt2 = $pdo->prepare("UPDATE student SET thesisID = NULL WHERE thesisID = ?");
             $stmt3 = $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, NOW(), 'NOT_ASSIGNED')");
