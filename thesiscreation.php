@@ -1,11 +1,37 @@
 <?php
 session_start();
-require_once "dbconnect.php"; // Ensure this contains $pdo
+require_once "dbconnect.php"; 
+
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ajax'])) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+        exit;
+    }
     header('Location: index.html');
     exit;
 }
 
+// ανακτηση δεομενων
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ajax']) && $_GET['ajax'] === '1') {
+    header('Content-Type: application/json');
+    $theses = [];
+    if (!empty($_SESSION['username'])) {
+        $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
+        $stmt->execute([$_SESSION['username']]);
+        $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($teacher && isset($teacher['id'])) {
+            $id = $teacher['id'];
+            $stmt2 = $pdo->prepare("SELECT * FROM thesis WHERE supervisor = ? ORDER BY thesisID DESC");
+            $stmt2->execute([$id]);
+            $theses = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+        }
+    }
+    echo json_encode($theses);
+    exit;
+}
+
+// POST request για δημιουργια διπλωματικης
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     header("Content-Type: application/json");
 
@@ -23,7 +49,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
-    // Retrieve the teacher's ID
     $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
     $stmt->execute([$_SESSION['username']]);
     $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -33,7 +58,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
     $id = $teacher['id'];
 
-    // Handle optional PDF upload
     $pdfPath = null;
     if ($pdf && $pdf['error'] === UPLOAD_ERR_OK && $pdf['size'] > 0) {
         $fileType = mime_content_type($pdf['tmp_name']);
@@ -54,7 +78,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 
-    // Insert the new thesis and create a committee
     if ($pdfPath) {
         $stmt = $pdo->prepare("INSERT INTO thesis (supervisor, title, th_description, pdf_description, th_status) VALUES (?, ?, ?, ?, 'NOT_ASSIGNED')");
         $stmt->execute([$id, $title, $description, $pdfPath]);
@@ -67,32 +90,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->execute([$thesisID, $id]);
     echo json_encode(['success' => true, 'message' => 'Thesis created successfully.']);
     exit;
-
 }
-
-$theses = [];
-if (!empty($_SESSION['username'])) {
-    $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
-    $stmt->execute([$_SESSION['username']]);
-    $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($teacher && isset($teacher['id'])) {
-        $id = $teacher['id'];
-        $stmt2 = $pdo->prepare("SELECT * FROM thesis WHERE supervisor = ? ORDER BY thesisID DESC");
-        $stmt2->execute([$id]);
-        $theses = $stmt2->fetchAll(PDO::FETCH_ASSOC);
-    }
-}
-
-
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
+    <title>Thesis Creation</title>
 </head>
 <body>
     <header>
@@ -116,43 +122,28 @@ if (!empty($_SESSION['username'])) {
             <button class="submit-btn" type="submit">Create Thesis</button>
         </form>
         <div id="result"></div>
+
         <h2>Previously Created Theses</h2>
-        <?php if (!empty($theses)): ?>
-        <table class="table">
+        <table class="table" id="ajaxThesesTable">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Title</th>
                     <th>Description</th>
                     <th>PDF</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($theses as $thesis): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($thesis['thesisID']); ?></td>
-                    <td><?php echo htmlspecialchars($thesis['title']); ?></td>
-                    <td><?php echo htmlspecialchars($thesis['th_description']); ?></td>
-                    <td>
-                        <?php if (!empty($thesis['pdf_description'])): ?>
-                            <a href="<?php echo htmlspecialchars($thesis['pdf_description']); ?>" target="_blank">View PDF</a>
-                        <?php else: ?>
-                            No PDF
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <button class="edit-btn" id="edit-form" type="click" data-thesis-id="<?= $thesis['thesisID'] ?>">Edit</button>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
+                <!-- δεδομενα εμφανιζονται μεσω ajax -->
             </tbody>
         </table>
-        <?php else: ?>
-        <p>No theses found.</p>
-        <?php endif; ?>
-        <script src="thesiscreation.js"></script>
+        <div id="noThesisMsg"></div>
     </div>
     <footer class="footer">
         <p>&copy; 2025 Thesis Management System</p>
+    </footer>
+
+    <script src="thesiscreation.js"></script>
 </body>
 </html>

@@ -45,7 +45,6 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'student') {
     </div>
 
     <script src="studentdashboard.js"></script>
-    <!-- Βάλε εδώ το JS που έστειλες (ή αποθήκευσέ το ως thesisview.js και κάνε include) -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
       fetch('thesis_details.php')

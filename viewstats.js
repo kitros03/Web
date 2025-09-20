@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-
     const popup = document.getElementById('statsPopup');
     const closeBtn = document.getElementById('closePopupBtn');
 
@@ -83,25 +82,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 renderCharts(data);
-                popup.style.display = 'flex'; // show popup using display:flex per CSS
+                popup.style.display = 'flex';
             })
             .catch(() => {
                 alert('Σφάλμα κατά τη φόρτωση των στατιστικών.');
             });
     }
 
-    // Attach button handlers to show popup charts
     document.getElementById('superviseStatsBtn').addEventListener('click', () => fetchDataAndShowPopup('supervise'));
     document.getElementById('committeeStatsBtn').addEventListener('click', () => fetchDataAndShowPopup('committee'));
     document.getElementById('bothStatsBtn').addEventListener('click', () => fetchDataAndShowPopup('both'));
 
-    // Close popup event
     closeBtn.addEventListener('click', () => {
         popup.style.display = 'none';
         clearCharts();
     });
 
-    // Close popup by clicking outside content
     popup.addEventListener('click', (e) => {
         if (e.target === popup) {
             popup.style.display = 'none';

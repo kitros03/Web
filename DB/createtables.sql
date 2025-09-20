@@ -1,12 +1,27 @@
+create table if not exists users
+(
+userID int(10) primary key auto_increment,
+username varchar(20) not null unique,
+pass varchar(100)not null,
+type enum('teacher', 'student', 'secretary') not null
+);
+
 create table if not exists teacher
 (
-teacherID int(10) primary key,
+id int(10) primary key auto_increment,
 t_fname varchar(15) not null,
 t_lname varchar(20) not null, 
 email varchar(50) not null unique,
-username varchar(20) not null unique,
-pass varchar(100) not null
+topic varchar(100),
+homephone int(10),
+cellphone int(10),
+department varchar(100),
+university  varchar(100),
+username varchar(20) not null,
+foreign key(username)
+references users (username)
 );
+
 
 create table if not exists thesis
 (
@@ -16,31 +31,35 @@ title varchar(50) not null,
 th_description varchar(500),
 pdf_description longblob,
 assigned boolean default 0,
-finalized boolean default 0, 
-th_status enum ('TBG', 'RUNNING', 'DONE', 'CANCELLED') not null,
-thesisGrade int(10),
-FinishDate date,
+th_status enum ('NOT_ASSIGNED','ASSIGNED','ACTIVE','EXAM','DONE','CANCELLED'),
 foreign key (supervisor)
-references teacher (teacherID) on delete cascade
+references teacher (id) on delete cascade,
+gs_numb int(10),
+grading boolean default 0
 );
 
 create table if not exists student
 (
-studentID int(10) primary key,
+id int(10) primary key auto_increment,
 s_fname varchar(15) not null,
 s_lname varchar(20) not null,
-address varchar(50),
-email varchar(50) unique,
-cellphone varchar(10) unique,
+studentID int(10) not null unique,
+street varchar(50),
+street_number int(10),
+city varchar(20),
+postcode int(5),
+father_name varchar(15),
 homephone varchar(10),
-currentects int(4) not null,
-currentNPclasses int(4) not null,
+cellphone varchar(10) unique,
+email varchar(50) unique,
 thesisID int(10),
 username varchar(20) not null unique,
-pass varchar(100) not null,
+foreign key(username)
+references users (username),
 foreign key (thesisID)
 references thesis (thesisID) on delete set null
 );
+
 
 create table if not exists secretary
 (
@@ -48,7 +67,8 @@ secretaryID int(10) primary key,
 secr_fname varchar(15) not null,
 secr_lname varchar(20) not null,
 username varchar(20) not null unique,
-pass varchar(100) not null
+foreign key(username)
+references users (username)
 );
 
 
@@ -63,19 +83,14 @@ m2_confirmation boolean,
 foreign key (thesisID)
 references thesis (thesisID) on delete cascade,
 foreign key (supervisor)
-references thesis (supervisor) on delete cascade,
+references thesis (supervisor),
 foreign key (member1)
-references teacher (teacherID),
+references teacher (id),
 foreign key (member2)
-references teacher (teacherID)
+references teacher (id)
 );
-create table if not exists announcements
-(
-announcementID int(10) primary key auto_increment,
-announcementTitle varchar(50),
-announcementDate date,
-announcementDesc varchar(500)
-);
+
+
  create table if not exists committeeInvitations
  (
  invitationID int primary key auto_increment,
@@ -87,7 +102,70 @@ announcementDesc varchar(500)
  foreign key (senderID)
  references student (studentID),
  foreign key (receiverID)
- references teacher (teacherID)
+ references teacher (id)
  );
 
+ create table if not exists thesisStatusChanges
+ (
+ id int primary key auto_increment,
+ thesisID int(10) not null,
+ changeDate date,
+ changeTo enum('NOT_ASSIGNED','ASSIGNED','ACTIVE','EXAM','DONE','CANCELLED'),
+ foreign key (thesisID)
+ references thesis (thesisID)
+ );
 
+create table if not exists teacherNotes
+(
+id int primary key auto_increment,
+thesisID int(10) not null,
+teacherID int(10) not null,
+description varchar(300),
+foreign key (thesisID)
+references thesis (thesisID),
+foreign key (teacherID)
+references teacher (id)
+);
+
+create table if not exists cancelledThesis
+(
+id int primary key auto_increment,
+thesisID int(10) not null,
+gaNumber int not null,
+gaDate date not null,
+reason varchar(100) default ('από Διδάσκοντα'),
+foreign key (thesisID)
+references thesis (thesisID)
+);
+
+create table if not exists grades
+(
+id int primary key auto_increment,
+thesisID int(10) not null,
+teacherID int(10) not null,
+quality_grade float,
+time_grade float,
+rest_quality_grade float,
+presentation_grade float,
+calc_grade float,
+grade float,
+foreign key (thesisID)
+references thesis (thesisID),
+foreign key (teacherID)
+references teacher (id)
+);
+
+CREATE TABLE IF NOT EXISTS thesis_exam_meta (
+  thesisID INT(10) PRIMARY KEY,
+  draft_file VARCHAR(255) NULL,
+  external_links JSON NULL,
+  exam_datetime DATETIME NULL,
+  exam_room VARCHAR(120) NULL,
+  exam_meeting_url VARCHAR(255) NULL,
+  report_url VARCHAR(255) NULL,
+  repository_url VARCHAR(255) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_tem_thesis FOREIGN KEY (thesisID) REFERENCES thesis(thesisID) ON DELETE CASCADE,
+  announce boolean default 0
+);

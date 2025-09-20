@@ -1,164 +1,120 @@
 <?php
 session_start();
 require_once 'dbconnect.php'; 
+
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
-    header('Location: index.html');
+    http_response_code(403);
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        echo json_encode(['error' => 'unauthorized']);
+    } else {
+        header('Location: index.html');
+    }
     exit;
 }
-// Get current teacher id 
+
 $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
 
-
-// Fetch theses same as before 
-$stmt = $pdo->prepare("
-    SELECT t.* 
-    FROM thesis t 
-    LEFT JOIN committee c ON t.thesisID = c.thesisID 
-    WHERE (t.supervisor = ? OR c.member1 = ? OR c.member2 = ?)
-      AND t.th_status != 'NOT_ASSIGNED'
-    ORDER BY t.thesisID DESC
-");
-$stmt->execute([$teacher['id'], $teacher['id'], $teacher['id']]);
-$theses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-function getTeacherName(PDO $pdo, $id) {
-    if (!$id) return null;
-    $stmt = $pdo->prepare("SELECT t_fname, t_lname FROM teacher WHERE id = ?");
-    $stmt->execute([$id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$row) return null;
-    return trim(($row['t_fname'] ?? '') . ' ' . ($row['t_lname'] ?? ''));
+if (!$teacher) {
+    http_response_code(404);
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        echo json_encode(['error' => 'teacher not found']);
+    } else {
+        echo "<h1>Teacher not found.</h1>";
+    }
+    exit;
 }
 
-//get the committees
-$stmt = $pdo->prepare("SELECT * FROM committee");
-$stmt->execute();
-$committees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+    $teacherId = $teacher['id'];
+    $stmt = $pdo->prepare("
+        SELECT t.*, c.member1, c.member2
+        FROM thesis t
+        LEFT JOIN committee c ON t.thesisID = c.thesisID
+        WHERE (t.supervisor = ? OR c.member1 = ? OR c.member2 = ?)
+        AND t.th_status != 'NOT_ASSIGNED'
+        ORDER BY t.thesisID DESC
+    ");
+    $stmt->execute([$teacherId, $teacherId, $teacherId]);
+    $theses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$memberNames = [];
+    // Προετοιμασία ονομάτων και αλλαγών
+    foreach ($theses as &$thesis) {
+        // Ονόματα μελών επιτροπής
+        $thesis['member1Name'] = null;
+        $thesis['member2Name'] = null;
+        if ($thesis['member1']) {
+            $stmt = $pdo->prepare("SELECT CONCAT(t_fname, ' ', t_lname) FROM teacher WHERE id = ?");
+            $stmt->execute([$thesis['member1']]);
+            $thesis['member1Name'] = $stmt->fetchColumn();
+        }
+        if ($thesis['member2']) {
+            $stmt = $pdo->prepare("SELECT CONCAT(t_fname, ' ', t_lname) FROM teacher WHERE id = ?");
+            $stmt->execute([$thesis['member2']]);
+            $thesis['member2Name'] = $stmt->fetchColumn();
+        }
+        // Αλλαγές κατάστασης
+        $stmt = $pdo->prepare("SELECT changeDate, changeTo FROM thesisStatusChanges WHERE thesisID = ? ORDER BY changeDate ASC");
+        $stmt->execute([$thesis['thesisID']]);
+        $thesis['changes'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Ρόλος και όνομα επιβλέποντα
+        $thesis['role'] = $thesis['supervisor'] == $teacherId ? 'Supervisor' : 'Committee';
+        $stmt = $pdo->prepare("SELECT CONCAT(t_fname, ' ', t_lname) FROM teacher WHERE id = ?");
+        $stmt->execute([$thesis['supervisor']]);
+        $thesis['supervisorName'] = $stmt->fetchColumn() ?: '';
+        // Χρήση κενής τιμής βαθμού αν δεν υπάρχει
+        $thesis['grade'] = $thesis['grade'] ?? '';
+    }
+    unset($thesis);
+    echo json_encode(['success'=>true, 'theses'=>$theses]);
+    exit;
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<title>Manage Theses</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
- <header>
-        <div class="logo-title-row">
-            <button class="back-btn" id="backBtn">
-                <img src="logo2.jpg" alt="Logo" class="logo" />
-            </button>
-            <h1 class="site-title">Manage Theses</h1>
-        </div>
-    </header>
+<header>
+    <div class="logo-title-row">
+        <button class="back-btn" id="backBtn">
+            <img src="logo2.jpg" alt="Logo" class="logo" />
+        </button>
+        <h1 class="site-title">Manage Theses</h1>
+    </div>
+</header>
 <main class="dashboard-main">
-  <h2>Theses</h2>
-
-  <table class="table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Title</th>
-        <th>Role</th>
-        <th>Status</th>
-        <th>Supervisor</th>
-        <th>Members</th>
-        <th></th>
-        <th>Grade</th>
-        <th>Changes Timeline</th>
-        <th>Manage</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (empty($theses)): ?>
-        <tr>
-          <td colspan="9">No theses found</td>
-        </tr>
-      <?php else: ?>
-        <?php foreach ($theses as $thesis): ?>
-          <?php
-            $supervisorName = getTeacherName($pdo, $thesis['supervisor']);
-
-            $grade = isset($thesis['grade']) ? $thesis['grade'] : '';
-
-            $role = 'Committee';
-            if ((string)$thesis['supervisor'] === (string)$teacher['id']) {
-                $role = 'Supervisor';
-            }
-
-            $stmt = $pdo->prepare("SELECT * FROM thesisStatusChanges WHERE thesisID = ?");
-            $stmt->execute([$thesis['thesisID']]);
-            $changes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-          ?>
-          <tr>
-            <td><?= htmlspecialchars($thesis['thesisID']) ?></td>
-            <td><?= htmlspecialchars($thesis['title']) ?></td>
-            <td><?= htmlspecialchars($role) ?></td>
-            <td><?= htmlspecialchars($thesis['th_status']) ?></td>
-            <td><?= htmlspecialchars($supervisorName ?? '') ?></td>
-            <?php foreach($committees as $committee):if($committee['thesisID'] === $thesis['thesisID']):
-                $member1 = getTeacherName($pdo, $committee['member1']);
-                $member2 = getTeacherName($pdo, $committee['member2']);
-                endif; endforeach;?>
-            <?php if($member1 && $member2):?>
-                <td><?= htmlspecialchars($member1)?></td>
-                <td><?= htmlspecialchars($member2)?></td>
-            <?php elseif($member1 && !$member2):?>
-                <td><?= htmlspecialchars($member1)?></td>
-                <td>There is no second member in committee.</td>
-            <?php elseif(!$member1 && $member2):?>
-                <td>There is no first member in committee.</td>
-                <td><?= htmlspecialchars($member2)?></td>
-            <?php  else: ?>
-                <td>There are no members in committee.</td>
-                <td>-</td>
-            <?php endif; ?>
-            <td><?= htmlspecialchars($grade) ?></td>
-            <td>
-                <button class="popupBtn">View Changes</button>
-                <div class="popupWindow popup-window" style="display:none;">
-                  <div class="popup-content">
-                    <?php if (isset($changes)): ?>
-                        <h3>Changes Timeline</h3>
-                        <ul class="changes-list">
-                            <?php foreach ($changes as $change): ?>
-                                <li>
-                                    <strong><?= htmlspecialchars($change['changeDate'] . ' ' . $change['changeTo']) ?></strong>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p>No changes recorded for this thesis.</p>
-                    <?php endif; ?>
-                    <button id="closePopupBtn" class="closePopupBtn close-popup-btn" aria-label="Close">&times;</button>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <?php if ($thesis['th_status'] === 'ASSIGNED' || $thesis['th_status'] === 'ACTIVE' || $thesis['th_status'] === 'EXAM' ): ?>
-                    <button
-                        class="submit-btn open-btn"
-                        data-thesis-id="<?= htmlspecialchars($thesis['thesisID']) ?>"
-                        data-th-status="<?= htmlspecialchars($thesis['th_status']) ?>"
-                    >
-                    Open
-                    </button>
-                <?php else: ?>
-                    <span>N/A</span>
-                <?php endif; ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      <?php endif; ?>
-    </tbody>
-  </table>
+    <h2>Theses</h2>
+    <table class="table" id="thesesTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Supervisor</th>
+                <th>Member 1</th>
+                <th>Member 2</th>
+                <th>Grade</th>
+                <th>Changes Timeline</th>
+                <th>Manage</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- AJAX δυναμικά δεδομένα εδώ -->
+        </tbody>
+    </table>
+    <p id="noThesesMsg" style="display:none;">No theses found</p>
 </main>
 <footer class="footer">
     <p>© 2025 Thesis Management System</p>
-    <script src="viewtheses.js"></script>
+</footer>
+<script src="viewtheses.js"></script>
 </body>
 </html>

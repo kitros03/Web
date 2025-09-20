@@ -32,7 +32,7 @@ function safeRound($val) {
 $teacherIDArr = ['teacherID' => $teacher['id']];
 $teacherIDDoubleArr = ['teacherID1' => $teacher['id'], 'teacherID2' => $teacher['id']];
 
-// Detect AJAX request to return only JSON
+// Αν είναι AJAX αίτημα, επιστρέφουμε JSON με τα στατιστικά
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     $stmt = $pdo->prepare("
         SELECT AVG(DATEDIFF(done.changeDate, active.changeDate)) AS avgCompletionDays
@@ -109,7 +109,6 @@ canvas { background: #fff; margin-top: 10px; border: 1px solid #ccc; }
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo-title-row">
     <button class="back-btn" onclick="history.back()">
@@ -118,7 +117,6 @@ canvas { background: #fff; margin-top: 10px; border: 1px solid #ccc; }
     <h1 class="site-title">View Statistics</h1>
   </div>
 </header>
-
 <main class="dashboard-centered">
     <div class="centered-body">
     <h2>Επιλέξτε πίνακα στατιστικών</h2>
@@ -132,12 +130,11 @@ canvas { background: #fff; margin-top: 10px; border: 1px solid #ccc; }
             <button id="bothStatsBtn" class="submit-btn">Στατιστικά Και των Δύο</button>
         </div>
         
-        <div id="statsPopup" class="popup-window" role="dialog" aria-modal="true" aria-labelledby="popupTitle" aria-describedby="popupDesc">
+        <div id="statsPopup" class="popup-window" role="dialog" aria-modal="true" aria-labelledby="popupTitle" aria-describedby="popupDesc" style="display:none;">
             <div class="popup-content">
                 <button id="closePopupBtn" class="close-popup-btn" aria-label="Close popup">&times;</button>
                 <h2 id="popupTitle">Στατιστικά</h2>
-                <div id="popupDesc" style="margin-bottom:1rem;">
-                </div>
+                <div id="popupDesc" style="margin-bottom:1rem;"></div>
                 <canvas id="popupCompletionTimeChart" width="600" height="300"></canvas>
                 <canvas id="popupAverageGradeChart" width="600" height="300"></canvas>
                 <canvas id="popupCountChart" width="600" height="300"></canvas>
@@ -145,10 +142,9 @@ canvas { background: #fff; margin-top: 10px; border: 1px solid #ccc; }
         </div>
     </div>
 </main>
-<script src=viewstats.js></script>
+<script src="viewstats.js"></script>
 <footer>
     <p class="footer">© 2025 Thesis Management System</p>
 </footer>
-
 </body>
 </html>
