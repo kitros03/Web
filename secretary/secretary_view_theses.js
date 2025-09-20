@@ -1,3 +1,5 @@
+
+// secretary_view_theses.js
 (function () {
   'use strict';
 
@@ -50,7 +52,7 @@
 
     var rows = [];
     rows.push('<table class="table"><thead><tr>');
-    rows.push('<th>Κωδ.</th><th>Τίτλος</th><th>Κατάσταση</th><th>Επιβλέπων</th><th>Φοιτητής</th><th>Από ανάθεση</th><th></th>');
+    rows.push('<th>Κωδ.</th><th>Τίτλος</th><th>Κατάσταση</th><th>Επιβλέπων</th><th>Φοιτητής</th><th>Από ανάθεση</th><th>Λεπτομέρειες</th>');
     rows.push('</tr></thead><tbody>');
 
     items.forEach(function (it) {
@@ -61,12 +63,8 @@
       rows.push('<td>' + (it.supervisor_name || '—') + '</td>');
       rows.push('<td>' + (it.student_name || '—') + '</td>');
       rows.push('<td>' + daysLabel(it.days_since_assignment) + '</td>');
-
-      if (it.th_status === 'DONE') {
-        rows.push('<td><button class="sidebarButton btn-done" data-id="' + it.thesisID + '">Done</button></td>');
-      } else {
-        rows.push('<td><button class="sidebarButton btn-details" data-id="' + it.thesisID + '">Λεπτομέρειες</button></td>');
-      }
+      // ΜΟΝΟ “Λεπτομέρειες”
+      rows.push('<td><button class="sidebarButton btn-details" data-id="' + it.thesisID + '">Λεπτομέρειες</button></td>');
       rows.push('</tr>');
     });
 
@@ -76,7 +74,6 @@
 
   function fetchJSON(url, options) {
     options = options || {};
-    // Εγγυώμαστε ότι στέλνονται cookies για τα session
     if (!options.credentials) options.credentials = 'same-origin';
 
     return fetch(url, options).then(function (res) {
@@ -89,7 +86,7 @@
           throw new Error('Μη έγκυρη JSON απόκριση από ' + url + '. Πρώτα bytes:\n' + preview);
         }
         if (!res.ok) {
-          var msg = (data && data.error) ? data.error : (res.status + ' ' + (res.statusText || ''));
+          var msg = (data && (data.message || data.error)) ? (data.message || data.error) : (res.status + ' ' + (res.statusText || ''));
           throw new Error(msg);
         }
         return data;
@@ -126,21 +123,6 @@
     });
   }
 
-  function buildDoneHTML(info) {
-    var link = (info && info.repository_url)
-      ? '<a href="' + info.repository_url + '" target="_blank" rel="noopener">Άνοιγμα αποθετηρίου</a>'
-      : '—';
-    var gradeNum = (info && info.final_grade != null) ? Number(info.final_grade) : NaN;
-    var grade = !isNaN(gradeNum) ? gradeNum.toFixed(2) : '—';
-    var canFinalize = (info && info.th_status !== 'DONE') ? '' : 'disabled';
-
-    return '' +
-      '<h3>Περατωμένη ΔΕ #' + info.thesisID + '</h3>' +
-      '<p><strong>Σύνδεσμος αποθετηρίου:</strong> ' + link + '</p>' +
-      '<p><strong>Τελικός βαθμός:</strong> ' + grade + '</p>' +
-      '<button class="submit-btn finalize-btn" data-id="' + info.thesisID + '" ' + canFinalize + '>Οριστική Περάτωση</button>';
-  }
-
   function buildDetailsHTML(d) {
     var committee = (d && d.committee) ? d.committee : [];
     var committeeList = (committee && committee.length) ? committee.join(', ') : '—';
@@ -155,7 +137,9 @@
   }
 
   document.addEventListener('click', function (e) {
-    var btnDetails = e.target && e.target.closest ? e.target.closest('button.btn-details[data-id]') : null;
+    var target = e.target || e.srcElement;
+
+    var btnDetails = target && target.closest ? target.closest('button.btn-details[data-id]') : null;
     if (btnDetails) {
       var thesisID = btnDetails.getAttribute('data-id');
       if (currentOpenId && String(currentOpenId) === String(thesisID)) { hideDetails(); return; }
@@ -173,53 +157,6 @@
           if (window.console && console.error) console.error(err);
         });
       return;
-    }
-
-    var btnDone = e.target && e.target.closest ? e.target.closest('button.btn-done[data-id]') : null;
-    if (btnDone) {
-      var thesisID2 = btnDone.getAttribute('data-id');
-      if (currentOpenId && String(currentOpenId) === String(thesisID2)) { hideDetails(); return; }
-      currentOpenId = thesisID2;
-      if (detailsDiv) {
-        detailsDiv.style.display = 'block';
-        detailsDiv.innerHTML = '<p>Φόρτωση…</p>';
-      }
-      fetchJSON('secretary_done_info.php?thesisID=' + encodeURIComponent(thesisID2))
-        .then(function (info) {
-          if (detailsDiv) detailsDiv.innerHTML = buildDoneHTML(info);
-        })
-        .catch(function (err) {
-          if (detailsDiv) detailsDiv.innerHTML = '<p class="error">' + err.message + '</p>';
-          if (window.console && console.error) console.error(err);
-        });
-      return;
-    }
-
-    var finalizeBtn = e.target && e.target.closest ? e.target.closest('button.finalize-btn[data-id]') : null;
-    if (finalizeBtn) {
-      var thesisID3 = Number(finalizeBtn.getAttribute('data-id'));
-      finalizeBtn.disabled = true;
-      finalizeBtn.textContent = 'Ενημέρωση…';
-
-      fetchJSON('secretary_mark_done.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ thesisID: thesisID3 })
-      }).then(function (out) {
-        if (!out || !out.success) {
-          throw new Error((out && out.message) ? out.message : 'Αποτυχία');
-        }
-        alert('Η διπλωματική χαρακτηρίστηκε ως Περατωμένη.');
-        loadList();
-        return fetchJSON('secretary_done_info.php?thesisID=' + encodeURIComponent(String(thesisID3)));
-      }).then(function (info2) {
-        if (detailsDiv) detailsDiv.innerHTML = buildDoneHTML(info2);
-      }).catch(function (err) {
-        alert('Σφάλμα: ' + err.message);
-        finalizeBtn.disabled = false;
-        finalizeBtn.textContent = 'Οριστική Περάτωση';
-      });
     }
   });
 
