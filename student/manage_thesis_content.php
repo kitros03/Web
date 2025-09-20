@@ -15,7 +15,7 @@ try {
 
 if (empty($_SESSION['username']) || (($_SESSION['role']??'')!=='student')) fail('Unauthorized', 401);
 
-
+// Thesis του φοιτητή
 $st = $pdo->prepare("
   SELECT s.studentID, s.thesisID, t.supervisor, t.th_status
   FROM student s
@@ -81,7 +81,6 @@ if ($thStatus === 'ACTIVE') {
   ok([
     'view'  => 'ACTIVE',
     'title' => 'Διαχείριση Διπλωματικής — Ενεργή',
-    'note'      => 'Η Διπλωματική είναι σε Ενεργή κατάσταση. Ανέμενε τον επιβλέποντα καθηγητή να την θέσει σε Υπο_Εξέταση.',
     'html'  => '<div class="announcements" style="min-height:220px;"></div>',
     'thesisID' => $thesisID
   ]);
@@ -116,7 +115,7 @@ if ($thStatus === 'EXAM') {
   ]);
 }
 
-// DONE (Περατωμένη)
+// DONE 
 if ($thStatus === 'DONE') {
   // Θέμα
   $stmt = $pdo->prepare("SELECT t.thesisID, t.title, t.th_description, t.pdf_description, t.th_status FROM thesis t WHERE t.thesisID=? LIMIT 1");
@@ -141,18 +140,22 @@ if ($thStatus === 'DONE') {
     $nameById((int)$crow['member2']),
   ]));
 
-  // Εξέταση
+  
   $m = $pdo->prepare("SELECT exam_datetime, exam_room, exam_meeting_url, repository_url FROM thesis_exam_meta WHERE thesisID=?");
   $m->execute([$thesisID]);
   $meta = $m->fetch(PDO::FETCH_ASSOC) ?: [];
 
-  // Τελικός βαθμός = μέσος όρος calc_grade της τριμελούς
-  $gr = $pdo->prepare("SELECT AVG(calc_grade) AS g FROM grades WHERE thesisID=?");
+  // Ημερομηνία & Ώρα  και Αίθουσα
+  $examDate = ($meta['exam_datetime'] ?? null) ? date('d/m/Y H:i', strtotime($meta['exam_datetime'])) : '-';
+  $examRoom = trim($meta['exam_room'] ?? '') !== '' ? $meta['exam_room'] : '-';
+
+  // Τελικός βαθμός 
+  $gr = $pdo->prepare("SELECT AVG(grade) AS g FROM grades WHERE thesisID=?");
   $gr->execute([$thesisID]);
   $gRow = $gr->fetch(PDO::FETCH_ASSOC);
   $finalGrade = ($gRow && $gRow['g'] !== null) ? round((float)$gRow['g'], 2) : null;
 
-  // Ιστορικό + πάντα DONE
+  // Ιστορικό
   $hist = $pdo->prepare("SELECT changeDate, changeTo FROM thesisStatusChanges WHERE thesisID=? ORDER BY changeDate ASC, id ASC");
   $hist->execute([$thesisID]);
   $history = $hist->fetchAll(PDO::FETCH_ASSOC);
@@ -160,9 +163,6 @@ if ($thStatus === 'DONE') {
   $hasDone = false; $lastDate = null;
   foreach ($history as $r) { if (strtoupper((string)$r['changeTo'])==='DONE') $hasDone=true; $lastDate=$r['changeDate']; }
   if (!$hasDone) { $syntheticDate = $lastDate ?: date('Y-m-d'); $history[] = ['changeDate'=>$syntheticDate,'changeTo'=>'DONE']; }
-
-  $examDate = ($meta['exam_datetime'] ?? null) ? date('d/m/Y H:i', strtotime($meta['exam_datetime'])) : '-';
-  $examRoom = trim($meta['exam_room'] ?? '') !== '' ? $meta['exam_room'] : '-';
 
   ok([
     'view'  => 'DONE',
@@ -187,6 +187,7 @@ if ($thStatus === 'DONE') {
     'thesisID' => $thesisID
   ]);
 }
+
 // Fallback
 ok([
   'view'  => 'ACTIVE',
@@ -194,5 +195,3 @@ ok([
   'html'  => '<div class="announcements" style="min-height:220px;"></div>',
   'thesisID' => $thesisID
 ]);
-
-

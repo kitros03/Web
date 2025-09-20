@@ -94,13 +94,18 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       return;
     }
-    if (data.view==='ACTIVE') {
-      container.innerHTML = `
-        <h3>${escapeHtml(data.title || 'Διαχείριση Διπλωματικής — Ενεργή')}</h3>
-        ${data.html || '<div class="announcements" style="min-height:220px;"></div>'}
-      `;
-      return;
-    }
+  if (data.view==='ACTIVE') {
+  container.innerHTML = `
+    <h3>${escapeHtml(data.title || 'Διαχείριση Διπλωματικής — Ενεργή')}</h3>
+    <p style="margin:8px 0 14px 0;">
+      Η Διπλωματική είναι σε Ενεργή κατάσταση. Ανέμενε τον επιβλέποντα καθηγητή να θέσει την κατάσταση σε
+      <strong>Υπο-Εξέταση</strong>.
+    </p>
+    ${data.html || '<div class="announcements" style="min-height:220px;"></div>'}
+  `;
+  return;
+}
+
     if (data.view==='EXAM') {
       const m = data.meta || {};
       const linksText = (m.external_links || []).join('\n');
