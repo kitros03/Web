@@ -1,4 +1,3 @@
-// secretary_import.js
 (function () {
   const fileInput = document.getElementById('jsonFile');
   const uploadBtn = document.getElementById('uploadBtn');

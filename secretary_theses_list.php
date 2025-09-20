@@ -9,10 +9,9 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
   exit;
 }
 
-require_once __DIR__ . '/dbconnect.php'; // $pdo
+require_once __DIR__ . '/dbconnect.php'; 
 
 try {
-  // ΜΟΝΟ ACTIVE & EXAM για την Προβολή ΔΕ
   $sql = "
     SELECT
       t.thesisID,
@@ -38,7 +37,6 @@ try {
 
   $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-  // Υπολογισμός ημερών από επίσημη ανάθεση (αν υπάρχει)
   $today = new DateTimeImmutable('today');
   $out = [];
   foreach ($rows as $r) {

@@ -1,4 +1,3 @@
-// secretary_manage_theses.js
 (function () {
   const listDiv = document.getElementById('manageList');
   const searchBox = document.getElementById('searchBox');
@@ -66,7 +65,6 @@
       }
       rows.push('</tr>');
 
-      // Φόρμες ΜΟΝΟ για ACTIVE
       if (it.th_status === 'ACTIVE') {
         rows.push(`<tr class="row-forms" data-for="${it.thesisID}" style="display:none;">
           <td colspan="8">
