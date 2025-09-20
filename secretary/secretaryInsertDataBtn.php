@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'secretary') {
-    header('Location: index.html');
+    header('Location: ../index.php');
     exit;
 }
 ?>
@@ -10,12 +10,12 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['rol
 <head>
   <meta charset="UTF-8" />
   <title>Secretary · Εισαγωγή Δεδομένων (JSON)</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
   <header>
     <div class="logo-title-row">
-      <img src="logo2.jpg" alt="Logo" class="logo" />
+      <img src="../logo2.jpg" alt="Logo" class="logo" />
       <h1 class="site-title">Secretary Dashboard</h1>
     </div>
   </header>

@@ -9,7 +9,7 @@ if (!isset($_SESSION['username']) || ($_SESSION['role'] ?? '') !== 'secretary') 
   exit;
 }
 
-require_once __DIR__ . '/dbconnect.php'; 
+require_once '../dbconnect.php'; 
 
 try {
   $sql = "
@@ -63,3 +63,4 @@ try {
   http_response_code(500);
   echo 'Server error: ' . $e->getMessage();
 }
+?>
