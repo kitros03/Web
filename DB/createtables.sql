@@ -156,7 +156,8 @@ references teacher (id)
 );
 
 CREATE TABLE IF NOT EXISTS thesis_exam_meta (
-  thesisID INT(10) PRIMARY KEY,
+  id INT(10) PRIMARY KEY AUTO_INCREMENT,
+  thesisID INT(10) ,
   draft_file VARCHAR(255) NULL,
   external_links JSON NULL,
   exam_datetime DATETIME NULL,
