@@ -22,7 +22,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     const messageElement = document.getElementById('result');
     if (result.success) {
         messageElement.innerHTML = `<div class="success">${result.message}</div>`;
-        setTimeout(() => window.location.href ='index.html', 1000);
+        setTimeout(() => window.location.href ='index.php', 1000);
     } else {
         messageElement.innerHTML = `<div class="error">${result.message}</div>`;
     }
