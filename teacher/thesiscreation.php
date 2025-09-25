@@ -8,7 +8,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
         echo json_encode(['success' => false, 'message' => 'Unauthorized']);
         exit;
     }
-    header('Location: index.html');
+    header('Location: index.php');
     exit;
 }
 
@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             echo json_encode(['success' => false, 'message' => 'Only PDF files are allowed.']);
             exit;
         }
-        $uploadDir = 'uploads/';
+        $uploadDir = '../uploads/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
