@@ -176,13 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <ul class="ul">
               ${(th.committee || []).map(c => `<li>${escapeHtml(c)}</li>`).join('') || '<li>-</li>'}
             </ul>
-            <div class="kv"><b>Χρόνος από ανάθεση:</b> ${th.days_since_assigned ?? '-'}</div>
+
           </section>
           <section class="card">
-            <h4>Στοιχεία Εξέτασης</h4>
-            <div class="kv"><b>Ημ/νία & ώρα:</b> ${escapeHtml(ex.date || '-')}</div>
-            <div class="kv"><b>Αίθουσα:</b> ${escapeHtml(ex.room || '-')}</div>
-            <div class="kv"><b>Τελικός βαθμός:</b> ${ex.final_grade ?? '-'}</div>
+           
+            <div class="kv"><b>Τελικός βαθμός:</b> ${data.final_grade ?? '-'}</div>
             <div class="kv" style="margin-top:10px;">
               <button class="btn" type="button" onclick="window.open('praktiko_form.php?thesisID=${encodeURIComponent(data.thesisID)}','_blank','width=800,height=900,scrollbars=yes')">Πρακτικό</button>
             </div>

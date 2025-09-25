@@ -141,19 +141,11 @@ if ($thStatus === 'DONE') {
   ]));
 
   
-  $m = $pdo->prepare("SELECT exam_datetime, exam_room, exam_meeting_url, repository_url FROM thesis_exam_meta WHERE thesisID=?");
-  $m->execute([$thesisID]);
-  $meta = $m->fetch(PDO::FETCH_ASSOC) ?: [];
-
-  // Ημερομηνία & Ώρα  και Αίθουσα
-  $examDate = ($meta['exam_datetime'] ?? null) ? date('d/m/Y H:i', strtotime($meta['exam_datetime'])) : '-';
-  $examRoom = trim($meta['exam_room'] ?? '') !== '' ? $meta['exam_room'] : '-';
-
   // Τελικός βαθμός 
   $gr = $pdo->prepare("SELECT AVG(grade) AS g FROM grades WHERE thesisID=?");
   $gr->execute([$thesisID]);
   $gRow = $gr->fetch(PDO::FETCH_ASSOC);
-  $finalGrade = ($gRow && $gRow['g'] !== null) ? round((float)$gRow['g'], 2) : null;
+  $finalGrade = ($gRow && $gRow['g'] !== null) ? number_format((float)$gRow['g'], 2, '.', '') : null;
 
   // Ιστορικό
   $hist = $pdo->prepare("SELECT changeDate, changeTo FROM thesisStatusChanges WHERE thesisID=? ORDER BY changeDate ASC, id ASC");
@@ -167,6 +159,8 @@ if ($thStatus === 'DONE') {
   ok([
     'view'  => 'DONE',
     'title' => 'Διαχείριση Διπλωματικής — Περατωμένη',
+    // Συμβατότητα: δώσε final_grade και στο root για να το διαβάζει ο renderer ως data.final_grade
+    'final_grade' => $finalGrade,
     'thesis'=> [
       'title'       => $th['title'] ?? '-',
       'description' => $th['th_description'] ?? '-',
@@ -175,11 +169,7 @@ if ($thStatus === 'DONE') {
       'committee'   => $committee,
       'final_grade' => $finalGrade
     ],
-    'exam' => [
-      'datetime' => $examDate,
-      'room'     => $examRoom,
-      'url'      => $meta['exam_meeting_url'] ?? null
-    ],
+    
     'repository_url' => ($meta['repository_url'] ?? null) ?: null,
     'history' => array_map(function($r){
       return ['date'=>date('d/m/Y', strtotime($r['changeDate'])), 'status'=>strtoupper((string)$r['changeTo'])];
@@ -188,10 +178,3 @@ if ($thStatus === 'DONE') {
   ]);
 }
 
-// Fallback
-ok([
-  'view'  => 'ACTIVE',
-  'title' => 'Διαχείριση Διπλωματικής — Ενεργή',
-  'html'  => '<div class="announcements" style="min-height:220px;"></div>',
-  'thesisID' => $thesisID
-]);
