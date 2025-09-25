@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 header('Content-Type: application/json');
-require_once '../dbconnect.php'; 
+require_once '../dbconnect.php';
 
 try {
     $raw = file_get_contents('php://input');
@@ -10,7 +10,6 @@ try {
         echo json_encode(['success' => false, 'message' => 'Μη έγκυρο JSON.']);
         exit;
     }
-
 
     $defaultPasswordHash = password_hash('1', PASSWORD_DEFAULT);
 
@@ -21,7 +20,6 @@ try {
         $v = trim((string)$v);
         return ($v === '' || strtoupper($v) === 'NULL' || $v === '-') ? null : $v;
     };
-   
     $uniqueUsernameFromSurname = function (PDO $pdo, string $surname): string {
         $base = strtolower(preg_replace('/\s+/', '', trim($surname)));
         if ($base === '') { $base = 'user'; }
@@ -36,17 +34,20 @@ try {
         }
     };
 
-    
+    // counters
     $summary = [
-        'students'  => ['inserted' => 0, 'updated' => 0, 'failed' => 0],
-        'teachers'  => ['inserted' => 0, 'updated' => 0, 'failed' => 0],
+        'students' => ['inserted' => 0, 'failed' => 0, 'duplicates' => 0],
+        'teachers' => ['inserted' => 0, 'failed' => 0, 'duplicates' => 0],
     ];
     $errors = [];
 
-    
-   
+    // ========================
+    // ΦΟΙΤΗΤΕΣ
+    // ========================
     $students = $data['students'] ?? [];
     if (is_array($students)) {
+        $stmtCheckStudentEmail = $pdo->prepare("SELECT 1 FROM student WHERE email = ? LIMIT 1");
+
         $stmtUserStudent = $pdo->prepare(
             "INSERT INTO users (username, pass, type)
              VALUES (?, ?, 'student')
@@ -55,8 +56,8 @@ try {
 
         $stmtStudent = $pdo->prepare(
             "INSERT INTO student
-            (s_fname, s_lname, studentID, street, street_number, city, postcode, father_name, homephone, cellphone, email, username)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (s_fname, s_lname, studentID, street, street_number, city, postcode, father_name, homephone, cellphone, email, thesisID, username)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
              ON DUPLICATE KEY UPDATE
                s_fname=VALUES(s_fname),
                s_lname=VALUES(s_lname),
@@ -76,8 +77,22 @@ try {
                 $studentNumber = (int)($s['student_number'] ?? 0);
                 $fname = $takeOrNull($s['name'] ?? '');
                 $lname = $takeOrNull($s['surname'] ?? '');
+                $emailFromJson = $takeOrNull($s['email'] ?? '');
+
                 if ($studentNumber <= 0 || !$fname || !$lname) {
                     throw new Exception("students[$idx]: λείπει/άκυρο student_number ή name/surname");
+                }
+                if (!$emailFromJson) {
+                    throw new Exception("students[$idx]: λείπει email στο JSON");
+                }
+
+                // Προ-έλεγχος διπλότυπου email
+                $stmtCheckStudentEmail->execute([$emailFromJson]);
+                if ($stmtCheckStudentEmail->fetchColumn()) {
+                    $summary['students']['failed']++;
+                    $summary['students']['duplicates']++;
+                    $errors[] = "students[$idx]: διπλότυπο email ($emailFromJson)";
+                    continue;
                 }
 
                 $street  = $takeOrNull($s['street'] ?? '');
@@ -87,29 +102,30 @@ try {
                 $postcodeDigits = $onlyDigits($s['postcode'] ?? '');
                 $postcode = ($postcodeDigits === '') ? null : (int)substr($postcodeDigits, 0, 5);
 
-               
                 $home = $onlyDigits($s['landline_telephone'] ?? '');
                 $home = ($home === '') ? null : substr($home, -10);
                 $cell = $onlyDigits($s['mobile_telephone'] ?? '');
                 $cell = ($cell === '') ? null : substr($cell, -10);
 
                 $username = $uniqueUsernameFromSurname($pdo, (string)$lname);
-                $email    = $studentNumber . '@upatras.gr';
 
+                // users
                 $stmtUserStudent->execute([$username, $defaultPasswordHash]);
 
+                // student
                 $ok = $stmtStudent->execute([
-                    $fname, $lname, $studentNumber, $street, ($numberDigits === '' ? null : (int)$numberDigits),
-                    $city, $postcode, $takeOrNull($s['father_name'] ?? ''), $home, $cell, $email, $username
+                    $fname, $lname, $studentNumber,
+                    $street, ($numberDigits === '' ? null : (int)$numberDigits),
+                    $city, $postcode, $takeOrNull($s['father_name'] ?? ''),
+                    $home, $cell, $emailFromJson, $username
                 ]);
 
                 if (!$ok) {
                     $summary['students']['failed']++;
                     $errors[] = "students[$idx]: DB error";
                 } else {
-                    $count = $stmtStudent->rowCount();
-                    if ($count === 1) $summary['students']['inserted']++;
-                    else              $summary['students']['updated']++;
+                    // rowCount() == 1 => INSERT, == 2 => UPDATE λόγω ON DUPLICATE
+                    $summary['students']['inserted'] += ($stmtStudent->rowCount() === 1) ? 1 : 0;
                 }
             } catch (Throwable $e) {
                 $summary['students']['failed']++;
@@ -118,8 +134,13 @@ try {
         }
     }
 
+    // ========================
+    // ΚΑΘΗΓΗΤΕΣ
+    // ========================
     $professors = $data['professors'] ?? [];
     if (is_array($professors)) {
+        $stmtCheckTeacherEmail = $pdo->prepare("SELECT 1 FROM teacher WHERE email = ? LIMIT 1");
+
         $stmtUserTeacher = $pdo->prepare(
             "INSERT INTO users (username, pass, type)
              VALUES (?, ?, 'teacher')
@@ -147,8 +168,22 @@ try {
                 $id    = (int)($t['id'] ?? 0);
                 $fname = $takeOrNull($t['name'] ?? '');
                 $lname = $takeOrNull($t['surname'] ?? '');
+                $emailFromJson = $takeOrNull($t['email'] ?? '');
+
                 if ($id <= 0 || !$fname || !$lname) {
                     throw new Exception("professors[$idx]: λείπει/άκυρο id ή name/surname");
+                }
+                if (!$emailFromJson) {
+                    throw new Exception("professors[$idx]: λείπει email στο JSON");
+                }
+
+                // Προ-έλεγχος διπλότυπου email
+                $stmtCheckTeacherEmail->execute([$emailFromJson]);
+                if ($stmtCheckTeacherEmail->fetchColumn()) {
+                    $summary['teachers']['failed']++;
+                    $summary['teachers']['duplicates']++;
+                    $errors[] = "professors[$idx]: διπλότυπο email ($emailFromJson)";
+                    continue;
                 }
 
                 $topic       = $takeOrNull($t['topic'] ?? '');
@@ -161,21 +196,19 @@ try {
                 $cellphone   = ($cellDigits === '') ? null : (int)substr($cellDigits, -10);
 
                 $username = $uniqueUsernameFromSurname($pdo, (string)$lname);
-                $email    = $id . '@upatras.gr';
 
                 $stmtUserTeacher->execute([$username, $defaultPasswordHash]);
 
                 $ok = $stmtTeacher->execute([
-                    $id, $fname, $lname, $email, $topic, $homephone, $cellphone, $department, $university, $username
+                    $id, $fname, $lname, $emailFromJson, $topic,
+                    $homephone, $cellphone, $department, $university, $username
                 ]);
 
                 if (!$ok) {
                     $summary['teachers']['failed']++;
                     $errors[] = "professors[$idx]: DB error";
                 } else {
-                    $count = $stmtTeacher->rowCount();
-                    if ($count === 1) $summary['teachers']['inserted']++;
-                    else              $summary['teachers']['updated']++;
+                    $summary['teachers']['inserted'] += ($stmtTeacher->rowCount() === 1) ? 1 : 0;
                 }
             } catch (Throwable $e) {
                 $summary['teachers']['failed']++;
@@ -193,4 +226,3 @@ try {
 } catch (Throwable $e) {
     echo json_encode(['success' => false, 'message' => 'Server error.']);
 }
-?>

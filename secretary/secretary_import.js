@@ -3,7 +3,6 @@
   const uploadBtn = document.getElementById('uploadBtn');
   const resultBox = document.getElementById('result');
 
-
   function showResult(html) {
     resultBox.style.display = 'block';
     resultBox.innerHTML = html;
@@ -37,11 +36,16 @@
         const rows = [];
         rows.push(`<p><strong>Αποτέλεσμα:</strong> ${data.success ? '✅ Επιτυχία' : '❌ Αποτυχία'}</p>`);
         if (data.summary) {
+          const s = data.summary.students || {};
+          const t = data.summary.teachers || {};
           rows.push('<table class="table">');
-          rows.push('<tr><th>Κατηγορία</th><th>Επιτυχείς</th><th>Ενημερωμένες</th><th>Απέτυχαν</th></tr>');
-          rows.push(`<tr><td>Φοιτητές</td><td>${data.summary.students?.inserted ?? 0}</td><td>${data.summary.students?.updated ?? 0}</td><td>${data.summary.students?.failed ?? 0}</td></tr>`);
-          rows.push(`<tr><td>Διδάσκοντες</td><td>${data.summary.teachers?.inserted ?? 0}</td><td>${data.summary.teachers?.updated ?? 0}</td><td>${data.summary.teachers?.failed ?? 0}</td></tr>`);
+          rows.push('<tr><th>Κατηγορία</th><th>Επιτυχείς</th><th>Απέτυχαν</th></tr>');
+          rows.push(`<tr><td>Φοιτητές</td><td>${s.inserted ?? 0}</td><td>${s.failed ?? 0}</td></tr>`);
+          rows.push(`<tr><td>Διδάσκοντες</td><td>${t.inserted ?? 0}</td><td>${t.failed ?? 0}</td></tr>`);
           rows.push('</table>');
+          if ((s.duplicates ?? 0) > 0 || (t.duplicates ?? 0) > 0) {
+            rows.push(`<p style="margin-top:8px;"><em>Διπλότυπα email:</em> Φοιτητές ${s.duplicates ?? 0} • Διδάσκοντες ${t.duplicates ?? 0}</p>`);
+          }
         }
         if (Array.isArray(data.errors) && data.errors.length) {
           rows.push('<h4>Σφάλματα</h4><ul>');
