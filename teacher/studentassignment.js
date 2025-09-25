@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return text ? text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;") : "";
     }
 
+    //load data
     async function loadData() {
         try {
             let response = await fetch('studentassignment.php', {
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            //selects
             thesisSelect.innerHTML = '<option value="">-- Επιλέξτε --</option>';
             for(const thesis of data.theses) {
                 let option = document.createElement('option');
@@ -41,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 studentSelect.appendChild(option);
             }
 
+            //theses table
             if (data.assignedTheses.length === 0) {
                 assignedContainer.innerHTML = "<p>Δεν υπάρχουν ανατεθειμένα θέματα.</p>";
             } else {
@@ -57,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 html += "</tbody></table>";
                 assignedContainer.innerHTML = html;
 
+                //handle unassign
                 assignedContainer.querySelectorAll(".submit-btn").forEach(button => {
                     button.addEventListener("click", async () => {
                         if (!confirm("Σίγουρα θέλετε να αναιρέσετε την ανάθεση θέματος;")) return;
@@ -86,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    //assign form submit
     assignmentForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         resultDiv.textContent = "";

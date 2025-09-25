@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/'/g, "&#039;");
     }
 
+    //load data
     async function fetchData() {
         try {
             const res = await fetch(`examthesis.php?thesisID=${encodeURIComponent(thesisId)}`, {
@@ -59,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    //update draft link
     async function updateDraftLink() {
         const data = await fetchData();
         draftLink.style.display = "inline-block";
@@ -75,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    //presentation popup
     btnPresentation.addEventListener("click", async () => {
         popupPresentation.style.display = "flex";
         const data = await fetchData();
@@ -108,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    //grading popup
     btnGrading.addEventListener("click", async () => {
         popupGrading.style.display = "flex";
         const data = await fetchData();
@@ -170,6 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         gradingContent.innerHTML = html;
 
+        // form handlers
         const activateForm = document.getElementById("activateGrading");
         if (activateForm) {
             activateForm.addEventListener("submit", async (e) => {
@@ -191,6 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
+        // submit grades form
         const gradeForm = document.getElementById("gradeForm");
         if (gradeForm) {
             gradeForm.addEventListener("submit", async (e) => {

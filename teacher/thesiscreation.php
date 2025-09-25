@@ -134,7 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </tr>
             </thead>
             <tbody>
-                <!-- δεδομενα εμφανιζονται μεσω ajax -->
+                <!-- data shown in js -->
             </tbody>
         </table>
         <div id="noThesisMsg"></div>

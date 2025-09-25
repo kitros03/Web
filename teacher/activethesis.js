@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     closePopupBtn2?.addEventListener('click', () => popupWindow2.style.display = 'none');
     popupWindow2?.addEventListener('click', e => { if (e.target === popupWindow2) popupWindow2.style.display = 'none'; });
 
+
+    //load data
     async function loadData() {
         try{
             const res = await fetch(`activethesis.php?thesisID=${encodeURIComponent(thesisID)}`, {
@@ -71,7 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 startExamSection.style.display = "block";
                 startExamMessage.textContent = "You can only start the examination if GS number is assigned";
             }
-
+            
+            //show notes
             if(notesListContent){
                 if(data.teachernotes.length > 0){
                     let html = "<h3>Notes</h3><ul class='notes-list'>";
@@ -99,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                    .replace(/'/g,"&#039;");
     }
 
+    //add note 
     addNoteForm?.addEventListener('submit', async e => {
         e.preventDefault();
         const desc = document.getElementById('description').value.trim();
@@ -132,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    //unassign 
     unassignForm?.addEventListener('submit', async e => {
         e.preventDefault();
         if(!confirm("Are you sure you want to unassign?")) return;
@@ -157,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    //start exam
     startExamForm?.addEventListener('submit', async e => {
         e.preventDefault();
         if(!confirm("Start examination?")) return;

@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'teacherdashboard.php';
     });
 
+    //load data
     async function loadData() {
         if (!thesisID) {
             alert('Το ID του θέματος δεν είναι διαθέσιμο.');
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    //unassign
     unassignForm?.addEventListener('submit', async e => {
         e.preventDefault();
         if (!confirm('Σίγουρα θέλετε να αναιρέσετε την ανάθεση θέματος;')) return;
@@ -88,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    
     function escapeHtml(text) {
         if (!text) return '';
         return text.replace(/&/g, "&amp;")

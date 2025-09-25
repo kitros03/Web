@@ -23,7 +23,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $thesisID = $_GET['id'];
 
-// AJAX GET request για δεδομένα thesis
+// Fetch teacher ID
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     header('Content-Type: application/json');
     $stmt = $pdo->prepare("SELECT * FROM thesis WHERE thesisID = ?");
@@ -37,11 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ajax']) && $_GET['ajax'
     exit;
 }
 
-// POST request για επεξεργασία thesis
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Content-Type: application/json");
 
-    // Πρώτα φορτώνουμε το τρέχον thesis για ενημέρωση pdf κλπ
+    // Fetch existing thesis data
     $stmt = $pdo->prepare("SELECT * FROM thesis WHERE thesisID = ?");
     $stmt->execute([$thesisID]);
     $thesis = $stmt->fetch(PDO::FETCH_ASSOC);

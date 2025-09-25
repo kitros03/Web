@@ -4,12 +4,10 @@ header("Content-Type: text/html; charset=utf-8");
 
 require_once("../dbconnect.php");
 
-// Save thesisID from GET to session if present
 if (isset($_GET['thesisID']) && !empty($_GET['thesisID'])) {
     $_SESSION['thesisID'] = $_GET['thesisID'];
 }
 
-// Use thesisID from GET or session
 $thesisId = $_GET['thesisID'] ?? ($_SESSION['thesisID'] ?? null);
 
 if (!$thesisId) {
@@ -28,10 +26,12 @@ $teacher = $stmt->fetch();
 
 $teacherId = $teacher['id'] ?? 0;
 
+//ajax requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
 
+    //activate grading
     if ($action === 'activateGrading' && isset($_POST['thesisID'])) {
         $stmt = $pdo->prepare("UPDATE thesis SET grading = 1 WHERE thesisID = ?");
         $stmt->execute([$_POST['thesisID']]);
@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
         exit;
     }
 
+    //submit grades
     if ($action === 'submitGrades') {
         try {
             $stmt_check = $pdo->prepare("SELECT id FROM grades WHERE thesisID = ? AND teacherID = ?");
@@ -54,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             $presentation = floatval($_POST['presentation'] ?? 0);
             $calc = $quality * 0.6 + $time * 0.15 + $rest * 0.15 + $presentation * 0.1;
 
-            // Insert using correct column names
             $stmt = $pdo->prepare("INSERT INTO grades (thesisID, teacherID, quality_grade, time_grade, rest_quality_grade, presentation_grade, calc_grade) VALUES (?, ?, ?, ?, ?, ?, ?)");
             if (!$stmt->execute([$_POST['thesisID'], $teacherId, $quality, $time, $rest, $presentation, $calc])) {
                 throw new Exception("Database insert failed");
@@ -79,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
         }
     }
 
+    //announce
     if ($action === 'announce' && isset($_POST['thesisID'])) {
         $stmt = $pdo->prepare("UPDATE thesis SET announce = 1 WHERE thesisID = ?");
         $stmt->execute([$_POST['thesisID']]);
@@ -87,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
     }
 }
 
+//load data for no need to refresh page
 $loadData = function () use ($pdo, $thesisId, $teacherId, $teacher) {
     $stmt = $pdo->prepare("SELECT * FROM thesis WHERE thesisID = ?");
     $stmt->execute([$thesisId]);

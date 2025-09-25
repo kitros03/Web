@@ -18,6 +18,7 @@ if (!$teacher) {
 
 $id = $teacher['id'];
 
+// Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     if (isset($_POST['thesis'], $_POST['student'])) {
@@ -67,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    //remove assignment
     if (isset($_POST['remove'], $_POST['thesisID'])) {
         $thesisId = $_POST['thesisID'];
         $stmt = $pdo->prepare("SELECT th_status FROM thesis WHERE thesisID = ?");
@@ -103,8 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Fetch data for GET requests
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Return minimal page on direct load (no JSON)
     if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
 ?>
 <!DOCTYPE html>
@@ -144,7 +146,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 <?php
         exit;
     }
-    // Ajax GET request, return data JSON
     header('Content-Type: application/json');
     $stmt = $pdo->prepare("SELECT * FROM thesis WHERE supervisor = ? AND assigned = 0 ORDER BY thesisID DESC");
     $stmt->execute([$id]);

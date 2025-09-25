@@ -12,7 +12,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     exit;
 }
 
-// den xreiazetai ajax edw
+// Fetch teacher ID
 $stmt = $pdo->prepare("SELECT id FROM teacher WHERE username = ?");
 $stmt->execute([$_SESSION['username']]);
 $teacher = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -33,6 +33,7 @@ function safeRound($val) {
 $teacherIDArr = ['teacherID' => $teacher['id']];
 $teacherIDDoubleArr = ['teacherID1' => $teacher['id'], 'teacherID2' => $teacher['id']];
 
+// Handle AJAX requests
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     $stmt = $pdo->prepare("
         SELECT AVG(DATEDIFF(done.changeDate, active.changeDate)) AS avgCompletionDays

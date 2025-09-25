@@ -4,6 +4,7 @@ function getQueryParam(param) {
     return urlParams.get(param);
 };
 
+// Login form submission
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const username = document.getElementById('username').value.trim();

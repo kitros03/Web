@@ -7,6 +7,7 @@ html, body {
   width: 100%;
 }
 
+/* header */
 header {
     background: #7191d2;
     color: #222;
@@ -69,6 +70,8 @@ header {
     cursor: pointer;
     padding: 0.5rem;
 }
+
+/*main*/
 
 main {
     min-height: 50vh;
@@ -140,6 +143,7 @@ main {
     text-align: center;
 }
 
+/* Sidebar */
 
 .sidebar nav ul {
     list-style: none;
@@ -154,6 +158,8 @@ main {
 .sidebar nav li:last-child {
     margin-bottom: 0;
 }
+
+/* Tables*/
 
 .table {
     width: 90%;
@@ -172,6 +178,8 @@ main {
     border: 1px solid #ccc;
     padding: 8px;
 }
+
+/* Forms */
 
 .form-group {
     margin-bottom: 1.5rem;
@@ -233,6 +241,8 @@ main {
     border-color: #7191d2;
     outline: none;
 }
+
+/* Buttons */
 
 .sidebar-btn,
 .sidebarButton {
@@ -377,6 +387,7 @@ main {
   color: #222;
 }
 
+/* footer */
 
 footer {
   background: #7191d2;
@@ -396,3 +407,84 @@ footer {
 }
 
 
+/* Responsive Styles */
+@media screen and (max-width: 900px) {
+  .sidebar {
+    width: 100vw;
+    min-height: auto;
+    position: relative;
+    top: unset;
+    padding: 1rem 0.5rem;
+    border-radius: 0;
+  }
+  .main, .dashboard-with-sidebar, .dashboard-main, .dashboard-centered {
+    padding: 1rem !important;
+    margin-left: 0;
+  }
+  .dashboard-container {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0;
+  }
+  .site-title {
+    font-size: 1.5rem;
+    margin-left: 10px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  header {
+    padding: 0.7rem 0.2rem;
+    font-size: 1rem;
+  }
+  .logo {
+    max-width: 120px;
+  }
+  .site-title, .title-login {
+    font-size: 1.3rem;
+    margin-left: 0;
+    left: unset;
+    transform: none;
+    position: relative;
+  }
+  .sidebar {
+    width: 100vw;
+    padding: 0.7rem 0.5rem;
+  }
+  .dashboard-with-sidebar, .dashboard-main, .dashboard-centered, .centered-body {
+    padding: 0.8rem !important;
+    font-size: 1rem;
+    box-shadow: none;
+    margin-left: 0;
+  }
+  .form-group input[type="text"],
+  .form-group input[type="password"],
+  .form-group textarea {
+    width: 90%;
+    font-size: 1rem;
+  }
+  .table {
+    width: 100%;
+    font-size: 0.9rem;
+  }
+  .login-btn {
+    right: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  header,
+  footer {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.1rem;
+  }
+  .sidebar {
+    padding: 0.7rem 0.2rem;
+    font-size: 0.9rem;
+  }
+  .logo {
+    max-width: 80px;
+  }
+}

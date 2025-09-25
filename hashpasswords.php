@@ -1,5 +1,5 @@
 <?php
-require_once 'dbconnect.php'; // Ensure this connects to your database
+require_once 'dbconnect.php'; 
 
 // Fetch all teachers
 $stmt = $pdo->query("SELECT username, pass FROM teacher");

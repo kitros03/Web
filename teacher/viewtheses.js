@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `<li><strong>${escapeHtml(c.changeDate)} ${escapeHtml(c.changeTo)}</strong></li>`).join('') + '</ul>';
     }
 
-    // emfanisi grammis pinaka
+    // Create table row
     function createRow(thesis) {
         const changesHtml = createChangesHtml(thesis.changes);
         return `<tr>
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </tr>`;
     }
 
-    // fortosi dedomenon
+    // load theses
     async function loadTheses() {
         try {
             const response = await fetch('viewtheses.php', {
@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Popup handlers
     function addPopupListeners() {
         document.querySelectorAll('.popupBtn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -110,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Open button handlers
     function addOpenButtonListeners() {
         document.addEventListener('click', e => {
             const btn = e.target.closest('.open-btn');

@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     backBtn?.addEventListener('click', () => {
         window.location.href = 'teacherdashboard.php';
     });
-    
+  
+  //load data
   async function loadInvitations() {
     try {
       const response = await fetch('committeeinvitations.php', {
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      //show table content
       const rows = data.map(inv => {
         return `
           <tr data-id="${inv.invitationID}">
@@ -35,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       tbody.innerHTML = rows;
 
+      //handle accept/reject
       tbody.querySelectorAll('.accept-btn, .reject-btn').forEach(button => {
         button.onclick = async () => {
           const decision = button.classList.contains('accept-btn') ? 'accept' : 'reject';

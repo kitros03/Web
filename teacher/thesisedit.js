@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Φόρτωση δεδομένων αρχικά μέσω AJAX
+    //load data
     try {
         const response = await fetch(`thesisedit.php?id=${encodeURIComponent(thesisID)}&ajax=1`, {
             credentials: 'same-origin',
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error(error);
     }
 
-    // Υποβολή φορμας με AJAX
+    //form submit
     const form = document.getElementById('thesisForm');
     form.addEventListener('submit', async (e) => {
         e.preventDefault();

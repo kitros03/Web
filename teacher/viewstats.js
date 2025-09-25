@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const gradeCanvas = document.getElementById('popupAverageGradeChart');
     const countCanvas = document.getElementById('popupCountChart');
 
+    // Clear existing charts if any
     function clearCharts() {
         [timeCanvas, gradeCanvas, countCanvas].forEach(c => {
             if (c.chart) {
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Render charts with fetched data
     function renderCharts(data) {
         clearCharts();
 
@@ -58,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Fetch data and show popup
     function fetchDataAndShowPopup(type = 'both') {
         clearCharts();
 
