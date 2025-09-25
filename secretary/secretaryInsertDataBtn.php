@@ -40,21 +40,29 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['rol
 
       <section>
         <div class="form-group">
-          <label for="jsonFile">Αρχείο JSON</label>
-          <input id="jsonFile" type="file" accept=".json" />
+          <form action="json_import.php" method="post" enctype="multipart/form-data">
+                    <label>Αρχείο JSON</label>
+                    <input name="json_file" type="file" accept=".json" />
+                    <button type="submit"> & Εισαγωγή</button>
+                </form>
+          
         </div>
+    <!-- Εμφάνιση μηνύματος κατάστασης -->
+            <?php
+                if (isset($_SESSION['status'])) {
+                    $failed = (strpos($_SESSION['status'], " 0 αποτυχίες") === false);
+                    $statusClass = $failed ? 'status-box failed' : 'status-box';
 
-        <div class="form-group">
-          <button id="uploadBtn" class="submit-btn">Ανέβασμα & Εισαγωγή</button>
-        </div>
+                    echo '<div class="'.$statusClass.'">';
+                    echo '<span class="status-title">'.($failed ? 'Υπήρξαν αποτυχίες :(' : 'Επιτυχής Εισαγωγή Δεδομένων :)').'</span><br><br>';
+                    echo $_SESSION['status'];
+                    echo '</div>';
 
-        <div id="result" class="centered-body" style="display:none;"></div>
-      </section>
-    </main>
+                    unset($_SESSION['status']);
+                }
+            ?>
   </div>
-
   <script src="secretarydashboard.js"></script>
-  <script src="secretary_import.js"></script>
   <footer class="footer">
     <p>&copy; 2025 Thesis Management System</p>
   </footer>

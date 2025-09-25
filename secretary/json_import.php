@@ -1,228 +1,261 @@
 <?php
 declare(strict_types=1);
-header('Content-Type: application/json');
-require_once '../dbconnect.php';
+session_start();
 
-try {
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true);
-    if (!is_array($data)) {
-        echo json_encode(['success' => false, 'message' => 'Μη έγκυρο JSON.']);
+// Γιατί κάνεις redirect στο τέλος, δεν στέλνω JSON header εδώ
+// header('Content-Type: application/json; charset=UTF-8');
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
+/**
+ * Έλεγχος πρόσβασης: μόνο secretary
+ */
+if (!isset($_SESSION['username']) || (($_SESSION['role'] ?? '') !== 'secretary')) {
+  http_response_code(403);
+  $_SESSION['status'] = 'Απαγορεύεται η πρόσβαση.';
+  header("Location: secretaryinsertDataBtn.php");
+  exit;
+}
+
+/**
+ * Σύνδεση στη ΒΔ — ίδιος τρόπος με το άλλο αρχείο σου
+ */
+require_once __DIR__ . '/../dbconnect.php';
+
+if (!isset($host, $db, $user, $pass)) {
+  http_response_code(500);
+  $_SESSION['status'] = 'Σφάλμα: Δεν βρέθηκαν στοιχεία σύνδεσης (host/db/user/pass) στο dbconnect.php.';
+  header("Location: secretaryinsertDataBtn.php");
+  exit;
+}
+
+$mysqli = @new mysqli($host, $user, $pass, $db);
+if ($mysqli->connect_errno) {
+  http_response_code(500);
+  $_SESSION['status'] = 'Σφάλμα σύνδεσης DB: ' . $mysqli->connect_error;
+  header("Location: secretaryinsertDataBtn.php");
+  exit;
+}
+@$mysqli->set_charset(isset($charset) ? $charset : 'utf8mb4');
+
+/*
+Schema mapping (σύμφωνα με το DDL που έστειλες):
+
+users(userID PK AI, username UNIQUE, pass, type ENUM('teacher','student','secretary'))
+
+teacher(id PK AI, t_fname, t_lname, email UNIQUE, topic, homephone INT(10), cellphone INT(10),
+        department, university, username NOT NULL FK -> users(username))
+
+student(id PK AI, s_fname, s_lname, studentID UNIQUE, street, street_number INT, city,
+        postcode INT(5), father_name, homephone VARCHAR(10), cellphone VARCHAR(10) UNIQUE,
+        email VARCHAR(50) UNIQUE, thesisID INT NULL FK -> thesis(thesisID) ON DELETE SET NULL,
+        username UNIQUE NOT NULL FK -> users(username))
+*/
+
+// ---------------------- Φοιτητές ----------------------
+function insert_students(array $students_info, mysqli $mysqli, array &$student_passwords = []): array {
+    $success = 0; $fail = 0;
+
+    foreach ($students_info as $stud) {
+        $name                = $stud['name'] ?? null;
+        $surname             = $stud['surname'] ?? null;
+        $stud_number         = $stud['student_number'] ?? null; // -> student.studentID
+        $street              = $stud['street'] ?? null;
+        $number              = $stud['number'] ?? null;         // -> student.street_number
+        $city                = $stud['city'] ?? null;
+        $postcode            = $stud['postcode'] ?? null;
+        $father_name         = $stud['father_name'] ?? null;
+        $landline_telephone  = $stud['landline_telephone'] ?? null; // -> student.homephone (varchar)
+        $mobile_telephone    = $stud['mobile_telephone'] ?? null;   // -> student.cellphone (varchar unique)
+        $email               = $stud['email'] ?? null;               // -> users.username & student.email
+
+        if (!$email || !$name || !$surname || !$stud_number) {
+            $fail++;
+            continue;
+        }
+
+        // Κωδικός για testing (σταθερός)
+        $password_plain = '1';
+        $password = $password_plain;
+
+        // Έλεγχος αν υπάρχει ήδη user με ίδιο username (email)
+        $stmt = $mysqli->prepare("SELECT userID FROM users WHERE username = ?");
+        $stmt->bind_param("s", $surname);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $stmt->close();
+            $fail++;
+            continue;
+        }
+        $stmt->close();
+
+        // Εισαγωγή στον πίνακα users
+        $stmt = $mysqli->prepare("INSERT INTO users (username, pass, type) VALUES (?, ?, 'student')");
+        $stmt->bind_param("ss", $surname, $password);
+        if ($stmt->execute()) {
+            $stmt->close();
+
+            // Εισαγωγή στον πίνακα student
+            $sql = "INSERT INTO student
+                (s_fname, s_lname, studentID, street, street_number, city, postcode, father_name,
+                 homephone, cellphone, email, thesisID, username)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $stmt2 = $mysqli->prepare($sql);
+
+            $thesisID = null; // καμία ανάθεση κατά την εισαγωγή
+            $stmt2->bind_param(
+                "ssisisissssis",
+                $name,
+                $surname,
+                $stud_number,
+                $street,
+                $number,
+                $city,
+                $postcode,
+                $father_name,
+                $landline_telephone,
+                $mobile_telephone,
+                $email,
+                $thesisID,
+                $surname // username = email
+            );
+
+            if ($stmt2->execute()) {
+                $success++;
+                $student_passwords[$surname] = $password_plain;
+            } else {
+                $fail++;
+            }
+            $stmt2->close();
+        } else {
+            $fail++;
+            $stmt->close();
+        }
+    }
+
+    return [$success, $fail];
+}
+
+// ---------------------- Καθηγητές (teacher) ----------------------
+function insert_professors(array $profs_info, mysqli $mysqli, array &$professor_passwords = []): array {
+    $success = 0; $fail = 0;
+
+    foreach ($profs_info as $prof) {
+        $name        = $prof['name'] ?? null;       // -> teacher.t_fname
+        $surname     = $prof['surname'] ?? null;    // -> teacher.t_lname
+        $email       = $prof['email'] ?? null;      // unique + users.username
+        $topic       = $prof['topic'] ?? null;
+        $landline    = $prof['landline'] ?? null;   // -> teacher.homephone (INT(10))
+        $mobile      = $prof['mobile'] ?? null;     // -> teacher.cellphone (INT(10))
+        $department  = $prof['department'] ?? null;
+        $university  = $prof['university'] ?? null;
+
+        if (!$email || !$name || !$surname) {
+            $fail++;
+            continue;
+        }
+
+        // Κωδικός για testing
+        $password_plain = '0';
+        $password = $password_plain;
+
+        // Έλεγχος αν υπάρχει ήδη user με ίδιο username
+        $stmt = $mysqli->prepare("SELECT userID FROM users WHERE username = ?");
+        $stmt->bind_param("s", $surname);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $stmt->close();
+            $fail++;
+            continue;
+        }
+        $stmt->close();
+
+        // Εισαγωγή στον πίνακα users (type = 'teacher')
+        $stmt = $mysqli->prepare("INSERT INTO users (username, pass, type) VALUES (?, ?, 'teacher')");
+        $stmt->bind_param("ss", $surname, $password);
+        if ($stmt->execute()) {
+            $stmt->close();
+
+            // Εισαγωγή στον πίνακα teacher (id = AI)
+            $sql = "INSERT INTO teacher
+                (t_fname, t_lname, email, topic, homephone, cellphone, department, university, username)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $stmt2 = $mysqli->prepare($sql);
+            $stmt2->bind_param(
+                "ssssiisss",
+                $name,
+                $surname,
+                $email,
+                $topic,
+                $landline,
+                $mobile,
+                $department,
+                $university,
+                $surname // username = email
+            );
+
+            if ($stmt2->execute()) {
+                $success++;
+                $professor_passwords[$surname] = $password_plain;
+            } else {
+                $fail++;
+            }
+            $stmt2->close();
+        } else {
+            $fail++;
+            $stmt->close();
+        }
+    }
+
+    return [$success, $fail];
+}
+
+// ---------------------- Χειρισμός JSON upload ----------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['json_file'])) {
+    $jsonData = @file_get_contents($_FILES['json_file']['tmp_name']);
+    $data = json_decode($jsonData ?? '', true);
+
+    // Έλεγχος δομής αρχείου
+    if (!$data || !isset($data['students']) || !isset($data['professors'])) {
+        $_SESSION['status'] = "Λάθος δομή αρχείου JSON! Απαιτούνται keys: 'students' και 'professors'.";
+        header("Location: secretaryinsertDataBtn.php");
         exit;
     }
 
-    $defaultPasswordHash = password_hash('1', PASSWORD_DEFAULT);
+    $student_passwords = [];
+    $professor_passwords = [];
 
-    $onlyDigits = function (?string $s): string {
-        return preg_replace('/\D+/', '', (string)$s ?? '');
-    };
-    $takeOrNull = function ($v) {
-        $v = trim((string)$v);
-        return ($v === '' || strtoupper($v) === 'NULL' || $v === '-') ? null : $v;
-    };
-    $uniqueUsernameFromSurname = function (PDO $pdo, string $surname): string {
-        $base = strtolower(preg_replace('/\s+/', '', trim($surname)));
-        if ($base === '') { $base = 'user'; }
-        $u = $base;
-        $i = 2;
-        $stmt = $pdo->prepare("SELECT 1 FROM users WHERE username = ? LIMIT 1");
-        while (true) {
-            $stmt->execute([$u]);
-            if (!$stmt->fetchColumn()) return $u;
-            $u = $base . $i;
-            $i++;
-        }
-    };
+    try {
+        // Προαιρετικά, transactions για ασφάλεια μαζικής εισαγωγής
+        $mysqli->begin_transaction();
 
-    // counters
-    $summary = [
-        'students' => ['inserted' => 0, 'failed' => 0, 'duplicates' => 0],
-        'teachers' => ['inserted' => 0, 'failed' => 0, 'duplicates' => 0],
-    ];
-    $errors = [];
+        list($succ_st, $fail_st) = insert_students($data['students'], $mysqli, $student_passwords);
+        list($succ_pr, $fail_pr) = insert_professors($data['professors'], $mysqli, $professor_passwords);
 
-    // ========================
-    // ΦΟΙΤΗΤΕΣ
-    // ========================
-    $students = $data['students'] ?? [];
-    if (is_array($students)) {
-        $stmtCheckStudentEmail = $pdo->prepare("SELECT 1 FROM student WHERE email = ? LIMIT 1");
+        $mysqli->commit();
 
-        $stmtUserStudent = $pdo->prepare(
-            "INSERT INTO users (username, pass, type)
-             VALUES (?, ?, 'student')
-             ON DUPLICATE KEY UPDATE pass=VALUES(pass), type='student'"
-        );
-
-        $stmtStudent = $pdo->prepare(
-            "INSERT INTO student
-            (s_fname, s_lname, studentID, street, street_number, city, postcode, father_name, homephone, cellphone, email, thesisID, username)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
-             ON DUPLICATE KEY UPDATE
-               s_fname=VALUES(s_fname),
-               s_lname=VALUES(s_lname),
-               street=VALUES(street),
-               street_number=VALUES(street_number),
-               city=VALUES(city),
-               postcode=VALUES(postcode),
-               father_name=VALUES(father_name),
-               homephone=VALUES(homephone),
-               cellphone=VALUES(cellphone),
-               email=VALUES(email),
-               username=VALUES(username)"
-        );
-
-        foreach ($students as $idx => $s) {
-            try {
-                $studentNumber = (int)($s['student_number'] ?? 0);
-                $fname = $takeOrNull($s['name'] ?? '');
-                $lname = $takeOrNull($s['surname'] ?? '');
-                $emailFromJson = $takeOrNull($s['email'] ?? '');
-
-                if ($studentNumber <= 0 || !$fname || !$lname) {
-                    throw new Exception("students[$idx]: λείπει/άκυρο student_number ή name/surname");
-                }
-                if (!$emailFromJson) {
-                    throw new Exception("students[$idx]: λείπει email στο JSON");
-                }
-
-                // Προ-έλεγχος διπλότυπου email
-                $stmtCheckStudentEmail->execute([$emailFromJson]);
-                if ($stmtCheckStudentEmail->fetchColumn()) {
-                    $summary['students']['failed']++;
-                    $summary['students']['duplicates']++;
-                    $errors[] = "students[$idx]: διπλότυπο email ($emailFromJson)";
-                    continue;
-                }
-
-                $street  = $takeOrNull($s['street'] ?? '');
-                $number  = $takeOrNull($s['number'] ?? '');
-                $numberDigits = $onlyDigits($number);
-                $city    = $takeOrNull($s['city'] ?? '');
-                $postcodeDigits = $onlyDigits($s['postcode'] ?? '');
-                $postcode = ($postcodeDigits === '') ? null : (int)substr($postcodeDigits, 0, 5);
-
-                $home = $onlyDigits($s['landline_telephone'] ?? '');
-                $home = ($home === '') ? null : substr($home, -10);
-                $cell = $onlyDigits($s['mobile_telephone'] ?? '');
-                $cell = ($cell === '') ? null : substr($cell, -10);
-
-                $username = $uniqueUsernameFromSurname($pdo, (string)$lname);
-
-                // users
-                $stmtUserStudent->execute([$username, $defaultPasswordHash]);
-
-                // student
-                $ok = $stmtStudent->execute([
-                    $fname, $lname, $studentNumber,
-                    $street, ($numberDigits === '' ? null : (int)$numberDigits),
-                    $city, $postcode, $takeOrNull($s['father_name'] ?? ''),
-                    $home, $cell, $emailFromJson, $username
-                ]);
-
-                if (!$ok) {
-                    $summary['students']['failed']++;
-                    $errors[] = "students[$idx]: DB error";
-                } else {
-                    // rowCount() == 1 => INSERT, == 2 => UPDATE λόγω ON DUPLICATE
-                    $summary['students']['inserted'] += ($stmtStudent->rowCount() === 1) ? 1 : 0;
-                }
-            } catch (Throwable $e) {
-                $summary['students']['failed']++;
-                $errors[] = "students[$idx]: " . $e->getMessage();
-            }
-        }
+        $_SESSION['status'] =
+            "<b>Φοιτητές:</b> $succ_st επιτυχίες, $fail_st αποτυχίες" .
+            "<br><b>Καθηγητές:</b> $succ_pr επιτυχίες, $fail_pr αποτυχίες.";
+    } catch (Throwable $e) {
+        @$mysqli->rollback();
+        $_SESSION['status'] = "Σφάλμα κατά την εισαγωγή: " . htmlspecialchars($e->getMessage(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
-    // ========================
-    // ΚΑΘΗΓΗΤΕΣ
-    // ========================
-    $professors = $data['professors'] ?? [];
-    if (is_array($professors)) {
-        $stmtCheckTeacherEmail = $pdo->prepare("SELECT 1 FROM teacher WHERE email = ? LIMIT 1");
-
-        $stmtUserTeacher = $pdo->prepare(
-            "INSERT INTO users (username, pass, type)
-             VALUES (?, ?, 'teacher')
-             ON DUPLICATE KEY UPDATE pass=VALUES(pass), type='teacher'"
-        );
-
-        $stmtTeacher = $pdo->prepare(
-            "INSERT INTO teacher
-            (id, t_fname, t_lname, email, topic, homephone, cellphone, department, university, username)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE
-               t_fname=VALUES(t_fname),
-               t_lname=VALUES(t_lname),
-               email=VALUES(email),
-               topic=VALUES(topic),
-               homephone=VALUES(homephone),
-               cellphone=VALUES(cellphone),
-               department=VALUES(department),
-               university=VALUES(university),
-               username=VALUES(username)"
-        );
-
-        foreach ($professors as $idx => $t) {
-            try {
-                $id    = (int)($t['id'] ?? 0);
-                $fname = $takeOrNull($t['name'] ?? '');
-                $lname = $takeOrNull($t['surname'] ?? '');
-                $emailFromJson = $takeOrNull($t['email'] ?? '');
-
-                if ($id <= 0 || !$fname || !$lname) {
-                    throw new Exception("professors[$idx]: λείπει/άκυρο id ή name/surname");
-                }
-                if (!$emailFromJson) {
-                    throw new Exception("professors[$idx]: λείπει email στο JSON");
-                }
-
-                // Προ-έλεγχος διπλότυπου email
-                $stmtCheckTeacherEmail->execute([$emailFromJson]);
-                if ($stmtCheckTeacherEmail->fetchColumn()) {
-                    $summary['teachers']['failed']++;
-                    $summary['teachers']['duplicates']++;
-                    $errors[] = "professors[$idx]: διπλότυπο email ($emailFromJson)";
-                    continue;
-                }
-
-                $topic       = $takeOrNull($t['topic'] ?? '');
-                $department  = $takeOrNull($t['department'] ?? '');
-                $university  = $takeOrNull($t['university'] ?? '');
-
-                $homeDigits  = $onlyDigits($t['landline'] ?? '');
-                $cellDigits  = $onlyDigits($t['mobile'] ?? '');
-                $homephone   = ($homeDigits === '') ? null : (int)substr($homeDigits, -10);
-                $cellphone   = ($cellDigits === '') ? null : (int)substr($cellDigits, -10);
-
-                $username = $uniqueUsernameFromSurname($pdo, (string)$lname);
-
-                $stmtUserTeacher->execute([$username, $defaultPasswordHash]);
-
-                $ok = $stmtTeacher->execute([
-                    $id, $fname, $lname, $emailFromJson, $topic,
-                    $homephone, $cellphone, $department, $university, $username
-                ]);
-
-                if (!$ok) {
-                    $summary['teachers']['failed']++;
-                    $errors[] = "professors[$idx]: DB error";
-                } else {
-                    $summary['teachers']['inserted'] += ($stmtTeacher->rowCount() === 1) ? 1 : 0;
-                }
-            } catch (Throwable $e) {
-                $summary['teachers']['failed']++;
-                $errors[] = "professors[$idx]: " . $e->getMessage();
-            }
-        }
-    }
-
-    echo json_encode([
-        'success' => true,
-        'message' => 'Η εισαγωγή ολοκληρώθηκε',
-        'summary' => $summary,
-        'errors'  => $errors
-    ]);
-} catch (Throwable $e) {
-    echo json_encode(['success' => false, 'message' => 'Server error.']);
+    header("Location: secretaryinsertDataBtn.php");
+    exit;
 }
+
+// Αν έρθει GET ή δεν ανέβηκε αρχείο:
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $_SESSION['status'] = "Στείλε JSON αρχείο μέσω POST (field name: json_file).";
+    header("Location: secretaryinsertDataBtn.php");
+    exit;
+}
+
+// Τέλος: κλείσιμο σύνδεσης
+if (isset($mysqli) && $mysqli instanceof mysqli) { @$mysqli->close(); }

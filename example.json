@@ -1,31 +1,31 @@
 {
   "students": [
     {
-      "id": "1",
-      "name": "Makis",
-      "surname": "Makopoulos",
-      "student_number": "10433999",
-      "street": "test street",
-      "number": "45",
-      "city": "test city",
-      "postcode": "39955",
-      "father_name": "Orestis",
+      "id": "110011",
+      "name": "Makis1",
+      "surname": "Makopoulos2",
+      "student_number": "10433997",
+      "street": "test street1",
+      "number": "451",
+      "city": "test city1",
+      "postcode": "399551",
+      "father_name": "Orestis1",
       "landline_telephone": "2610333000",
-      "mobile_telephone": "6939096979",
-      "email": "104333999@students.upatras.gr"
+      "mobile_telephone": "6939096901",
+      "email": "104333999@students.upatras.gr2"
     }
   ],
   "professors": [
     {
-    "id": "61",
-    "name": "Eleni",
-    "surname": "Papadimitriou",
-    "email": "epapadimitriou1@upatras.gr",
-    "topic": "Data Science",
-    "landline": "2610456789",
-    "mobile": "6976543210",
-    "department": "CEID",
-    "university": "University of Patras"
+    "id": "6111",
+    "name": "Eleni2",
+    "surname": "Papadimitriou2",
+    "email": "epapadimitriou1@upatras.gr2",
+    "topic": "Data Science1",
+    "landline": "26104567891",
+    "mobile": "69765432101",
+    "department": "CEID1",
+    "university": "University of Patras1"
     }
   ]
 }
