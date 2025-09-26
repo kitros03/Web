@@ -16,18 +16,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Render charts with fetched data
-    function renderCharts(data) {
+    // Render charts with data filtered by type
+    function renderCharts(data, type) {
         clearCharts();
+
+        const labels = [];
+        const timeData = [];
+        const gradeData = [];
+        const countData = [];
+        const bgColors = [];
+
+        if (type === 'supervise' || type === 'both') {
+            labels.push('Επιβλέπων');
+            timeData.push(data.avgTimeSupervise || 0);
+            gradeData.push(data.avgGradeSupervise || 0);
+            countData.push(data.countSupervise || 0);
+            bgColors.push('rgba(54, 162, 235, 0.7)'); // Blue
+        }
+        if (type === 'committee' || type === 'both') {
+            labels.push('Μέλος Τριμελούς');
+            timeData.push(data.avgTimeCommittee || 0);
+            gradeData.push(data.avgGradeCommittee || 0);
+            countData.push(data.countCommittee || 0);
+            bgColors.push('rgba(255, 206, 86, 0.7)'); // Yellow
+        }
 
         timeCanvas.chart = new Chart(timeCanvas.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Επιβλέπων', 'Μέλος Τριμελούς'],
+                labels: labels,
                 datasets: [{
                     label: 'Μέσος Χρόνος Περάτωσης (ημέρες)',
-                    data: [data.avgTimeSupervise || 0, data.avgTimeCommittee || 0],
-                    backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)']
+                    data: timeData,
+                    backgroundColor: bgColors
                 }]
             },
             options: { scales: { y: { beginAtZero: true } } }
@@ -36,11 +57,11 @@ document.addEventListener('DOMContentLoaded', function() {
         gradeCanvas.chart = new Chart(gradeCanvas.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Επιβλέπων', 'Μέλος Τριμελούς'],
+                labels: labels,
                 datasets: [{
                     label: 'Μέσος Βαθμός',
-                    data: [data.avgGradeSupervise || 0, data.avgGradeCommittee || 0],
-                    backgroundColor: ['rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)']
+                    data: gradeData,
+                    backgroundColor: bgColors
                 }]
             },
             options: { scales: { y: { beginAtZero: true, max: 10 } } }
@@ -49,18 +70,18 @@ document.addEventListener('DOMContentLoaded', function() {
         countCanvas.chart = new Chart(countCanvas.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Επιβλέπων', 'Μέλος Τριμελούς'],
+                labels: labels,
                 datasets: [{
                     label: 'Συνολικό Πλήθος Διπλωματικών',
-                    data: [data.countSupervise || 0, data.countCommittee || 0],
-                    backgroundColor: ['rgba(255, 99, 132, 0.7)', 'rgba(255, 159, 64, 0.7)']
+                    data: countData,
+                    backgroundColor: bgColors
                 }]
             },
             options: { scales: { y: { beginAtZero: true } } }
         });
     }
 
-    // Fetch data and show popup
+    // Fetch data and show popup filtered by type
     function fetchDataAndShowPopup(type = 'both') {
         clearCharts();
 
@@ -81,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                renderCharts(data);
+                renderCharts(data, type);
                 popup.style.display = 'flex';
             })
             .catch(() => {
