@@ -33,7 +33,7 @@ function safeRound($val) {
 $teacherIDArr = ['teacherID' => $teacher['id']];
 $teacherIDDoubleArr = ['teacherID1' => $teacher['id'], 'teacherID2' => $teacher['id']];
 
-// Handle AJAX requests
+// Handle AJAX requests for statistics
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
     $stmt = $pdo->prepare("
         SELECT AVG(DATEDIFF(done.changeDate, active.changeDate)) AS avgCompletionDays
@@ -107,6 +107,7 @@ h1, h2 { color: #222; }
 .message { color: #d00; font-weight: bold; margin-top: 10px; }
 canvas { background: #fff; margin-top: 10px; border: 1px solid #ccc; }
 </style>
+<title>Στατιστικά</title>
 </head>
 <body>
 <header>
