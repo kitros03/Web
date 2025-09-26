@@ -2,8 +2,6 @@
 declare(strict_types=1);
 session_start();
 
-// Γιατί κάνεις redirect στο τέλος, δεν στέλνω JSON header εδώ
-// header('Content-Type: application/json; charset=UTF-8');
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
@@ -17,9 +15,7 @@ if (!isset($_SESSION['username']) || (($_SESSION['role'] ?? '') !== 'secretary')
   exit;
 }
 
-/**
- * Σύνδεση στη ΒΔ — ίδιος τρόπος με το άλλο αρχείο σου
- */
+
 require_once __DIR__ . '/../dbconnect.php';
 
 if (!isset($host, $db, $user, $pass)) {
@@ -38,19 +34,7 @@ if ($mysqli->connect_errno) {
 }
 @$mysqli->set_charset(isset($charset) ? $charset : 'utf8mb4');
 
-/*
-Schema mapping (σύμφωνα με το DDL που έστειλες):
 
-users(userID PK AI, username UNIQUE, pass, type ENUM('teacher','student','secretary'))
-
-teacher(id PK AI, t_fname, t_lname, email UNIQUE, topic, homephone INT(10), cellphone INT(10),
-        department, university, username NOT NULL FK -> users(username))
-
-student(id PK AI, s_fname, s_lname, studentID UNIQUE, street, street_number INT, city,
-        postcode INT(5), father_name, homephone VARCHAR(10), cellphone VARCHAR(10) UNIQUE,
-        email VARCHAR(50) UNIQUE, thesisID INT NULL FK -> thesis(thesisID) ON DELETE SET NULL,
-        username UNIQUE NOT NULL FK -> users(username))
-*/
 
 // ---------------------- Φοιτητές ----------------------
 function insert_students(array $students_info, mysqli $mysqli, array &$student_passwords = []): array {
@@ -59,15 +43,15 @@ function insert_students(array $students_info, mysqli $mysqli, array &$student_p
     foreach ($students_info as $stud) {
         $name                = $stud['name'] ?? null;
         $surname             = $stud['surname'] ?? null;
-        $stud_number         = $stud['student_number'] ?? null; // -> student.studentID
+        $stud_number         = $stud['student_number'] ?? null;
         $street              = $stud['street'] ?? null;
-        $number              = $stud['number'] ?? null;         // -> student.street_number
+        $number              = $stud['number'] ?? null;         
         $city                = $stud['city'] ?? null;
         $postcode            = $stud['postcode'] ?? null;
         $father_name         = $stud['father_name'] ?? null;
-        $landline_telephone  = $stud['landline_telephone'] ?? null; // -> student.homephone (varchar)
-        $mobile_telephone    = $stud['mobile_telephone'] ?? null;   // -> student.cellphone (varchar unique)
-        $email               = $stud['email'] ?? null;               // -> users.username & student.email
+        $landline_telephone  = $stud['landline_telephone'] ?? null; 
+        $mobile_telephone    = $stud['mobile_telephone'] ?? null;   
+        $email               = $stud['email'] ?? null;              
 
         if (!$email || !$name || !$surname || !$stud_number) {
             $fail++;
@@ -119,7 +103,7 @@ function insert_students(array $students_info, mysqli $mysqli, array &$student_p
                 $mobile_telephone,
                 $email,
                 $thesisID,
-                $surname // username = email
+                $surname // username = surname
             );
 
             if ($stmt2->execute()) {
@@ -143,12 +127,12 @@ function insert_professors(array $profs_info, mysqli $mysqli, array &$professor_
     $success = 0; $fail = 0;
 
     foreach ($profs_info as $prof) {
-        $name        = $prof['name'] ?? null;       // -> teacher.t_fname
-        $surname     = $prof['surname'] ?? null;    // -> teacher.t_lname
-        $email       = $prof['email'] ?? null;      // unique + users.username
+        $name        = $prof['name'] ?? null;       
+        $surname     = $prof['surname'] ?? null;    
+        $email       = $prof['email'] ?? null;      
         $topic       = $prof['topic'] ?? null;
-        $landline    = $prof['landline'] ?? null;   // -> teacher.homephone (INT(10))
-        $mobile      = $prof['mobile'] ?? null;     // -> teacher.cellphone (INT(10))
+        $landline    = $prof['landline'] ?? null;   
+        $mobile      = $prof['mobile'] ?? null;
         $department  = $prof['department'] ?? null;
         $university  = $prof['university'] ?? null;
 
@@ -195,7 +179,7 @@ function insert_professors(array $profs_info, mysqli $mysqli, array &$professor_
                 $mobile,
                 $department,
                 $university,
-                $surname // username = email
+                $surname 
             );
 
             if ($stmt2->execute()) {
