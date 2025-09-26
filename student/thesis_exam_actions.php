@@ -98,12 +98,12 @@ if ($action === 'save_draft') {
     $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
     if ($ext !== 'pdf') fail('Επιτρέπεται μόνο PDF', 400);
 
-    $dir = __DIR__.'/uploads/exam_drafts/';
+    $dir = __DIR__.'/../uploads/exam_drafts/';
     if (!is_dir($dir) && !@mkdir($dir, 0777, true)) fail('Αδυναμία δημιουργίας φακέλου uploads', 500);
 
     $newName = uniqid('draft_'.$thesisID.'_', true).'.pdf';
     $full = $dir.$newName;
-    $rel  = 'uploads/exam_drafts/'.$newName;
+    $rel  = '/../uploads/exam_drafts/'.$newName;
 
     if (!move_uploaded_file($_FILES['draft_file']['tmp_name'], $full)) fail('Αποτυχία αποθήκευσης αρχείου', 500);
 

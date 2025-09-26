@@ -19,6 +19,8 @@ try {
 
   $i = $pdo->prepare("INSERT INTO thesisStatusChanges (thesisID, changeDate, changeTo) VALUES (?, CURDATE(), 'DONE')");
   $i->execute([$thesisID]);
+  $stmt = $pdo->prepare("UPDATE thesis_exam_meta SET announce=0 WHERE thesisID=?");
+  $stmt->execute([$thesisID]);
 
   $pdo->commit();
   echo json_encode(['success'=>true]);

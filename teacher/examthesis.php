@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
 
     //announce
     if ($action === 'announce' && isset($_POST['thesisID'])) {
-        $stmt = $pdo->prepare("UPDATE thesis SET announce = 1 WHERE thesisID = ?");
+        $stmt = $pdo->prepare("UPDATE thesis_exam_meta SET announce = 1 WHERE thesisID = ?");
         $stmt->execute([$_POST['thesisID']]);
         echo json_encode(['success' => true, 'message' => 'Announcement sent!']);
         exit;

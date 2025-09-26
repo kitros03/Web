@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = 'teacherdashboard.php';
     });
 
-    
     // Retrieve thesisID from URL or sessionStorage
     function getThesisId() {
         const params = new URLSearchParams(window.location.search);
@@ -64,8 +63,12 @@ document.addEventListener("DOMContentLoaded", () => {
     async function updateDraftLink() {
         const data = await fetchData();
         draftLink.style.display = "inline-block";
-        if (data?.thesis?.pdf_description) {
-            draftLink.href = data.thesis.pdf_description;
+        if (data?.meta?.draft_file) {
+            let draftUrl = data.meta.draft_file;
+            if (!draftUrl.startsWith('http') && !draftUrl.startsWith('/')) {
+                draftUrl = '/' + draftUrl;
+            }
+            draftLink.href = draftUrl;
             draftLink.style.pointerEvents = "auto";
             draftLink.style.color = "";
             draftLink.textContent = "View Draft";
@@ -86,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const student = data.student || {};
         const thesis = data.thesis || {};
         let html = "";
-        if (meta.announce) {
+        if (meta.announce == 1 || meta.announce === true || meta.announce === "1") {
             html += `<p>Φοιτητής: ${escapeHtml(student.s_fname)} ${escapeHtml(student.s_lname)}</p>`;
             html += `<p>Θέμα: ${escapeHtml(thesis.title)}</p>`;
             html += `<p>Ημ/νία και Ώρα: ${escapeHtml(meta.exam_datetime)}</p>`;
@@ -97,8 +100,37 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } else {
             html = `<p>Δεν υπάρχουν πληροφορίες</p>`;
+            // Add announce button
+            html += `<button id="btnAnnounce" style="margin-top:1em;">Ανακοίνωση Παρουσίασης</button>`;
         }
         presentationInfo.innerHTML = html;
+
+        // Add event listener to announce button if it exists
+        const btnAnnounce = document.getElementById("btnAnnounce");
+        if (btnAnnounce) {
+            btnAnnounce.addEventListener("click", async () => {
+                try {
+                    const formData = new FormData();
+                    formData.append("action", "announce");
+                    formData.append("thesisID", thesis.thesisID || thesis.id);
+
+                    const res = await fetch("examthesis.php", {
+                        method: "POST",
+                        headers: { "X-Requested-With": "XMLHttpRequest" },
+                        body: formData,
+                    });
+
+                    const json = await res.json();
+                    alert(json.message);
+                    if (json.success) {
+                        btnPresentation.click();
+                    }
+                } catch (error) {
+                    alert("Αποτυχία ανακοίνωσης παρουσίασης");
+                    console.error(error);
+                }
+            });
+        }
     });
 
     closePresentation.addEventListener("click", () => {
@@ -196,7 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // submit grades form
         const gradeForm = document.getElementById("gradeForm");
         if (gradeForm) {
             gradeForm.addEventListener("submit", async (e) => {
