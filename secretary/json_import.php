@@ -60,7 +60,7 @@ function insert_students(array $students_info, mysqli $mysqli, array &$student_p
 
         // Κωδικός για testing (σταθερός)
         $password_plain = '1';
-        $password = $password_plain;
+        $password = password_hash(trim($password_plain), PASSWORD_DEFAULT);
 
         // Έλεγχος αν υπάρχει ήδη user με ίδιο username (email)
         $stmt = $mysqli->prepare("SELECT userID FROM users WHERE username = ?");
@@ -143,7 +143,7 @@ function insert_professors(array $profs_info, mysqli $mysqli, array &$professor_
 
         // Κωδικός για testing
         $password_plain = '0';
-        $password = $password_plain;
+        $password = password_hash(trim($password_plain), PASSWORD_DEFAULT);
 
         // Έλεγχος αν υπάρχει ήδη user με ίδιο username
         $stmt = $mysqli->prepare("SELECT userID FROM users WHERE username = ?");
