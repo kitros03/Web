@@ -118,7 +118,11 @@ if ($thStatus === 'EXAM') {
 // DONE 
 if ($thStatus === 'DONE') {
   // Θέμα
-  $stmt = $pdo->prepare("SELECT t.thesisID, t.title, t.th_description, t.pdf_description, t.th_status FROM thesis t WHERE t.thesisID=? LIMIT 1");
+  $stmt = $pdo->prepare("
+    SELECT t.thesisID, t.title, t.th_description, t.pdf_description, t.th_status
+    FROM thesis t
+    WHERE t.thesisID=? LIMIT 1
+  ");
   $stmt->execute([$thesisID]);
   $th = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
@@ -140,7 +144,6 @@ if ($thStatus === 'DONE') {
     $nameById((int)$crow['member2']),
   ]));
 
-  
   // Τελικός βαθμός 
   $gr = $pdo->prepare("SELECT AVG(grade) AS g FROM grades WHERE thesisID=?");
   $gr->execute([$thesisID]);
@@ -156,6 +159,16 @@ if ($thStatus === 'DONE') {
   foreach ($history as $r) { if (strtoupper((string)$r['changeTo'])==='DONE') $hasDone=true; $lastDate=$r['changeDate']; }
   if (!$hasDone) { $syntheticDate = $lastDate ?: date('Y-m-d'); $history[] = ['changeDate'=>$syntheticDate,'changeTo'=>'DONE']; }
 
+  // Φόρτωση thesis_exam_meta για repository_url (και συναφή πεδία)
+  $m = $pdo->prepare("
+    SELECT repository_url, exam_datetime, exam_room, exam_meeting_url, draft_file, external_links
+    FROM thesis_exam_meta
+    WHERE thesisID = ?
+    LIMIT 1
+  ");
+  $m->execute([$thesisID]);
+  $meta = $m->fetch(PDO::FETCH_ASSOC) ?: [];
+
   ok([
     'view'  => 'DONE',
     'title' => 'Διαχείριση Διπλωματικής — Περατωμένη',
@@ -169,12 +182,23 @@ if ($thStatus === 'DONE') {
       'committee'   => $committee,
       'final_grade' => $finalGrade
     ],
-    
-    'repository_url' => ($meta['repository_url'] ?? null) ?: null,
+
+    // Εδώ πλέον διαβάζεις από $meta
+    'repository_url' => (!empty($meta['repository_url']) ? $meta['repository_url'] : null),
+
+    // Προαιρετικά: εκθέτουμε βασικά exam metadata (αν θες να τα εμφανίσεις και στο DONE)
+    'exam' => [
+      'datetime_raw' => $meta['exam_datetime'] ?? null,
+      'datetime'     => !empty($meta['exam_datetime']) ? date('d/m/Y H:i', strtotime($meta['exam_datetime'])) : null,
+      'room'         => $meta['exam_room'] ?? null,
+      'meeting_url'  => $meta['exam_meeting_url'] ?? null,
+    ],
+
     'history' => array_map(function($r){
       return ['date'=>date('d/m/Y', strtotime($r['changeDate'])), 'status'=>strtoupper((string)$r['changeTo'])];
     }, $history),
     'thesisID' => $thesisID
   ]);
 }
+
 
